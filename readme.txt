@@ -1,0 +1,1 @@
+set GLM_ROOT, BOOST_ROOT, GLFW_ROOT environment variables

@@ -1,0 +1,5 @@
+#ifndef YAGA_COMMON_TEST_PCH
+#define YAGA_COMMON_TEST_PCH
+
+
+#endif // !YAGA_COMMON_TEST_PCH
