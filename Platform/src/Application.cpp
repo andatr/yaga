@@ -1,26 +1,73 @@
 #include "Pch.h"
 #include "Application.h"
-#include "Common/include/Exception.h"
+#include "Device.h"
+#include "VulkanExtensions.h"
 
 namespace yaga
 {
-	namespace
+	Application::InitGLFW Application::_initGLFW;
+
+namespace
+{
+	// const char* for compatibility with Valukan API
+	// -------------------------------------------------------------------------------------------------------------------------
+	std::vector<const char*> GetExtensions()
 	{
-		// ---------------------------------------------------------------------------------------------------------------------
-		void SetDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& info) {
-			info = {};
-			info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-			info.messageSeverity =
-				VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | 
-				VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | 
-				VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-			info.messageType =
-				VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT    |
-				VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-				VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-			info.pfnUserCallback = VulkanLog;
+		uint32_t count;
+		auto glfwExtensions = glfwGetRequiredInstanceExtensions(&count);
+		std::vector<const char*> extensions(glfwExtensions, glfwExtensions + count);
+		if (!validationLayers.empty()) {
+			extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
 		}
+		std::sort(extensions.begin(), extensions.end());
+		return extensions;
 	}
+
+	// -------------------------------------------------------------------------------------------------------------------------
+	VKAPI_ATTR VkBool32 VKAPI_CALL VulkanLog(
+		VkDebugUtilsMessageSeverityFlagBitsEXT severity,
+		VkDebugUtilsMessageTypeFlagsEXT /*type*/,
+		const VkDebugUtilsMessengerCallbackDataEXT* callbackData,
+		void* /*userData*/)
+	{
+		auto logSeverity = log::Severity::warning;
+		if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT)
+		{
+			logSeverity = log::Severity::error;
+		} 
+		else if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+		{
+			logSeverity = log::Severity::warning;
+		}
+		else if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT)
+		{
+			logSeverity = log::Severity::info;
+		}
+		else if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT)
+		{
+			logSeverity = log::Severity::debug;
+		}
+		Log(logSeverity, std::string("validation: ") + callbackData->pMessage);
+		return VK_FALSE;
+	}
+
+	// -------------------------------------------------------------------------------------------------------------------------
+	void SetDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& info)
+	{
+		info = {};
+		info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
+		info.messageSeverity =
+			VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | 
+			VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | 
+			VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
+		info.messageType =
+			VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT    |
+			VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+			VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+		info.pfnUserCallback = VulkanLog;
+	}
+
+} // end of anonymous namespace
 
 	// -------------------------------------------------------------------------------------------------------------------------
 	IApplicationPtr CreateApplication(int width, int height, const std::string& title)
@@ -29,24 +76,26 @@ namespace yaga
 	}
 
 	// -------------------------------------------------------------------------------------------------------------------------
+	Application::InitGLFW::InitGLFW()
+	{
+		glfwInit();
+	}
+
+	// -------------------------------------------------------------------------------------------------------------------------
+	Application::InitGLFW::~InitGLFW()
+	{
+		glfwTerminate();
+	}
+
+	// -------------------------------------------------------------------------------------------------------------------------
 	Application::Application(int width, int height, const std::string& title):
-		_destroyed(false), _width(width), _height(height), _title(title),
-		_gpu(VK_NULL_HANDLE), _graphicsQueue(VK_NULL_HANDLE), _presentQueue(VK_NULL_HANDLE)
+		_width(width), _height(height), _title(title)
 	{
 	}
 
 	// -------------------------------------------------------------------------------------------------------------------------
 	Application::~Application()
 	{
-		Cleanup();
-	}
-
-	// -------------------------------------------------------------------------------------------------------------------------
-	void Application::Cleanup()
-	{
-		if (_destroyed) return;
-		_destroyed = true;
-		glfwTerminate();
 	}
 
 	// -------------------------------------------------------------------------------------------------------------------------
@@ -55,13 +104,11 @@ namespace yaga
 		CreateWindow();
 		InitVulkan();
 		Loop();
-		Cleanup();
 	}
 
 	// -------------------------------------------------------------------------------------------------------------------------
 	void Application::CreateWindow()
 	{
-		glfwInit();
 		glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 		glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
@@ -90,7 +137,7 @@ namespace yaga
 		CreateInstance();
 		SetupLogging();
 		CreateSurface();
-		FindGPU();
+		_device = std::make_unique<Device>(_instance.Get(), _surface.Get());
 	}
 
 	// -------------------------------------------------------------------------------------------------------------------------
@@ -123,7 +170,7 @@ namespace yaga
 		createInfo.ppEnabledExtensionNames = extensions.data();
 		
 		auto createInstance = [&createInfo]() {
-			VkInstance instance = {};
+			VkInstance instance;
 			if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
 				THROW("could not create instance")
 			}
@@ -136,7 +183,7 @@ namespace yaga
 	void Application::CreateSurface()
 	{
 		auto createSurface = [this]() {
-			VkSurfaceKHR surface = {};
+			VkSurfaceKHR surface;
 			if (glfwCreateWindowSurface(_instance.Get(), _window.Get(), nullptr, &surface) != VK_SUCCESS) {
 				THROW("could not create window surface")
 			}
@@ -154,10 +201,10 @@ namespace yaga
 		if (validationLayers.empty()) return;
 
 		// get available layers
-		uint32_t layerCount = 0;
-		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
-		std::vector<VkLayerProperties> availableLayers(layerCount);
-		vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+		uint32_t count;
+		vkEnumerateInstanceLayerProperties(&count, nullptr);
+		std::vector<VkLayerProperties> availableLayers(count);
+		vkEnumerateInstanceLayerProperties(&count, availableLayers.data());
 
 		// sort available layers
 		auto compareLayers = [](const auto& l1, const auto& l2) {
@@ -184,7 +231,7 @@ namespace yaga
 		SetDebugMessengerCreateInfo(info);
 		auto CreateDebugUtilsMessenger = GET_EXT_PROC_ADDRESS(_instance.Get(), vkCreateDebugUtilsMessengerEXT);
 		auto createLogger = [this, CreateDebugUtilsMessenger, info]() {
-			VkDebugUtilsMessengerEXT debugMessenger = {};
+			VkDebugUtilsMessengerEXT debugMessenger;
 			if (CreateDebugUtilsMessenger(_instance.Get(), &info, nullptr, &debugMessenger) != VK_SUCCESS) {
 				THROW("could not create debug messenger");
 			}
@@ -197,72 +244,5 @@ namespace yaga
 		};
 
 		_debugMessenger.Construct(createLogger, destroyLogger);
-	}
-
-	// -------------------------------------------------------------------------------------------------------------------------
-	void Application::FindGPU()
-	{
-		uint32_t count = 0;
-		vkEnumeratePhysicalDevices(_instance.Get(), &count, nullptr);
-
-		std::vector<VkPhysicalDevice> devices(count);
-		vkEnumeratePhysicalDevices(_instance.Get(), &count, devices.data());
-
-		for (const auto& device : devices) {
-			auto features = GetDeivceFeatures(device, _surface.Get());
-			if (features.graphics.empty() || features.surface.empty()) continue;
-			_gpu = device;
-			CreateDevice(features);
-			return;
-		}
-
-		THROW("could not find Vulkan supporting GPU");
-	}
-
-	// -------------------------------------------------------------------------------------------------------------------------
-	void Application::CreateDevice(const DeviceFeatures& features)
-	{
-		std::vector<VkDeviceQueueCreateInfo> queueInfos;
-		const auto graphicsFamily = features.graphics[0];
-		const auto surfaceFamily = features.surface[0];
-		std::set<uint32_t> families = { graphicsFamily, surfaceFamily };
-
-		float priority = 1.0f;
-		for (uint32_t family : families) {
-			VkDeviceQueueCreateInfo info = {};
-			info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-			info.queueFamilyIndex = family;
-			info.queueCount = 1;
-			info.pQueuePriorities = &priority;
-			queueInfos.push_back(info);
-		}
-
-		VkPhysicalDeviceFeatures devFeatures = {};
-		VkDeviceCreateInfo info = {};
-		info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-		info.pQueueCreateInfos = queueInfos.data();
-		info.queueCreateInfoCount = static_cast<uint32_t>(queueInfos.size());
-		info.pEnabledFeatures = &devFeatures;
-		info.enabledExtensionCount = 0;
-		if (validationLayers.empty()) {
-			info.enabledLayerCount = 0;
-		} else {
-			info.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-			info.ppEnabledLayerNames = validationLayers.data();
-		}
-
-		auto createDevice = [&info, this]() {
-			VkDevice device = {};
-			if (vkCreateDevice(_gpu, &info, nullptr, &device) != VK_SUCCESS) {
-				THROW("could not create Vulkan device")
-			}
-			return device;
-		};
-		auto destroyDevice = [this](auto device) {
-			vkDestroyDevice(device, nullptr);
-		};
-		_device.Construct(createDevice, destroyDevice);
-		vkGetDeviceQueue(_device.Get(), graphicsFamily, 0, &_graphicsQueue);
-		vkGetDeviceQueue(_device.Get(), surfaceFamily,  0, &_presentQueue );
 	}
 }

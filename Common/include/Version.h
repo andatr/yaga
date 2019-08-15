@@ -11,11 +11,14 @@ namespace yaga
 		uint16_t minor;
 		uint32_t build;
 
-		explicit Version(uint16_t major = 0, uint16_t minor = 0, uint32_t build = 0): 
-			major(major), minor(minor), build(build)
-		{
-		}
+		explicit Version(uint16_t major = 0, uint16_t minor = 0, uint32_t build = 0);
 	};
+
+	// -------------------------------------------------------------------------------------------------------------------------
+	inline Version::Version(uint16_t major, uint16_t minor, uint32_t build):
+		major(major), minor(minor), build(build)
+	{
+	}
 }
 
 #endif // !YAGA_COMMON_VERSION
