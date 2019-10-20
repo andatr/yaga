@@ -1,5 +1,5 @@
 file( GLOB_RECURSE source_list
-    "include/*.h"
+	"include/*.h"
 	"src/*.h"
     "src/*.cpp"
 )
@@ -9,24 +9,28 @@ if( MSVC )
 	set_source_files_properties( src/Pch.cpp PROPERTIES COMPILE_FLAGS "/YcPch.h" )
 endif( MSVC )
 
-add_library( Common ${source_list} )
+add_library( Engine ${source_list} )
 
-target_include_directories( Common
+target_include_directories( Engine
 	PUBLIC 
 		${CMAKE_CURRENT_LIST_DIR}/include
 	PRIVATE
 		${CMAKE_CURRENT_LIST_DIR}/src
 )
 
-target_link_libraries( Common
+target_link_libraries( Engine
 	PUBLIC
 		Boost::boost
-		Boost::filesystem
 		Boost::log
-		Boost::log_setup
-		Boost::regex
+		Asset
+	PRIVATE
+		Common
+		glfw
+		glm
+		opengl32
+		Vulkan::Vulkan
 )
 
-set_target_properties( Common PROPERTIES FOLDER Lib )
+set_target_properties( Engine PROPERTIES FOLDER Lib )
 
 add_subdirectory( test )

@@ -4,7 +4,7 @@
 #include <exception>
 #include <boost/format.hpp>
 
-#define THROW(format, ...) throw yaga::Exception(__FILE__, __LINE__, format, __VA_ARGS__);
+#define THROW(format, ...) throw yaga::Exception(__FILE__, __LINE__, format, __VA_ARGS__)
 
 namespace yaga
 {

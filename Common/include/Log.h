@@ -9,49 +9,33 @@
 
 #include "Exception.h"
 
-#define LOG(severity, msg) { yaga::Log((yaga::log::Severity::severity), (msg), __FILE__, __LINE__); }
+#define LOG(severity) BOOST_LOG_TRIVIAL(severity) \
+		<< boost::log::add_value(yaga::log::a_file, __FILE__) \
+		<< boost::log::add_value(yaga::log::a_line, __LINE__)
+
+#define LOG_E(severity, exception) BOOST_LOG_TRIVIAL(severity) \
+		<< boost::log::add_value(yaga::log::a_file, exception.File()) \
+		<< boost::log::add_value(yaga::log::a_line, exception.Line()) \
+		<< exception.what()
 
 namespace yaga { namespace log
 {
 	typedef boost::log::trivial::severity_level Severity;
 
 	BOOST_LOG_ATTRIBUTE_KEYWORD(a_file, "File", std::string)
-	BOOST_LOG_ATTRIBUTE_KEYWORD(a_line, "Line", uint32_t)
+		BOOST_LOG_ATTRIBUTE_KEYWORD(a_line, "Line", uint32_t)
 
-	//Severity SeverityFromString(std::string str);
+		enum class Format : int
+	{
+		Time,
+		Severity,
+		File,
+		Line,
+		All = std::numeric_limits<int>::max()
+	};
 
-	void Init(boost::optional<Severity> severity = boost::none);
+	void Init(boost::optional<Severity> severity = boost::none, Format format = Format::All);
+	Severity SeverityFromString(std::string str);
 }}
-
-namespace yaga
-{
-	// --------------------------------------------------------------------------------------------
-	inline void Log(log::Severity severity, const std::string& msg, const std::string& file, int line)
-	{
-		using namespace boost::log;
-
-		BOOST_LOG_STREAM_WITH_PARAMS(trivial::logger::get(), (keywords::severity = severity))
-			<< add_value(log::a_file, file) \
-			<< add_value(log::a_line, line) \
-			<< msg;
-	}
-
-	// --------------------------------------------------------------------------------------------
-	inline void Log(log::Severity severity, const std::string& msg)
-	{
-		using namespace boost::log;
-
-		BOOST_LOG_STREAM_WITH_PARAMS(trivial::logger::get(), (keywords::severity = severity)) << msg;
-	}
-
-	// --------------------------------------------------------------------------------------------
-	inline void Log(const Exception& e)
-	{
-		BOOST_LOG_TRIVIAL(error)
-			<< boost::log::add_value(log::a_file, e.File())
-			<< boost::log::add_value(log::a_line, e.Line())
-			<< e.what();
-	}
-}
 
 #endif // !YAGA_COMMON_LOG

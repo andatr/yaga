@@ -9,24 +9,24 @@ if( MSVC )
 	set_source_files_properties( src/Pch.cpp PROPERTIES COMPILE_FLAGS "/YcPch.h" )
 endif( MSVC )
 
-add_library( Common ${source_list} )
+add_library( Asset ${source_list} )
 
-target_include_directories( Common
+target_include_directories( Asset
 	PUBLIC 
 		${CMAKE_CURRENT_LIST_DIR}/include
 	PRIVATE
-		${CMAKE_CURRENT_LIST_DIR}/src
+		${CMAKE_CURRENT_LIST_DIR}/include/Asset
+		${CMAKE_CURRENT_LIST_DIR}/src		
 )
 
-target_link_libraries( Common
+target_link_libraries( Asset
 	PUBLIC
 		Boost::boost
 		Boost::filesystem
 		Boost::log
-		Boost::log_setup
-		Boost::regex
+		Common
 )
 
-set_target_properties( Common PROPERTIES FOLDER Lib )
+set_target_properties( Asset PROPERTIES FOLDER Lib )
 
 add_subdirectory( test )

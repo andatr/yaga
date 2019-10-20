@@ -1,5 +1,5 @@
 #include "Pch.h"
-#include "include/Log.h"
+#include "Log.h"
 
 namespace yaga { namespace log
 {
@@ -33,16 +33,16 @@ namespace yaga { namespace log
 		const auto& line = rec.attribute_values()[a_line];
 
 		std::cout
-			<< time << " "
+			//<< time << " "
 			<< severity << " "
-			<< file << " "
-			<< line << " "
+			//<< file << " "
+			//<< line << " "
 			<< message
 		<< std::endl;
 	}
 
 	// --------------------------------------------------------------------------------------------
-	void Init(boost::optional<Severity> severity)
+	void Init(boost::optional<Severity> severity, Format format)
 	{
 		typedef sinks::synchronous_sink<SinkConsole> sink_t;
 
@@ -56,7 +56,7 @@ namespace yaga { namespace log
 	}
 
 	// --------------------------------------------------------------------------------------------
-	/*Severity SeverityFromString(std::string str)
+	Severity SeverityFromString(std::string str)
 	{
 		using namespace logging::trivial;
 
@@ -69,6 +69,6 @@ namespace yaga { namespace log
 			SEVERITY_FROM_STR(str, error)
 			SEVERITY_FROM_STR(str, fatal)
 #undef SEVERITY_FROM_STR
-		THROW("unknown severity level")
-	}*/
+		THROW("unknown log severity level");
+	}
 }}

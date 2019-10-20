@@ -8,19 +8,18 @@
 
 namespace yaga
 {
-	// smart pointer for not a pointer base class T
-	// can't use std smart pointers for this
 	// -------------------------------------------------------------------------------------------------------------------------
 	template<typename T>
 	class AutoDeleter : private boost::noncopyable
 	{
 	public:
-		typedef std::function<T()> ConstructorT;
 		typedef std::function<void(T)> DestructorT;
 	public:
 		AutoDeleter();
+		AutoDeleter(AutoDeleter<T>&& other) noexcept;
+		AutoDeleter<T>& operator=(AutoDeleter<T>&& other) noexcept;
 		~AutoDeleter();
-		void Construct(const ConstructorT& ctor, const DestructorT& dtor);
+		void Assign(T& obj, const DestructorT& dtor);
 		void Reset();
 		const T& Get() const;
 		bool Destoyed() const { return _destoyed; }
@@ -39,13 +38,34 @@ namespace yaga
 
 	// -------------------------------------------------------------------------------------------------------------------------
 	template<typename T>
-	void AutoDeleter<T>::Construct(const ConstructorT& ctor, const DestructorT& dtor)
+	AutoDeleter<T>::AutoDeleter(AutoDeleter<T>&& other) noexcept
+	{
+		_destoyed = other._destoyed;
+		_destructor = other._destructor;
+		_object = std::move(other._object);
+		other._destoyed = true;
+	}
+
+	// -------------------------------------------------------------------------------------------------------------------------
+	template<typename T>
+	AutoDeleter<T>& AutoDeleter<T>::operator=(AutoDeleter<T>&& other) noexcept
+	{
+		_destoyed = other._destoyed;
+		_destructor = other._destructor;
+		_object = std::move(other._object);
+		other._destoyed = true;
+		return *this;
+	}
+
+	// -------------------------------------------------------------------------------------------------------------------------
+	template<typename T>
+	void AutoDeleter<T>::Assign(T& obj, const DestructorT& dtor)
 	{
 		if (!_destoyed) {
-			THROW("AutoDeleter: attempt to construct object twice")
+			THROW("AutoDeleter: attempt to construct object twice");
 		}
 		_destructor = dtor;
-		_object = std::move(ctor());
+		_object = std::move(obj);
 		_destoyed = false;
 	}
 
@@ -70,7 +90,7 @@ namespace yaga
 	const T& AutoDeleter<T>::Get() const
 	{
 		if (_destoyed) {
-			THROW("AutoDeleter: attempt to access destoyed object")
+			THROW("AutoDeleter: attempt to access destoyed object");
 		}
 		return _object;
 	}
