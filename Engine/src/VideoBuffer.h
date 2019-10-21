@@ -20,7 +20,7 @@ namespace yaga
 		const VkFormat& ImageFormat() const { return _format; }
 		const VkExtent2D& Resolution() const { return _resolution; }
 		const std::vector<std::unique_ptr<Texture>>& Textures() const { return _textures; }
-		VkSwapchainKHR SwapChain() const { return _swapChain.Get(); }
+		VkSwapchainKHR SwapChain() const { return *_swapChain; }
 		virtual ~VideoBuffer();
 	private:
 		VkFormat _format;

@@ -13,7 +13,7 @@ namespace yaga
 	{
 	public:
 		Shader(VkDevice device, asset::Shader* asset);
-		VkShaderModule ShaderModule() const { return _shader.Get(); }
+		VkShaderModule ShaderModule() const { return *_shader; }
 	private:
 		AutoDeleter<VkShaderModule> _shader;
 	};

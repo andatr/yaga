@@ -22,6 +22,7 @@ namespace yaga
 		void Assign(T& obj, const DestructorT& dtor);
 		void Reset();
 		const T& Get() const;
+		const T& operator*() const;
 		bool Destoyed() const { return _destoyed; }
 	private:
 		bool _destoyed;
@@ -88,6 +89,16 @@ namespace yaga
 	// -------------------------------------------------------------------------------------------------------------------------
 	template<typename T>
 	const T& AutoDeleter<T>::Get() const
+	{
+		if (_destoyed) {
+			THROW("AutoDeleter: attempt to access destoyed object");
+		}
+		return _object;
+	}
+
+	// -------------------------------------------------------------------------------------------------------------------------
+	template<typename T>
+	const T& AutoDeleter<T>::operator*() const
 	{
 		if (_destoyed) {
 			THROW("AutoDeleter: attempt to access destoyed object");

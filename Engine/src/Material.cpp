@@ -11,15 +11,46 @@ namespace yaga
 {
 namespace
 {
+
+
+	VkVertexInputBindingDescription getBindingDescription() {
+		VkVertexInputBindingDescription bindingDescription = {};
+		bindingDescription.binding = 0;
+		bindingDescription.stride = sizeof(Vertex);
+		bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+		return bindingDescription;
+	}
+
+	std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions() {
+		std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions = {};
+
+		attributeDescriptions[0].binding = 0;
+		attributeDescriptions[0].location = 0;
+		attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+		attributeDescriptions[0].offset = offsetof(Vertex, pos);
+
+		attributeDescriptions[1].binding = 0;
+		attributeDescriptions[1].location = 1;
+		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+		attributeDescriptions[1].offset = offsetof(Vertex, color);
+
+		return attributeDescriptions;
+	}
+
+
 	// -------------------------------------------------------------------------------------------------------------------------
 	VkPipelineVertexInputStateCreateInfo VertexAttributes()
 	{
+		auto bindingDescription = getBindingDescription();
+		auto attributeDescriptions = getAttributeDescriptions();
+
 		VkPipelineVertexInputStateCreateInfo info = {};
 		info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 		info.vertexBindingDescriptionCount = static_cast<uint32_t>(VertexDescription.size());
-		info.pVertexBindingDescriptions = VertexDescription.data();
-		info.vertexAttributeDescriptionCount = static_cast<uint32_t>(VertexAttributeDescription.size());
-		info.pVertexAttributeDescriptions = VertexAttributeDescription.data();
+		info.pVertexBindingDescriptions = &bindingDescription;
+		info.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+		info.pVertexAttributeDescriptions = attributeDescriptions.data();
 		return info;
 	}
 
@@ -134,9 +165,9 @@ namespace
 	// -------------------------------------------------------------------------------------------------------------------------
 	Material::Material(Device* device, VideoBuffer* videoBuffer, VkCommandPool commandPool, asset::Material* asset)
 	{
+		_resolution = videoBuffer->Resolution();
 		CreatePipeline(device, videoBuffer, asset);
 		CreateFramebuffers(device->Logical(), videoBuffer);
-		CreateCommandBuffer(device->Logical(), commandPool, videoBuffer);
 	}
 
 	// -------------------------------------------------------------------------------------------------------------------------
@@ -151,7 +182,19 @@ namespace
 			ShaderStage(fragmentShader.ShaderModule(), VK_SHADER_STAGE_FRAGMENT_BIT)
 		};
 		
-		auto vertexAttributes = VertexAttributes();
+		//auto vertexAttributes = VertexAttributes();
+		
+		auto bindingDescription = getBindingDescription();
+		auto attributeDescriptions = getAttributeDescriptions();
+
+		VkPipelineVertexInputStateCreateInfo vertexAttributes = {};
+		vertexAttributes.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+		vertexAttributes.vertexBindingDescriptionCount = 1;
+		vertexAttributes.pVertexBindingDescriptions = &bindingDescription;
+		vertexAttributes.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+		vertexAttributes.pVertexAttributeDescriptions = attributeDescriptions.data();
+		
+
 		auto primitives = Primitives();
 		auto viewport = Viewport(videoBuffer->Resolution());
 		auto scissors = Scissors(videoBuffer->Resolution());
@@ -174,8 +217,8 @@ namespace
 		info.pRasterizationState = &rasterizer;
 		info.pMultisampleState = &sampler;
 		info.pColorBlendState = &colorBlendState;
-		info.layout = _layout.Get();
-		info.renderPass = _renderPass.Get();
+		info.layout = *_layout;
+		info.renderPass = *_renderPass;
 		info.subpass = 0;
 		info.basePipelineHandle = VK_NULL_HANDLE;
 
@@ -260,12 +303,13 @@ namespace
 		};
 		const auto& textures = videoBuffer->Textures();
 		_frameBuffers.Resize(textures.size());
+		_frameBufferRefs.resize(textures.size());
 		for (size_t i = 0; i < textures.size(); i++)
 		{
 			VkImageView attachments[] = { textures[i]->ImageView() };
 			VkFramebufferCreateInfo info = {};
 			info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-			info.renderPass = _renderPass.Get();
+			info.renderPass = *_renderPass;
 			info.attachmentCount = 1;
 			info.pAttachments = attachments;
 			info.width = videoBuffer->Resolution().width;
@@ -276,49 +320,7 @@ namespace
 				THROW("Could not create framebuffer");
 			}
 			_frameBuffers[i].Assign(frameBuffer, destroyFrameBuffer);
-		}
-	}
-
-	// -------------------------------------------------------------------------------------------------------------------------
-	void Material::CreateCommandBuffer(VkDevice device, VkCommandPool commandPool, VideoBuffer* videoBuffer)
-	{
-		_commandBuffers.resize(_frameBuffers.Size());
-		VkCommandBufferAllocateInfo allocInfo = {};
-		allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-		allocInfo.commandPool = commandPool;
-		allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-		allocInfo.commandBufferCount = static_cast<uint32_t>(_commandBuffers.size());
-		if (vkAllocateCommandBuffers(device, &allocInfo, _commandBuffers.data()) != VK_SUCCESS) {
-			THROW("Could not allocate command buffers");
-		}
-		for (size_t i = 0; i < _commandBuffers.size(); i++)
-		{
-			const auto& command = _commandBuffers[i];
-
-			VkCommandBufferBeginInfo beginInfo = {};
-			beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-			if (vkBeginCommandBuffer(command, &beginInfo) != VK_SUCCESS) {
-				THROW("Failed to begin recording command buffer");
-			}
-
-			VkRenderPassBeginInfo renderPassInfo = {};
-			renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-			renderPassInfo.renderPass = _renderPass.Get();
-			renderPassInfo.framebuffer = _frameBuffers[i].Get();
-			renderPassInfo.renderArea.offset = { 0, 0 };
-			renderPassInfo.renderArea.extent = videoBuffer->Resolution();
-			VkClearValue clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
-			renderPassInfo.clearValueCount = 1;
-			renderPassInfo.pClearValues = &clearColor;
-
-			vkCmdBeginRenderPass(command, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-			vkCmdBindPipeline(command, VK_PIPELINE_BIND_POINT_GRAPHICS, _pipeline.Get());
-			vkCmdDraw(command, 3, 1, 0, 0);
-			vkCmdEndRenderPass(command);
-
-			if (vkEndCommandBuffer(command) != VK_SUCCESS) {
-				THROW("Failed to record command buffer");
-			}
+			_frameBufferRefs[i] = frameBuffer;
 		}
 	}
 }

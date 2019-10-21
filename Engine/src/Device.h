@@ -26,13 +26,14 @@ namespace yaga
 		};
 	public:
 		explicit Device(VkInstance instance, VkSurfaceKHR surface);
-		VkDevice Logical()  const { return _ldevice.Get(); }
+		virtual ~Device();
+		VkDevice Logical() const { return *_ldevice; }
 		VkPhysicalDevice Physical() const { return _pdevice; }
 		const std::vector<uint32_t>& Families() const { return _families; }
 		const DeviceQueues& Queues() const { return _queues; }
 		VkQueue GraphicsQueue() const { return _graphicsQueue; }
 		VkQueue PresentQueue() const { return _presentQueue; }
-		virtual ~Device();
+		uint32_t GetMemoryType(uint32_t filter, VkMemoryPropertyFlags props) const;
 	private:
 		void CreateDevice(uint32_t graphicsFamily, uint32_t surfaceFamily);
 	private:
@@ -42,6 +43,7 @@ namespace yaga
 		VkQueue _presentQueue;
 		std::vector<uint32_t> _families;
 		DeviceQueues _queues;
+		VkPhysicalDeviceMemoryProperties _props;
 	};
 
 	typedef std::unique_ptr<Device> DevicePtr;

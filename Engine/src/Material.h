@@ -18,19 +18,22 @@ namespace yaga
 	{
 	public:
 		Material(Device* device, VideoBuffer* videoBuffer, VkCommandPool commandPool, asset::Material* asset);
-		const std::vector<VkCommandBuffer>& CommandBuffers() const { return _commandBuffers; }
+		VkRenderPass RenderPass() const { return *_renderPass; }
+		VkPipeline Pipeline() const { return *_pipeline; }
+		const VkExtent2D& Resolution() const { return _resolution; }
+		const std::vector<VkFramebuffer>& FrameBuffers() const { return _frameBufferRefs; }
 	private:
 		void CreatePipeline(Device* device, VideoBuffer* videoBuffer, asset::Material* asset);
 		void CreateLayout(VkDevice device);
 		void CreateRenderPass(VkDevice device, VkFormat imageFormat);		
 		void CreateFramebuffers(VkDevice device, VideoBuffer* videoBuffer);
-		void CreateCommandBuffer(VkDevice device, VkCommandPool commandPool, VideoBuffer* videoBuffer);
 	private:
+		VkExtent2D _resolution;
 		AutoDeleter<VkRenderPass> _renderPass;
 		AutoDeleter<VkPipelineLayout> _layout;
 		AutoDeleter<VkPipeline> _pipeline;
 		Array<AutoDeleter<VkFramebuffer>> _frameBuffers;
-		std::vector<VkCommandBuffer> _commandBuffers;
+		std::vector<VkFramebuffer> _frameBufferRefs;
 	};
 }
 

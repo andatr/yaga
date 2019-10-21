@@ -8,7 +8,7 @@
 
 #include "AutoDeleter.h"
 #include "Application.h"
-#include "Material.h"
+#include "Model.h"
 #include "Asset/Database.h"
 
 namespace yaga
@@ -69,8 +69,8 @@ namespace yaga
 		AutoDeleter<VkSurfaceKHR> _surface;
 		std::unique_ptr<Device> _device;
 		std::unique_ptr<VideoBuffer> _videoBuffer;
-		std::unique_ptr<Material> _material;
 		AutoDeleter<VkCommandPool> _commandPool;
+		std::unique_ptr<Model> _model;
 		Array<FrameSync> _frameSync;
 		size_t _frame;
 		ResizeInfo _resize;

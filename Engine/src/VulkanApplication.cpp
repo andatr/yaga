@@ -116,7 +116,7 @@ namespace
 		CreateInstance(props->Title());
 		SetupLogging();
 		CreateSurface();
-		_device = std::make_unique<Device>(_instance.Get(), _surface.Get());
+		_device = std::make_unique<Device>(*_instance, *_surface);
 		CreateCommandPool();
 		CreateVideoBuffer({ props->Width(), props->Height() });
 
@@ -127,12 +127,16 @@ namespace
 	// -------------------------------------------------------------------------------------------------------------------------
 	void VulkanApplication::CreateVideoBuffer(VkExtent2D resolution)
 	{
-		auto material = _assets->Get<asset::Material>("material");
+		
 		vkDeviceWaitIdle(_device->Logical());
-		_material.reset();
+		_model.reset();
 		_videoBuffer.reset();			
-		_videoBuffer = std::make_unique<VideoBuffer>(_device.get(), _surface.Get(), resolution);
-		_material = std::make_unique<Material>(_device.get(), _videoBuffer.get(), _commandPool.Get(), material);
+		_videoBuffer = std::make_unique<VideoBuffer>(_device.get(), *_surface, resolution);
+
+		auto materialAsset = _assets->Get<asset::Material>("material");
+		auto material = std::make_unique<Material>(_device.get(), _videoBuffer.get(), *_commandPool, materialAsset);
+		auto mesh = std::make_unique<Mesh>(_device.get());
+		_model = std::make_unique<Model>(std::move(material), std::move(mesh), _device->Logical(), *_commandPool, _videoBuffer.get());
 	}
 
 	// -------------------------------------------------------------------------------------------------------------------------
@@ -198,7 +202,7 @@ namespace
 	// -------------------------------------------------------------------------------------------------------------------------
 	void VulkanApplication::Loop()
 	{
-		while (!glfwWindowShouldClose(_window.Get())) {
+		while (!glfwWindowShouldClose(*_window)) {
 			glfwPollEvents();
 			DrawFrame();
 		}
@@ -250,11 +254,11 @@ namespace
 	void VulkanApplication::CreateSurface()
 	{
 		auto destroySurface = [this](auto surface) {
-			vkDestroySurfaceKHR(_instance.Get(), surface, nullptr);
+			vkDestroySurfaceKHR(*_instance, surface, nullptr);
 			LOG(trace) << "Surface deleted";
 		};
 		VkSurfaceKHR surface;
-		if (glfwCreateWindowSurface(_instance.Get(), _window.Get(), nullptr, &surface) != VK_SUCCESS) {
+		if (glfwCreateWindowSurface(*_instance, *_window, nullptr, &surface) != VK_SUCCESS) {
 			THROW("Could not create Window Surface");
 		}
 		_surface.Assign(surface, destroySurface);
@@ -313,16 +317,16 @@ namespace
 
 		VkDebugUtilsMessengerCreateInfoEXT info = {};
 		SetDebugMessengerCreateInfo(info);
-		auto CreateDebugUtilsMessenger = GET_EXT_PROC_ADDRESS(_instance.Get(), vkCreateDebugUtilsMessengerEXT);
+		auto CreateDebugUtilsMessenger = GET_EXT_PROC_ADDRESS(*_instance, vkCreateDebugUtilsMessengerEXT);
 
-		auto DestroyDebugUtilsMessenger = GET_EXT_PROC_ADDRESS(_instance.Get(), vkDestroyDebugUtilsMessengerEXT);
+		auto DestroyDebugUtilsMessenger = GET_EXT_PROC_ADDRESS(*_instance, vkDestroyDebugUtilsMessengerEXT);
 		auto destroyLogger = [this, DestroyDebugUtilsMessenger](VkDebugUtilsMessengerEXT messenger) {
-			DestroyDebugUtilsMessenger(_instance.Get(), messenger, nullptr);
+			DestroyDebugUtilsMessenger(*_instance, messenger, nullptr);
 			LOG(trace) << "Debug Messenger deleted";
 		};
 
 		VkDebugUtilsMessengerEXT debugMessenger;
-		if (CreateDebugUtilsMessenger(_instance.Get(), &info, nullptr, &debugMessenger) != VK_SUCCESS) {
+		if (CreateDebugUtilsMessenger(*_instance, &info, nullptr, &debugMessenger) != VK_SUCCESS) {
 			THROW("Could not create Debug Messenger");
 		}
 		_debugMessenger.Assign(debugMessenger, destroyLogger);
@@ -336,11 +340,11 @@ namespace
 		const auto& sync = _frameSync[_frame];
 		const auto swapChain = _videoBuffer->SwapChain();
 
-		vkWaitForFences(device, 1, &sync.swap.Get(), VK_TRUE, UINT64_MAX);
+		vkWaitForFences(device, 1, &*sync.swap, VK_TRUE, UINT64_MAX);
 
 		uint32_t index = 0;
 		auto result = vkAcquireNextImageKHR(_device->Logical(), _videoBuffer->SwapChain(),
-			UINT64_MAX, sync.render.Get(), VK_NULL_HANDLE, &index);
+			UINT64_MAX, *sync.render, VK_NULL_HANDLE, &index);
 		if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
 			CreateVideoBuffer(GetWindowSize());
 			return;
@@ -353,22 +357,22 @@ namespace
 		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
 		VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
 		submitInfo.waitSemaphoreCount = 1;
-		submitInfo.pWaitSemaphores = &sync.render.Get();
+		submitInfo.pWaitSemaphores = &*sync.render;
 		submitInfo.pWaitDstStageMask = waitStages;
 		submitInfo.commandBufferCount = 1;
-		submitInfo.pCommandBuffers = &_material->CommandBuffers()[index];
+		submitInfo.pCommandBuffers = &_model->CommandBuffers()[index];
 		submitInfo.signalSemaphoreCount = 1;
-		submitInfo.pSignalSemaphores = &sync.present.Get();
+		submitInfo.pSignalSemaphores = &*sync.present;
 
-		vkResetFences(device, 1, &sync.swap.Get());
-		if (vkQueueSubmit(_device->GraphicsQueue(), 1, &submitInfo, sync.swap.Get()) != VK_SUCCESS) {
+		vkResetFences(device, 1, &*sync.swap);
+		if (vkQueueSubmit(_device->GraphicsQueue(), 1, &submitInfo, *sync.swap) != VK_SUCCESS) {
 			THROW("Could not draw frame");
 		}
 
 		VkPresentInfoKHR presentInfo = {};
 		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 		presentInfo.waitSemaphoreCount = 1;
-		presentInfo.pWaitSemaphores = &sync.present.Get();
+		presentInfo.pWaitSemaphores = &*sync.present;
 		presentInfo.swapchainCount = 1;
 		presentInfo.pSwapchains = &swapChain;
 		presentInfo.pImageIndices = &index;
@@ -388,7 +392,7 @@ namespace
 		int width = 0;
 		int height = 0;
 		while (width == 0 || height == 0) {
-			glfwGetFramebufferSize(_window.Get(), &width, &height);
+			glfwGetFramebufferSize(*_window, &width, &height);
 			glfwWaitEvents();
 		}
 		return { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };

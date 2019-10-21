@@ -124,10 +124,10 @@ namespace
 		LOG(trace) << "Swapchain created";
 
 		uint32_t imageCount;
-		vkGetSwapchainImagesKHR(logicalDeivce, _swapChain.Get(), &imageCount, nullptr);
+		vkGetSwapchainImagesKHR(logicalDeivce, *_swapChain, &imageCount, nullptr);
 		_images.resize(imageCount);
 		_textures.resize(imageCount);
-		vkGetSwapchainImagesKHR(logicalDeivce, _swapChain.Get(), &imageCount, _images.data());
+		vkGetSwapchainImagesKHR(logicalDeivce, *_swapChain, &imageCount, _images.data());
 		for (uint32_t i = 0; i < imageCount; ++i) {
 			_textures[i] = std::make_unique<Texture>(logicalDeivce, _images[i], colorFormat.format);
 		}

@@ -12,7 +12,7 @@ namespace yaga
 	{
 	public:
 		Texture(VkDevice device, VkImage image, VkFormat format);
-		VkImageView ImageView() const { return _imageView.Get(); }
+		VkImageView ImageView() const { return *_imageView; }
 	private:
 		AutoDeleter<VkImageView> _imageView;
 	};

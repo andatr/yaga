@@ -146,7 +146,19 @@ namespace
 		_ldevice.Assign(device, destroyDevice);
 		LOG(trace) << "Logical Device created";
 
-		vkGetDeviceQueue(_ldevice.Get(), graphicsFamily, 0, &_graphicsQueue);
-		vkGetDeviceQueue(_ldevice.Get(), surfaceFamily, 0, &_presentQueue);
+		vkGetDeviceQueue(*_ldevice, graphicsFamily, 0, &_graphicsQueue);
+		vkGetDeviceQueue(*_ldevice, surfaceFamily, 0, &_presentQueue);
+		vkGetPhysicalDeviceMemoryProperties(_pdevice, &_props);
+	}
+
+	// -------------------------------------------------------------------------------------------------------------------------
+	uint32_t Device::GetMemoryType(uint32_t filter, VkMemoryPropertyFlags props) const
+	{
+		for (uint32_t i = 0; i < _props.memoryTypeCount; i++) {
+			if (filter & (1 << i) && (_props.memoryTypes[i].propertyFlags & props) == props) {
+				return i;
+			}
+		}
+		THROW("Could not find suitable memory type");
 	}
 }
