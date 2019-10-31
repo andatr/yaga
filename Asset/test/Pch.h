@@ -1,5 +1,0 @@
-#ifndef YAGA_ASSET_TEST_PCH
-#define YAGA_ASSET_TEST_PCH
-
-
-#endif // !YAGA_ASSET_TEST_PCH
