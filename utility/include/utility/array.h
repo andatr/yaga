@@ -1,12 +1,16 @@
 #ifndef YAGA_UTILITY_ARRAY
 #define YAGA_UTILITY_ARRAY
 
+#include <type_traits>
+
 namespace yaga
 {
 
 template<typename T>
 class Array
 {
+public:
+  static_assert(std::is_pod<T>::value, "Array<T>: T must be POD");
 public:
   explicit Array(size_t size = 0);
   void Resize(size_t size);
@@ -33,8 +37,8 @@ Array<T>::Array(size_t size) : size_(size), data_(size > 0 ? new T[size] : nullp
 template<typename T>
 void Array<T>::Resize(size_t size)
 {
-	size_ = size;
-	data_ = std::shared_ptr<T>(size > 0 ? new T[size] : nullptr, Delete);
+  size_ = size;
+  data_ = std::shared_ptr<T>(size > 0 ? new T[size] : nullptr, Delete);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------

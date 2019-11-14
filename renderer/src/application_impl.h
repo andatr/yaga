@@ -4,9 +4,11 @@
 #include <memory>
 #include <string>
 #include <thread>
+#include <vector>
 
 #include <GLFW/glfw3.h>
 
+#include "allocator.h"
 #include "application.h"
 #include "device.h"
 #include "model.h"
@@ -35,9 +37,9 @@ public:
 private:
   void CreateWindow(asset::Application* props);
   void CreateInstance(const std::string& appName);
-  void CreateVideoBuffer(VkExtent2D resolution);
+  void CreateVideoBuffer(VkExtent2D size);
   void CreateSurface();
-  void CreateCommandPool();
+  
   void CheckValidationLayers();
   void Loop();
   void SetupLogging();
@@ -60,6 +62,8 @@ private:
   };
 private:
   static InitGLFW initGLFW_;
+  size_t frame_;
+  ResizeInfo resize_;
   // don't reorder - destruction order is important
   std::unique_ptr<asset::Database> assets_;
   AutoDestroyer<GLFWwindow*> window_;
@@ -67,12 +71,12 @@ private:
   AutoDestroyer<VkDebugUtilsMessengerEXT> debugMessenger_;
   AutoDestroyer<VkSurfaceKHR> surface_;
   std::unique_ptr<Device> device_;
+  std::unique_ptr<Allocator> allocator_;
   std::unique_ptr<VideoBuffer> videoBuffer_;
-  AutoDestroyer<VkCommandPool> commandPool_;
   std::unique_ptr<Model> model_;
-  Array<FrameSync> frameSync_;
-  size_t frame_;
-  ResizeInfo resize_;
+  std::unique_ptr<Mesh> mesh_;
+  std::unique_ptr<Material> material_;
+  std::vector<FrameSync> frameSync_;
 };
 
 } // !namespace yaga

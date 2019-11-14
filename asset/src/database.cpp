@@ -12,7 +12,7 @@ Asset* Database::Get(const std::string& name)
   auto it = assets_.find(name);
   if (it == assets_.end()) {
     THROW("Could not find asset \"%1%\"", name);
-	}
+  }
   return it->second.get();
 }
 

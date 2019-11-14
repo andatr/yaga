@@ -24,7 +24,7 @@ Texture::Texture(VkDevice device, VkImage image, VkFormat format)
 
   auto destroyImageView = [device](auto view) {
     vkDestroyImageView(device, view, nullptr);
-    LOG(trace) << "Image View deleted";
+    LOG(trace) << "Image View destroyed";
   };
   VkImageView view;
   if (vkCreateImageView(device, &info, nullptr, &view) != VK_SUCCESS) {

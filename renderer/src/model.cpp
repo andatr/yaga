@@ -5,22 +5,22 @@ namespace yaga
 {
 
 // -------------------------------------------------------------------------------------------------------------------------
-Model::Model(std::unique_ptr<Material> material, std::unique_ptr<Mesh> mesh, VkDevice device, VkCommandPool commandPool, VideoBuffer* videoBuffer) :
-  material_(std::move(material)), mesh_(std::move(mesh))
+Model::Model(Device* device, VideoBuffer* videoBuffer, Mesh* mesh, Material* material) :
+  mesh_(mesh), material_(material)
 {
-  CreateCommandBuffer(device, commandPool, videoBuffer);
+  CreateCommandBuffer(device, videoBuffer);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Model::CreateCommandBuffer(VkDevice device, VkCommandPool commandPool, VideoBuffer* videoBuffer)
+void Model::CreateCommandBuffer(Device* device, VideoBuffer* videoBuffer)
 {
   commandBuffers_.resize(material_->FrameBuffers().size());
   VkCommandBufferAllocateInfo allocInfo = {};
   allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-  allocInfo.commandPool = commandPool;
+  allocInfo.commandPool = device->CommandPool();
   allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
   allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers_.size());
-  if (vkAllocateCommandBuffers(device, &allocInfo, commandBuffers_.data()) != VK_SUCCESS) {
+  if (vkAllocateCommandBuffers(device->Logical(), &allocInfo, commandBuffers_.data()) != VK_SUCCESS) {
     THROW("Could not allocate command buffers");
   }
   for (size_t i = 0; i < commandBuffers_.size(); i++)
@@ -38,17 +38,18 @@ void Model::CreateCommandBuffer(VkDevice device, VkCommandPool commandPool, Vide
     renderPassInfo.renderPass = material_->RenderPass();
     renderPassInfo.framebuffer = material_->FrameBuffers()[i];
     renderPassInfo.renderArea.offset = { 0, 0 };
-    renderPassInfo.renderArea.extent = material_->Resolution();
+    renderPassInfo.renderArea.extent = videoBuffer->Size();
     VkClearValue clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
     renderPassInfo.clearValueCount = 1;
     renderPassInfo.pClearValues = &clearColor;
 
     vkCmdBeginRenderPass(command, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     vkCmdBindPipeline(command, VK_PIPELINE_BIND_POINT_GRAPHICS, material_->Pipeline());
-    VkBuffer vertexBuffers[] = { mesh_->Buffer() };
+    VkBuffer vertexBuffers[] = { mesh_->VertexBuffer() };
     VkDeviceSize offsets[] = { 0 };
     vkCmdBindVertexBuffers(command, 0, 1, vertexBuffers, offsets);
-    vkCmdDraw(command, static_cast<uint32_t>(mesh_->Vertices().size()), 1, 0, 0);
+    vkCmdBindIndexBuffer(command, mesh_->IndexBuffer(), 0, VK_INDEX_TYPE_UINT16);
+    vkCmdDrawIndexed(command, static_cast<uint32_t>(mesh_->Indices().size()), 1, 0, 0, 0);
     vkCmdEndRenderPass(command);
 
     if (vkEndCommandBuffer(command) != VK_SUCCESS) {

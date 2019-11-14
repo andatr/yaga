@@ -2,6 +2,7 @@
 #include "serializer.h"
 #include "application.h"
 #include "material.h"
+#include "mesh.h"
 #include "shader.h"
 #include "utility/array.h"
 
@@ -46,6 +47,7 @@ void Serializer::RegisterStandard()
   Register<asset::Application>();
   Register<asset::Shader>();
   Register<asset::Material>();
+  Register<asset::Mesh>();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------

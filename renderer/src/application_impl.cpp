@@ -9,7 +9,7 @@
 
 namespace yaga
 {
-	ApplicationImpl::InitGLFW ApplicationImpl::initGLFW_;
+  ApplicationImpl::InitGLFW ApplicationImpl::initGLFW_;
 
 namespace
 {
@@ -95,7 +95,7 @@ ApplicationImpl::InitGLFW::~InitGLFW()
 
 // -------------------------------------------------------------------------------------------------------------------------
 ApplicationImpl::ApplicationImpl() :
-  assets_(std::make_unique<asset::Database>()), frameSync_(MAX_FRAMES), frame_(0)
+  frame_(0), assets_(std::make_unique<asset::Database>()), frameSync_(MAX_FRAMES)
 {
 }
 
@@ -117,7 +117,7 @@ void ApplicationImpl::Run(const std::string& dir)
   SetupLogging();
   CreateSurface();
   device_ = std::make_unique<Device>(*instance_, *surface_);
-  CreateCommandPool();
+  allocator_ = std::make_unique<Allocator>(device_.get());
   CreateVideoBuffer({ props->Width(), props->Height() });
 
   CreateSync();    
@@ -125,18 +125,18 @@ void ApplicationImpl::Run(const std::string& dir)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void ApplicationImpl::CreateVideoBuffer(VkExtent2D resolution)
+void ApplicationImpl::CreateVideoBuffer(VkExtent2D size)
 {
-    
   vkDeviceWaitIdle(device_->Logical());
   model_.reset();
   videoBuffer_.reset();
-  videoBuffer_ = std::make_unique<VideoBuffer>(device_.get(), *surface_, resolution);
+  videoBuffer_ = std::make_unique<VideoBuffer>(device_.get(), *surface_, size);
 
+  auto meshAsset = assets_->Get<asset::Mesh>("mesh");
+  mesh_ = std::make_unique<Mesh>(device_.get(), allocator_.get(), meshAsset);
   auto materialAsset = assets_->Get<asset::Material>("material");
-  auto material = std::make_unique<Material>(device_.get(), videoBuffer_.get(), *commandPool_, materialAsset);
-  auto mesh = std::make_unique<Mesh>(device_.get());
-  model_ = std::make_unique<Model>(std::move(material), std::move(mesh), device_->Logical(), *commandPool_, videoBuffer_.get());
+  material_ = std::make_unique<Material>(device_.get(), videoBuffer_.get(), materialAsset);
+  model_ = std::make_unique<Model>(device_.get(), videoBuffer_.get(), mesh_.get(), material_.get());
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -151,11 +151,11 @@ void ApplicationImpl::CreateSync()
 
   auto deleteSemaphore = [this](auto semaphore) {
     vkDestroySemaphore(device_->Logical(), semaphore, nullptr);
-    LOG(trace) << "Vulkan Semaphore deleted";
+    LOG(trace) << "Vulkan Semaphore destroyed";
   };
   auto deleteFence = [this](auto fence) {
     vkDestroyFence(device_->Logical(), fence, nullptr);
-    LOG(trace) << "Vulkan Fence deleted";
+    LOG(trace) << "Vulkan Fence destroyed";
   };
 
   auto createSemaphore = [this, &semaphoreInfo](auto& semaphore) {
@@ -167,7 +167,7 @@ void ApplicationImpl::CreateSync()
 
   VkFence fence;
   VkSemaphore semaphore;    
-  for (size_t i = 0; i < frameSync_.Size(); ++i) {
+  for (size_t i = 0; i < frameSync_.size(); ++i) {
     createSemaphore(semaphore);
     frameSync_[i].render.Assign(semaphore, deleteSemaphore);
     createSemaphore(semaphore);
@@ -187,7 +187,7 @@ void ApplicationImpl::CreateWindow(asset::Application* props)
   glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
   auto deleteWindow = [](auto window) {
     glfwDestroyWindow(window);
-    LOG(trace) << "Window deleted";
+    LOG(trace) << "Window destroyed";
   };
   auto window = glfwCreateWindow(props->Width(), props->Height(), props->Title().c_str(), nullptr, nullptr);
   if (!window) {
@@ -240,7 +240,7 @@ void ApplicationImpl::CreateInstance(const std::string& appName)
     
   auto deleteInstance = [](auto inst){
     vkDestroyInstance(inst, nullptr);
-    LOG(trace) << "Vulkan instance deleted";
+    LOG(trace) << "Vulkan instance destroyed";
   };
   VkInstance instance;
   if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
@@ -255,7 +255,7 @@ void ApplicationImpl::CreateSurface()
 {
   auto destroySurface = [this](auto surface) {
     vkDestroySurfaceKHR(*instance_, surface, nullptr);
-    LOG(trace) << "Surface deleted";
+    LOG(trace) << "Surface destroyed";
   };
   VkSurfaceKHR surface;
   if (glfwCreateWindowSurface(*instance_, *window_, nullptr, &surface) != VK_SUCCESS) {
@@ -263,24 +263,6 @@ void ApplicationImpl::CreateSurface()
   }
   surface_.Assign(surface, destroySurface);
   LOG(trace) << "Surface created";
-}
-
-// -------------------------------------------------------------------------------------------------------------------------
-void ApplicationImpl::CreateCommandPool()
-{
-  VkCommandPoolCreateInfo info = {};
-  info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
-  info.queueFamilyIndex = device_->Queues().graphics[0];
-
-  VkCommandPool commandPool;
-  auto destroyCommandPool = [this](auto commandPool) {
-    vkDestroyCommandPool(device_->Logical(), commandPool, nullptr);
-    LOG(trace) << "Command Pool deleted";
-  };
-  if (vkCreateCommandPool(device_->Logical(), &info, nullptr, &commandPool) != VK_SUCCESS) {
-    THROW("Could not create Command Pool");
-  }
-  commandPool_.Assign(commandPool, destroyCommandPool);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -322,7 +304,7 @@ void ApplicationImpl::SetupLogging()
   auto DestroyDebugUtilsMessenger = GET_EXT_PROC_ADDRESS(*instance_, vkDestroyDebugUtilsMessengerEXT);
   auto destroyLogger = [this, DestroyDebugUtilsMessenger](VkDebugUtilsMessengerEXT messenger) {
     DestroyDebugUtilsMessenger(*instance_, messenger, nullptr);
-    LOG(trace) << "Debug Messenger deleted";
+    LOG(trace) << "Debug Messenger destroyed";
   };
 
   VkDebugUtilsMessengerEXT debugMessenger;
@@ -343,7 +325,7 @@ void ApplicationImpl::DrawFrame()
   vkWaitForFences(device, 1, &*sync.swap, VK_TRUE, UINT64_MAX);
 
   uint32_t index = 0;
-  auto result = vkAcquireNextImageKHR(device_->Logical(), videoBuffer_->Swapchain(),
+  auto result = vkAcquireNextImageKHR(device_->Logical(), swapChain,
     UINT64_MAX, *sync.render, VK_NULL_HANDLE, &index);
   if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
     CreateVideoBuffer(GetWindowSize());

@@ -23,10 +23,10 @@ target_link_libraries( renderer
   PUBLIC
     Boost::boost
     Boost::log
+  glm
     asset
   PRIVATE
     glfw
-    glm
     opengl32
     Vulkan::Vulkan
     utility

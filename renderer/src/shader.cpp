@@ -14,7 +14,7 @@ Shader::Shader(VkDevice device, asset::Shader* asset)
 
   auto destroyShader = [device](auto shader) {
     vkDestroyShaderModule(device, shader, nullptr);
-    LOG(trace) << "Shader deleted";
+    LOG(trace) << "Shader destroyed";
   };
   VkShaderModule shader;
   if (vkCreateShaderModule(device, &createInfo, nullptr, &shader) != VK_SUCCESS) {

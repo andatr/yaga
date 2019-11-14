@@ -14,12 +14,8 @@ namespace yaga
 
 const std::vector<const char*> validationLayers = {
 #ifndef NDEBUG
-"VK_LAYER_KHRONOS_validation"
+  "VK_LAYER_KHRONOS_validation"
 #endif // !NDEBUG
-};
-
-const std::vector<const char*> deviceExtensions = {
-  VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
 } // !namespace yaga

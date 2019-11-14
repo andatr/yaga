@@ -1,18 +1,13 @@
 #include "precompiled.h"
 #include "mesh.h"
-#include "device.h"
 
 namespace yaga
 {
 
 // -------------------------------------------------------------------------------------------------------------------------
-Mesh::Mesh(Device* device) : device_(device)
+Mesh::Mesh(Device* device, Allocator* allocator, asset::Mesh* asset) :
+  device_(device), allocator_(allocator), asset_(asset)
 {
-  vertices_ = {
-    {{  0.0f, -0.5f }, { 1.0f, 0.0f, 0.0f }},
-    {{  0.5f,  0.5f }, { 0.0f, 1.0f, 0.0f }},
-    {{ -0.5f,  0.5f }, { 0.0f, 0.0f, 1.0f }}
-  };
   Rebuild();
 }
 
@@ -20,30 +15,51 @@ Mesh::Mesh(Device* device) : device_(device)
 void Mesh::Rebuild()
 {
   CreateVertexBuffer();
-  CreateStageBuffer();
+  CreateIndexBuffer();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
 void Mesh::CreateVertexBuffer()
 {
-  auto size = static_cast<VkDeviceSize>(sizeof(Vertex) * vertices_.size());
-  vertexBuffer_ = CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
-  vertexMemory_ = AllocateMemory(*vertexBuffer_, size, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  auto size = static_cast<VkDeviceSize>(sizeof(Vertex) * asset_->Vertices().size());
+
+  auto stageBuffer = CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+  auto stageMemory = allocator_->Allocate(*stageBuffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  vkBindBufferMemory(device_->Logical(), *stageBuffer, *stageMemory, 0);
+
+  void* data;
+  const auto device = device_->Logical();
+  vkMapMemory(device, *stageMemory, 0, size, 0, &data);
+  memcpy(data, asset_->Vertices().data(), static_cast<size_t>(size));
+  vkUnmapMemory(device, *stageMemory);
+
+  vertexBuffer_ = CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+  vertexMemory_ = allocator_->Allocate(*vertexBuffer_, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  vkBindBufferMemory(device_->Logical(), *vertexBuffer_, *vertexMemory_, 0);
+
+  CopyBuffer(*vertexBuffer_, *stageBuffer, size);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Mesh::CreateStageBuffer()
+void Mesh::CreateIndexBuffer()
 {
-  auto size = static_cast<VkDeviceSize>(sizeof(Vertex) * vertices_.size());
-  stageBuffer_ = CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-  stageMemory_ = AllocateMemory(*stageBuffer_, size, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  auto size = sizeof(asset_->Indices()[0]) * asset_->Indices().size();
 
-  const auto device = device_->Logical();
+  auto stageBuffer = CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_SRC_BIT);
+  auto stageMemory = allocator_->Allocate(*stageBuffer, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  vkBindBufferMemory(device_->Logical(), *stageBuffer, *stageMemory, 0);
+
   void* data;
-  vkBindBufferMemory(device, *stageBuffer_, *stageMemory_, 0);
-  vkMapMemory(device, *stageMemory_, 0, size, 0, &data);
-  memcpy(data, vertices_.data(), static_cast<size_t>(size));
-  vkUnmapMemory(device, *stageMemory_);
+  const auto device = device_->Logical();
+  vkMapMemory(device, *stageMemory, 0, size, 0, &data);
+  memcpy(data, asset_->Indices().data(), static_cast<size_t>(size));
+  vkUnmapMemory(device, *stageMemory);
+
+  indexBuffer_ = CreateBuffer(size, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+  indexMemory_ = allocator_->Allocate(*indexBuffer_, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+  vkBindBufferMemory(device_->Logical(), *indexBuffer_, *indexMemory_, 0);
+
+  CopyBuffer(*indexBuffer_, *stageBuffer, size);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -58,7 +74,7 @@ AutoDestroyer<VkBuffer> Mesh::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags
 
   auto deleteBuffer = [device](auto buffer) {
     vkDestroyBuffer(device, buffer, nullptr);
-    LOG(trace) << "Vertex buffer deleted";
+    LOG(trace) << "Vertex buffer destroyed";
   };
   VkBuffer buffer;
   if (vkCreateBuffer(device, &info, nullptr, &buffer) != VK_SUCCESS) {
@@ -70,37 +86,14 @@ AutoDestroyer<VkBuffer> Mesh::CreateBuffer(VkDeviceSize size, VkBufferUsageFlags
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-AutoDestroyer<VkDeviceMemory> Mesh::AllocateMemory(VkBuffer buffer, VkDeviceSize size,VkMemoryPropertyFlags properties) const
+void Mesh::CopyBuffer(VkBuffer destination, VkBuffer source, VkDeviceSize size) const
 {
-  const auto device = device_->Logical();
-  VkMemoryRequirements requirements;
-  vkGetBufferMemoryRequirements(device, buffer, &requirements);
+  auto device = device_->Logical();
 
-  VkMemoryAllocateInfo info = {};
-  info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-  info.allocationSize = requirements.size;
-  info.memoryTypeIndex = device_->GetMemoryType(requirements.memoryTypeBits, properties);
-
-  auto freeMemory = [device](auto memory) {
-    vkFreeMemory(device, memory, nullptr);
-    LOG(trace) << "Vertex buffer memory released";
-  };
-  VkDeviceMemory memory;
-  if (vkAllocateMemory(device, &info, nullptr, &memory) != VK_SUCCESS) {
-    THROW("Could not allocate memory for vertex buffer");
-  }
-  AutoDestroyer<VkDeviceMemory> smartMemory;
-  smartMemory.Assign(memory, freeMemory);
-  return smartMemory;
-}
-
-// -------------------------------------------------------------------------------------------------------------------------
-//void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size)
-//{
-  /*VkCommandBufferAllocateInfo allocInfo = {};
+  VkCommandBufferAllocateInfo allocInfo = {};
   allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
   allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-  allocInfo.commandPool = commandPool;
+  allocInfo.commandPool = device_->CommandPool();
   allocInfo.commandBufferCount = 1;
 
   VkCommandBuffer commandBuffer;
@@ -111,11 +104,9 @@ AutoDestroyer<VkDeviceMemory> Mesh::AllocateMemory(VkBuffer buffer, VkDeviceSize
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
   vkBeginCommandBuffer(commandBuffer, &beginInfo);
-
   VkBufferCopy copyRegion = {};
   copyRegion.size = size;
-  vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
-
+  vkCmdCopyBuffer(commandBuffer, source, destination, 1, &copyRegion);
   vkEndCommandBuffer(commandBuffer);
 
   VkSubmitInfo submitInfo = {};
@@ -123,10 +114,10 @@ AutoDestroyer<VkDeviceMemory> Mesh::AllocateMemory(VkBuffer buffer, VkDeviceSize
   submitInfo.commandBufferCount = 1;
   submitInfo.pCommandBuffers = &commandBuffer;
 
-  vkQueueSubmit(graphicsQueue, 1, &submitInfo, VK_NULL_HANDLE);
-  vkQueueWaitIdle(graphicsQueue);
+  vkQueueSubmit(device_->GraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
+  vkQueueWaitIdle(device_->GraphicsQueue());
 
-  vkFreeCommandBuffers(device, commandPool, 1, &commandBuffer);*/
-//}
+  vkFreeCommandBuffers(device, device_->CommandPool(), 1, &commandBuffer);
+}
 
 } // !namespace yaga

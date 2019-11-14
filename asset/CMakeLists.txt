@@ -24,6 +24,7 @@ target_link_libraries( asset
     Boost::boost
     Boost::filesystem
     Boost::log
+    glm
     utility
 )
 

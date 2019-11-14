@@ -1,7 +1,3 @@
 #include "precompiled.h"
-
-// ----------------------------------------------------------------------------------------------------------------------------
-int main()
-{
-  return 0;
-}
+#define BOOST_TEST_MODULE UtilityTest
+#include <boost/test/unit_test.hpp>

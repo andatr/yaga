@@ -2,7 +2,7 @@
 #include "material.h"
 #include "shader.h"
 #include "texture.h"
-#include "vertex.h"
+#include "asset/vertex.h"
 
 namespace yaga
 {
@@ -10,7 +10,7 @@ namespace
 {
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkVertexInputBindingDescription getBindingDescription()
+VkVertexInputBindingDescription VertexBindingDescription()
 {
   VkVertexInputBindingDescription bindingDescription = {};
   bindingDescription.binding = 0;
@@ -21,7 +21,7 @@ VkVertexInputBindingDescription getBindingDescription()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions()
+std::array<VkVertexInputAttributeDescription, 2> VertexAttributeDescriptions()
 {
   std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions = {};
 
@@ -41,12 +41,12 @@ std::array<VkVertexInputAttributeDescription, 2> getAttributeDescriptions()
 // -------------------------------------------------------------------------------------------------------------------------
 VkPipelineVertexInputStateCreateInfo VertexAttributes()
 {
-  auto bindingDescription = getBindingDescription();
-  auto attributeDescriptions = getAttributeDescriptions();
+  auto bindingDescription = VertexBindingDescription();
+  auto attributeDescriptions = VertexAttributeDescriptions();
 
   VkPipelineVertexInputStateCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-  info.vertexBindingDescriptionCount = static_cast<uint32_t>(VertexDescription.size());
+  info.vertexBindingDescriptionCount = 1;
   info.pVertexBindingDescriptions = &bindingDescription;
   info.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
   info.pVertexAttributeDescriptions = attributeDescriptions.data();
@@ -64,24 +64,24 @@ VkPipelineInputAssemblyStateCreateInfo Primitives()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkViewport Viewport(const VkExtent2D& resolution)
+VkViewport Viewport(const VkExtent2D& size)
 {
   VkViewport viewport = {};
   viewport.x = 0.0f;
   viewport.y = 0.0f;
-  viewport.width = (float)resolution.width;
-  viewport.height = (float)resolution.height;
+  viewport.width = (float)size.width;
+  viewport.height = (float)size.height;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
   return viewport;
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkRect2D Scissors(const VkExtent2D& resolution)
+VkRect2D Scissors(const VkExtent2D& size)
 {
   VkRect2D scissors = {};
   scissors.offset = { 0, 0 };
-  scissors.extent = resolution;
+  scissors.extent = size;
   return scissors;
 }
 
@@ -162,9 +162,8 @@ VkPipelineShaderStageCreateInfo ShaderStage(VkShaderModule module, VkShaderStage
 } // !namespace
 
 // -------------------------------------------------------------------------------------------------------------------------
-Material::Material(Device* device, VideoBuffer* videoBuffer, VkCommandPool commandPool, asset::Material* asset)
+Material::Material(Device* device, VideoBuffer* videoBuffer, asset::Material* asset)
 {
-	resolution_ = videoBuffer->Resolution();
   CreatePipeline(device, videoBuffer, asset);
   CreateFramebuffers(device->Logical(), videoBuffer);
 }
@@ -180,11 +179,9 @@ void Material::CreatePipeline(Device* device, VideoBuffer* videoBuffer, asset::M
     ShaderStage(vertexShader.ShaderModule(),  VK_SHADER_STAGE_VERTEX_BIT),
     ShaderStage(fragmentShader.ShaderModule(), VK_SHADER_STAGE_FRAGMENT_BIT)
   };
-    
-  //auto vertexAttributes = VertexAttributes();
-    
-  auto bindingDescription = getBindingDescription();
-  auto attributeDescriptions = getAttributeDescriptions();
+
+  auto bindingDescription = VertexBindingDescription();
+  auto attributeDescriptions = VertexAttributeDescriptions();
 
   VkPipelineVertexInputStateCreateInfo vertexAttributes = {};
   vertexAttributes.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -193,10 +190,9 @@ void Material::CreatePipeline(Device* device, VideoBuffer* videoBuffer, asset::M
   vertexAttributes.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
   vertexAttributes.pVertexAttributeDescriptions = attributeDescriptions.data();
     
-
   auto primitives = Primitives();
-  auto viewport = Viewport(videoBuffer->Resolution());
-  auto scissors = Scissors(videoBuffer->Resolution());
+  auto viewport = Viewport(videoBuffer->Size());
+  auto scissors = Scissors(videoBuffer->Size());
   auto viewportState = ViewportState(viewport, scissors);
   auto rasterizer = Rasterizer();
   auto sampler = Sampler();
@@ -223,7 +219,7 @@ void Material::CreatePipeline(Device* device, VideoBuffer* videoBuffer, asset::M
 
   auto destroyPipeline = [logicalDevice](auto pipeline) {
     vkDestroyPipeline(logicalDevice, pipeline, nullptr);
-    LOG(trace) << "Pipeline deleted";
+    LOG(trace) << "Pipeline destroyed";
   };
   VkPipeline pipeline;
   if (vkCreateGraphicsPipelines(logicalDevice, VK_NULL_HANDLE, 1, &info, nullptr, &pipeline) != VK_SUCCESS) {
@@ -242,7 +238,7 @@ void Material::CreateLayout(VkDevice device)
 
   auto destroyLayout = [device](auto layout) {
     vkDestroyPipelineLayout(device, layout, nullptr);
-    LOG(trace) << "Pipeline Layout deleted";
+    LOG(trace) << "Pipeline Layout destroyed";
   };
   VkPipelineLayout layout;
   if (vkCreatePipelineLayout(device, &info, nullptr, &layout) != VK_SUCCESS) {
@@ -283,7 +279,7 @@ void Material::CreateRenderPass(VkDevice device, VkFormat imageFormat)
 
   auto destroyRenderPass = [device](auto renderPass) {
     vkDestroyRenderPass(device, renderPass, nullptr);
-    LOG(trace) << "Render Pass deleted";
+    LOG(trace) << "Render Pass destroyed";
   };
   VkRenderPass renderPass;
   if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
@@ -298,10 +294,10 @@ void Material::CreateFramebuffers(VkDevice device, VideoBuffer* videoBuffer)
 {
   auto destroyFrameBuffer = [device](auto frameBuffer) {
     vkDestroyFramebuffer(device, frameBuffer, nullptr);
-    LOG(trace) << "Framebuffer deleted";
+    LOG(trace) << "Framebuffer destroyed";
   };
   const auto& textures = videoBuffer->Textures();
-  frameBuffers_.Resize(textures.size());
+  frameBuffers_.resize(textures.size());
   frameBufferRefs_.resize(textures.size());
   for (size_t i = 0; i < textures.size(); i++)
   {
@@ -311,8 +307,8 @@ void Material::CreateFramebuffers(VkDevice device, VideoBuffer* videoBuffer)
     info.renderPass = *renderPass_;
     info.attachmentCount = 1;
     info.pAttachments = attachments;
-    info.width = videoBuffer->Resolution().width;
-    info.height = videoBuffer->Resolution().height;
+    info.width = videoBuffer->Size().width;
+    info.height = videoBuffer->Size().height;
     info.layers = 1;
     VkFramebuffer frameBuffer;
     if (vkCreateFramebuffer(device, &info, nullptr, &frameBuffer) != VK_SUCCESS) {

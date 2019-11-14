@@ -78,7 +78,7 @@ uint32_t PickBufferCount(const VkSurfaceCapabilitiesKHR& capabilities)
 } // !namespace
 
 // -------------------------------------------------------------------------------------------------------------------------
-VideoBuffer::VideoBuffer(Device* device, VkSurfaceKHR surface, VkExtent2D resolution)
+VideoBuffer::VideoBuffer(Device* device, VkSurfaceKHR surface, VkExtent2D size)
 {
   const auto colorFormat = PickColorFormat(device->Physical(), surface);
   VkSurfaceCapabilitiesKHR capabilities;
@@ -91,20 +91,21 @@ VideoBuffer::VideoBuffer(Device* device, VkSurfaceKHR surface, VkExtent2D resolu
   info.minImageCount = PickBufferCount(capabilities);
   info.imageFormat = colorFormat.format;
   info.imageColorSpace = colorFormat.colorSpace;
-  info.imageExtent = PickResolution(capabilities, resolution);
+  info.imageExtent = PickResolution(capabilities, size);
   info.imageArrayLayers = 1;
   info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
   format_ = info.imageFormat;
-  resolution_ = info.imageExtent;
+  size_ = info.imageExtent;
 
-  const auto& families = device->Families();
-  if (families.size() > 1) {
-    info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
-    info.queueFamilyIndexCount = static_cast<uint32_t>(families.size());
-    info.pQueueFamilyIndices = families.data();
+  const auto& queueFamilies = device->QueueFamilies();
+  if (queueFamilies.graphics == queueFamilies.surface) {
+    info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
   }
   else {
-    info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    uint32_t queueFamiliesArray[] = { queueFamilies.graphics, queueFamilies.surface };
+    info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+    info.queueFamilyIndexCount = 2;
+    info.pQueueFamilyIndices = queueFamiliesArray;
   }
 
   info.preTransform = capabilities.currentTransform;
@@ -115,13 +116,13 @@ VideoBuffer::VideoBuffer(Device* device, VkSurfaceKHR surface, VkExtent2D resolu
   auto logicalDeivce = device->Logical();
   auto destroySwapchain = [logicalDeivce](auto chain) {
     vkDestroySwapchainKHR(logicalDeivce, chain, nullptr);
-    LOG(trace) << "Swaprecompiledain deleted";
+    LOG(trace) << "Swaprecompiledain destroyed";
   };
   VkSwapchainKHR chain;
   if (vkCreateSwapchainKHR(logicalDeivce, &info, nullptr, &chain) != VK_SUCCESS) {
     THROW("Could not create Swaprecompiledain");
   }
-	swapchain_.Assign(chain, destroySwapchain);
+  swapchain_.Assign(chain, destroySwapchain);
   LOG(trace) << "Swaprecompiledain created";
 
   uint32_t imageCount;

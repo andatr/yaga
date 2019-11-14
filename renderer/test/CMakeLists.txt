@@ -13,6 +13,7 @@ add_executable( renderer_test ${source_list} )
 target_link_libraries( renderer_test
   PRIVATE
     renderer
+  Boost::unit_test_framework
 )
 
 set_target_properties( renderer_test PROPERTIES FOLDER test )

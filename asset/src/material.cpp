@@ -7,7 +7,7 @@ namespace yaga
 namespace asset
 {
 
-const AssetId Material::assetId = { "met", 3 };
+const AssetId Material::assetId = { "mt", 3 };
 
 // -------------------------------------------------------------------------------------------------------------------------
 Material::Material(const std::string& name) :

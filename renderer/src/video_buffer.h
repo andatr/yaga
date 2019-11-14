@@ -17,15 +17,15 @@ namespace yaga
 class VideoBuffer : private boost::noncopyable
 {
 public:
-  VideoBuffer(Device* device, VkSurfaceKHR surface, VkExtent2D resolution);
+  VideoBuffer(Device* device, VkSurfaceKHR surface, VkExtent2D size);
   const VkFormat& ImageFormat() const { return format_; }
-  const VkExtent2D& Resolution() const { return resolution_; }
+  const VkExtent2D& Size() const { return size_; }
   const std::vector<std::unique_ptr<Texture>>& Textures() const { return textures_; }
   VkSwapchainKHR Swapchain() const { return *swapchain_; }
   virtual ~VideoBuffer();
 private:
   VkFormat format_;
-  VkExtent2D resolution_;
+  VkExtent2D size_;
   AutoDestroyer<VkSwapchainKHR> swapchain_;
   std::vector<VkImage> images_;
   std::vector<std::unique_ptr<Texture>> textures_;

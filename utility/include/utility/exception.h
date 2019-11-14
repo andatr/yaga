@@ -37,7 +37,7 @@ inline std::string ExpandFormat(boost::format f)
 template<typename T, typename... Args>
 std::string ExpandFormat(boost::format f, T&& t, Args&&... args)
 {
-	return ExpandFormat(f % std::forward<T>(t), std::forward<Args>(args)...);
+  return ExpandFormat(f % std::forward<T>(t), std::forward<Args>(args)...);
 }
 
 } // !namespace impl
@@ -45,7 +45,7 @@ std::string ExpandFormat(boost::format f, T&& t, Args&&... args)
 // -------------------------------------------------------------------------------------------------------------------------
 template<typename ...Args>
 Exception::Exception(const std::string& file, int line, const std::string& format, Args... args):
-	file_(file), line_(line), message_(impl::ExpandFormat(boost::format(format), args...))
+  file_(file), line_(line), message_(impl::ExpandFormat(boost::format(format), args...))
 {
 }
 

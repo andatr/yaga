@@ -4,8 +4,10 @@
 #include <boost/noncopyable.hpp>
 #include <GLFW/glfw3.h>
 
+#include "device.h"
 #include "material.h"
 #include "mesh.h"
+#include "video_buffer.h"
 
 namespace yaga
 {
@@ -13,13 +15,13 @@ namespace yaga
 class Model : private boost::noncopyable
 {
 public:
-  Model(std::unique_ptr<Material> material, std::unique_ptr<Mesh> mesh, VkDevice device, VkCommandPool commandPool, VideoBuffer* videoBuffer);
+  Model(Device* device, VideoBuffer* videoBuffer, Mesh* mesh, Material* material);
   const std::vector<VkCommandBuffer>& CommandBuffers() const { return commandBuffers_; }
 private:
-  void CreateCommandBuffer(VkDevice device, VkCommandPool commandPool, VideoBuffer* videoBuffer);
+  void CreateCommandBuffer(Device* device, VideoBuffer* videoBuffer);
 private:
-  std::unique_ptr<Material> material_;
-  std::unique_ptr<Mesh> mesh_;
+  Mesh* mesh_;
+  Material* material_;
   std::vector<VkCommandBuffer> commandBuffers_;
 };
 

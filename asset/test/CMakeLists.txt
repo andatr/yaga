@@ -12,6 +12,7 @@ add_executable( asset_test ${source_list} )
 target_link_libraries( asset_test
   PRIVATE
     asset
+  Boost::unit_test_framework
 )
 
 set_target_properties( asset_test PROPERTIES FOLDER test )

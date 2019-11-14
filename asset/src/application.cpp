@@ -25,7 +25,7 @@ size_t Application::Serialize(Asset* asset, std::ostream& stream, bool)
   auto app = dynamic_cast<Application*>(asset);
   if (!app) {
     THROW("Application serializer was given wrong asset");
-	}
+  }
 
   namespace pt = boost::property_tree;
     
