@@ -42,9 +42,10 @@ void Model::CreateCommandBuffer(Device* device, VideoBuffer* videoBuffer)
     VkClearValue clearColor = { 0.0f, 0.0f, 0.0f, 1.0f };
     renderPassInfo.clearValueCount = 1;
     renderPassInfo.pClearValues = &clearColor;
-
     vkCmdBeginRenderPass(command, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     vkCmdBindPipeline(command, VK_PIPELINE_BIND_POINT_GRAPHICS, material_->Pipeline());
+    vkCmdBindDescriptorSets(command, VK_PIPELINE_BIND_POINT_GRAPHICS, videoBuffer->PipelineLayout(), 0, 1,
+      &videoBuffer->DescriptorSets()[i], 0, nullptr);
     VkBuffer vertexBuffers[] = { mesh_->VertexBuffer() };
     VkDeviceSize offsets[] = { 0 };
     vkCmdBindVertexBuffers(command, 0, 1, vertexBuffers, offsets);

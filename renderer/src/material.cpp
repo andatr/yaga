@@ -106,8 +106,12 @@ VkPipelineRasterizationStateCreateInfo Rasterizer()
   info.rasterizerDiscardEnable = VK_FALSE;
   info.polygonMode = VK_POLYGON_MODE_FILL;
   info.lineWidth = 1.0f;
+  //info.cullMode = VK_CULL_MODE_BACK_BIT;
+  //info.frontFace = VK_FRONT_FACE_CLOCKWISE;
+
   info.cullMode = VK_CULL_MODE_BACK_BIT;
-  info.frontFace = VK_FRONT_FACE_CLOCKWISE;
+  info.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+
   info.depthBiasEnable = VK_FALSE;
   return info;
 }
@@ -199,7 +203,8 @@ void Material::CreatePipeline(Device* device, VideoBuffer* videoBuffer, asset::M
   auto colorBlender = ColorBlender();
   auto colorBlendState = ColorBlendState(colorBlender);
 
-  CreateLayout(logicalDevice);
+  //CreateDescriptorSet(logicalDevice);
+  //CreateLayout(logicalDevice);
   CreateRenderPass(logicalDevice, videoBuffer->ImageFormat());
 
   VkGraphicsPipelineCreateInfo info = {};
@@ -212,7 +217,7 @@ void Material::CreatePipeline(Device* device, VideoBuffer* videoBuffer, asset::M
   info.pRasterizationState = &rasterizer;
   info.pMultisampleState = &sampler;
   info.pColorBlendState = &colorBlendState;
-  info.layout = *layout_;
+  info.layout = videoBuffer->PipelineLayout();
   info.renderPass = *renderPass_;
   info.subpass = 0;
   info.basePipelineHandle = VK_NULL_HANDLE;
@@ -226,26 +231,6 @@ void Material::CreatePipeline(Device* device, VideoBuffer* videoBuffer, asset::M
     THROW("Could not create Pipeline");
   }
   pipeline_.Assign(pipeline, destroyPipeline);
-}
-
-// -------------------------------------------------------------------------------------------------------------------------
-void Material::CreateLayout(VkDevice device)
-{
-  VkPipelineLayoutCreateInfo info = {};
-  info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  info.setLayoutCount = 0;
-  info.pushConstantRangeCount = 0;
-
-  auto destroyLayout = [device](auto layout) {
-    vkDestroyPipelineLayout(device, layout, nullptr);
-    LOG(trace) << "Pipeline Layout destroyed";
-  };
-  VkPipelineLayout layout;
-  if (vkCreatePipelineLayout(device, &info, nullptr, &layout) != VK_SUCCESS) {
-    THROW("Could not create Pipeline Layout");
-  }
-  layout_.Assign(layout, destroyLayout);
-  LOG(trace) << "Pipeline Layout created";
 }
 
 // -------------------------------------------------------------------------------------------------------------------------

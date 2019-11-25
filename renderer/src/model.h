@@ -1,6 +1,8 @@
 #ifndef YAGA_RENDERER_MODEL
 #define YAGA_RENDERER_MODEL
 
+#include <memory>
+
 #include <boost/noncopyable.hpp>
 #include <GLFW/glfw3.h>
 
@@ -24,6 +26,8 @@ private:
   Material* material_;
   std::vector<VkCommandBuffer> commandBuffers_;
 };
+
+typedef std::unique_ptr<Model> ModelPtr;
 
 } // !namespace yaga
 

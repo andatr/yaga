@@ -12,6 +12,7 @@
 #include "application.h"
 #include "device.h"
 #include "model.h"
+#include "uniform_buffer.h"
 #include "video_buffer.h"
 #include "asset/application.h"
 #include "asset/database.h"
@@ -65,17 +66,17 @@ private:
   size_t frame_;
   ResizeInfo resize_;
   // don't reorder - destruction order is important
-  std::unique_ptr<asset::Database> assets_;
+  asset::DatabasePtr assets_;
   AutoDestroyer<GLFWwindow*> window_;
   AutoDestroyer<VkInstance> instance_;
   AutoDestroyer<VkDebugUtilsMessengerEXT> debugMessenger_;
   AutoDestroyer<VkSurfaceKHR> surface_;
-  std::unique_ptr<Device> device_;
-  std::unique_ptr<Allocator> allocator_;
-  std::unique_ptr<VideoBuffer> videoBuffer_;
-  std::unique_ptr<Model> model_;
-  std::unique_ptr<Mesh> mesh_;
-  std::unique_ptr<Material> material_;
+  DevicePtr device_;
+  AllocatorPtr allocator_;
+  VideoBufferPtr videoBuffer_;
+  ModelPtr model_;
+  MeshPtr mesh_;
+  MaterialPtr material_;
   std::vector<FrameSync> frameSync_;
 };
 

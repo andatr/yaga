@@ -3,6 +3,7 @@
 
 #include <array>
 #include <algorithm>
+#include <chrono>
 #include <functional>
 #include <iostream>
 #include <limits>
@@ -14,6 +15,8 @@
 
 #include <boost/optional.hpp>
 #include <GLFW/glfw3.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "utility/exception.h"
 #include "utility/log.h"

@@ -1,6 +1,8 @@
 #ifndef YAGA_RENDERER_SRC_TEXTURE
 #define YAGA_RENDERER_SRC_TEXTURE
 
+#include <memory>
+
 #include <boost/noncopyable.hpp>
 #include <GLFW/glfw3.h>
 
@@ -17,6 +19,8 @@ public:
 private:
   AutoDestroyer<VkImageView> imageView_;
 };
+
+typedef std::unique_ptr<Texture> TexturePtr;
 
 } // !namespace yaga
 

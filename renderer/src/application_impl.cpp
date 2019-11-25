@@ -130,7 +130,7 @@ void ApplicationImpl::CreateVideoBuffer(VkExtent2D size)
   vkDeviceWaitIdle(device_->Logical());
   model_.reset();
   videoBuffer_.reset();
-  videoBuffer_ = std::make_unique<VideoBuffer>(device_.get(), *surface_, size);
+  videoBuffer_ = std::make_unique<VideoBuffer>(device_.get(), allocator_.get(), *surface_, size);
 
   auto meshAsset = assets_->Get<asset::Mesh>("mesh");
   mesh_ = std::make_unique<Mesh>(device_.get(), allocator_.get(), meshAsset);
@@ -287,7 +287,7 @@ void ApplicationImpl::CheckValidationLayers()
     VkLayerProperties props = {};
     strncpy(props.layerName, layer, VK_MAX_EXTENSION_NAME_SIZE);
     if (!std::binary_search(availableLayers.begin(), availableLayers.end(), props, compareLayers)) {
-      THROW("requested validation layer is not available");
+      THROW("Requested validation layer is not available");
     }
   }
 }
@@ -332,8 +332,10 @@ void ApplicationImpl::DrawFrame()
     return;
   }
   if (result != VK_SUCCESS) {
-    THROW("Failed to acquire swaprecompiledain image");
+    THROW("Failed to acquire swapchain image");
   }
+
+  videoBuffer_->TmpUpdate(index);
 
   VkSubmitInfo submitInfo = {};
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;

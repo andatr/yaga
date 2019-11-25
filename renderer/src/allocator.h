@@ -1,6 +1,8 @@
 #ifndef YAGA_RENDERER_SRC_ALLOCATOR
 #define YAGA_RENDERER_SRC_ALLOCATOR
 
+#include <memory>
+
 #include <boost/noncopyable.hpp>
 #include <GLFW/glfw3.h>
 
@@ -18,6 +20,8 @@ public:
 private:
   Device* device_;
 };
+
+typedef std::unique_ptr<Allocator> AllocatorPtr;
 
 } // !namespace yaga
 

@@ -2,11 +2,14 @@
 #include "video_buffer.h"
 #include "device.h"
 #include "texture.h"
+#include "asset/vertex.h"
 
 namespace yaga
 {
 namespace
 {
+
+constexpr auto uniBufferSize = sizeof(UniformObject);
 
 // -------------------------------------------------------------------------------------------------------------------------
 VkSurfaceFormatKHR PickColorFormat(VkPhysicalDevice device, VkSurfaceKHR surface)
@@ -78,7 +81,7 @@ uint32_t PickBufferCount(const VkSurfaceCapabilitiesKHR& capabilities)
 } // !namespace
 
 // -------------------------------------------------------------------------------------------------------------------------
-VideoBuffer::VideoBuffer(Device* device, VkSurfaceKHR surface, VkExtent2D size)
+VideoBuffer::VideoBuffer(Device* device, Allocator* allocator, VkSurfaceKHR surface, VkExtent2D size)
 {
   const auto colorFormat = PickColorFormat(device->Physical(), surface);
   VkSurfaceCapabilitiesKHR capabilities;
@@ -116,14 +119,14 @@ VideoBuffer::VideoBuffer(Device* device, VkSurfaceKHR surface, VkExtent2D size)
   auto logicalDeivce = device->Logical();
   auto destroySwapchain = [logicalDeivce](auto chain) {
     vkDestroySwapchainKHR(logicalDeivce, chain, nullptr);
-    LOG(trace) << "Swaprecompiledain destroyed";
+    LOG(trace) << "Swapchain destroyed";
   };
   VkSwapchainKHR chain;
   if (vkCreateSwapchainKHR(logicalDeivce, &info, nullptr, &chain) != VK_SUCCESS) {
-    THROW("Could not create Swaprecompiledain");
+    THROW("Could not create Swapchain");
   }
   swapchain_.Assign(chain, destroySwapchain);
-  LOG(trace) << "Swaprecompiledain created";
+  LOG(trace) << "Swapchain created";
 
   uint32_t imageCount;
   vkGetSwapchainImagesKHR(logicalDeivce, *swapchain_, &imageCount, nullptr);
@@ -133,11 +136,146 @@ VideoBuffer::VideoBuffer(Device* device, VkSurfaceKHR surface, VkExtent2D size)
   for (uint32_t i = 0; i < imageCount; ++i) {
     textures_[i] = std::make_unique<Texture>(logicalDeivce, images_[i], colorFormat.format);
   }
+
+  CreateUniformBuffers(logicalDeivce, allocator);
+  CreateDescriptorPool(logicalDeivce);
+  CreateDescriptorLayout(logicalDeivce);
+  CreateDescriptorSets(logicalDeivce);
+  CreatePipelineLayout(logicalDeivce);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
 VideoBuffer::~VideoBuffer()
 {
+}
+
+// -------------------------------------------------------------------------------------------------------------------------
+void VideoBuffer::CreateDescriptorPool(VkDevice device)
+{
+  VkDescriptorPoolSize poolSize = {};
+  poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  poolSize.descriptorCount = static_cast<uint32_t>(images_.size());
+
+  VkDescriptorPoolCreateInfo poolInfo = {};
+  poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+  poolInfo.poolSizeCount = 1;
+  poolInfo.pPoolSizes = &poolSize;
+  poolInfo.maxSets = static_cast<uint32_t>(images_.size());
+
+  VkDescriptorPool pool;
+  auto destroyPool = [this, device](auto pool) {
+    vkDestroyDescriptorPool(device, pool, nullptr);
+    LOG(trace) << "Descriptor Pool destroyed";
+  };
+  if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &pool) != VK_SUCCESS) {
+    throw std::runtime_error("Could not create descriptor pool");
+  }
+  descriptorPool_.Assign(pool, destroyPool);
+}
+
+// -------------------------------------------------------------------------------------------------------------------------
+void VideoBuffer::CreatePipelineLayout(VkDevice device)
+{
+  VkPipelineLayoutCreateInfo info = {};
+  info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+  info.setLayoutCount = 1;
+  info.pushConstantRangeCount = 0;
+  info.pSetLayouts = &*descriptorSetLayout_;
+
+  auto destroyLayout = [device](auto layout) {
+    vkDestroyPipelineLayout(device, layout, nullptr);
+    LOG(trace) << "Pipeline Layout destroyed";
+  };
+  VkPipelineLayout layout;
+  if (vkCreatePipelineLayout(device, &info, nullptr, &layout) != VK_SUCCESS) {
+    THROW("Could not create Pipeline Layout");
+  }
+  pipelineLayout_.Assign(layout, destroyLayout);
+  LOG(trace) << "Pipeline Layout created";
+}
+
+// -------------------------------------------------------------------------------------------------------------------------
+void VideoBuffer::CreateDescriptorLayout(VkDevice device)
+{
+  VkDescriptorSetLayoutBinding binding = {};
+  binding.binding = 0;
+  binding.descriptorCount = 1;
+  binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  binding.pImmutableSamplers = nullptr;
+  binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+
+  VkDescriptorSetLayoutCreateInfo info = {};
+  info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+  info.bindingCount = 1;
+  info.pBindings = &binding;
+
+  auto destroyLayout = [device](auto layout) {
+    vkDestroyDescriptorSetLayout(device, layout, nullptr);
+    LOG(trace) << "Descriptor Set Layout destroyed";
+  };
+  VkDescriptorSetLayout layout;
+  if (vkCreateDescriptorSetLayout(device, &info, nullptr, &layout) != VK_SUCCESS) {
+    throw std::runtime_error("Could not create Descriptor Set Layout!");
+  }
+  descriptorSetLayout_.Assign(layout, destroyLayout);
+}
+
+// -------------------------------------------------------------------------------------------------------------------------
+void VideoBuffer::CreateUniformBuffers(VkDevice device, Allocator* allocator)
+{
+  uniformBuffers_.resize(images_.size());
+  for (size_t i = 0; i < images_.size(); i++) {
+    uniformBuffers_[i] = std::make_unique<DeviceBuffer>(device, allocator, uniBufferSize,
+      VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+  }
+}
+
+// -------------------------------------------------------------------------------------------------------------------------
+void VideoBuffer::CreateDescriptorSets(VkDevice device)
+{
+  std::vector<VkDescriptorSetLayout> layouts(images_.size(), *descriptorSetLayout_);
+  VkDescriptorSetAllocateInfo allocInfo = {};
+  allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+  allocInfo.descriptorPool = *descriptorPool_;
+  allocInfo.descriptorSetCount = static_cast<uint32_t>(layouts.size());
+  allocInfo.pSetLayouts = layouts.data();
+
+  descriptorSets_.resize(images_.size());
+  if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSets_.data()) != VK_SUCCESS) {
+    throw std::runtime_error("Could not allocate descriptor sets");
+  }
+
+  for (size_t i = 0; i < images_.size(); i++) {
+    VkDescriptorBufferInfo bufferInfo = {};
+    bufferInfo.buffer = uniformBuffers_[i]->Buffer();
+    bufferInfo.offset = 0;
+    bufferInfo.range = sizeof(UniformObject);
+
+    VkWriteDescriptorSet descriptorWrite = {};
+    descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrite.dstSet = descriptorSets_[i];
+    descriptorWrite.dstBinding = 0;
+    descriptorWrite.dstArrayElement = 0;
+    descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptorWrite.descriptorCount = 1;
+    descriptorWrite.pBufferInfo = &bufferInfo;
+    
+    vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+  }
+}
+
+// -------------------------------------------------------------------------------------------------------------------------
+void VideoBuffer::TmpUpdate(uint32_t index)
+{
+  static auto startTime = std::chrono::high_resolution_clock::now();
+  auto currentTime = std::chrono::high_resolution_clock::now();
+  float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
+  UniformObject uniform = {};
+  uniform.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+  uniform.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+  uniform.projection = glm::perspective(glm::radians(45.0f), size_.width / (float)size_.height, 0.1f, 10.0f);
+  uniform.projection[1][1] *= -1;
+  uniformBuffers_[index]->Update(&uniform, uniBufferSize);
 }
 
 } // !namespace yaga

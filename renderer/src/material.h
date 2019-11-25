@@ -1,6 +1,7 @@
 #ifndef YAGA_RENDERER_SRC_MATERIAL
 #define YAGA_RENDERER_SRC_MATERIAL
 
+#include <memory>
 #include <vector>
 
 #include <boost/noncopyable.hpp>
@@ -24,17 +25,17 @@ public:
   const std::vector<VkFramebuffer>& FrameBuffers() const { return frameBufferRefs_; }
 private:
   void CreatePipeline(Device* device, VideoBuffer* videoBuffer, asset::Material* asset);
-  void CreateLayout(VkDevice device);
   void CreateRenderPass(VkDevice device, VkFormat imageFormat);    
   void CreateFramebuffers(VkDevice device, VideoBuffer* videoBuffer);
 private:
   VkExtent2D size_;
   AutoDestroyer<VkRenderPass> renderPass_;
-  AutoDestroyer<VkPipelineLayout> layout_;
   AutoDestroyer<VkPipeline> pipeline_;
   std::vector<AutoDestroyer<VkFramebuffer>> frameBuffers_;
   std::vector<VkFramebuffer> frameBufferRefs_;
 };
+
+typedef std::unique_ptr<Material> MaterialPtr;
 
 } // !namespace yaga
 
