@@ -1,6 +1,7 @@
 #ifndef YAGA_RENDERER_SRC_DEVICE
 #define YAGA_RENDERER_SRC_DEVICE
 
+#include <functional>
 #include <memory>
 #include <vector>
 
@@ -24,6 +25,7 @@ public:
     //uint32_t sparceMemory;
     //uint32_t protectedMemory;
   };
+  typedef std::function<void(VkCommandBuffer cmd)> CommandHandler;
 public:
   explicit Device(VkInstance instance, VkSurfaceKHR surface);
   virtual ~Device();
@@ -36,6 +38,7 @@ public:
   VkQueue ComputeQueue()  const { return queues_[3]; }
   uint32_t GetMemoryType(uint32_t filter, VkMemoryPropertyFlags props) const;
   VkCommandPool CommandPool() const { return *commandPool_; }
+  void SubmitCommand(CommandHandler handler) const;
 private:
   void CreateDevice();
   void CreateCommandPool();

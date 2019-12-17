@@ -15,8 +15,9 @@ target_include_directories( asset
   PUBLIC 
     ${CMAKE_CURRENT_LIST_DIR}/include
   PRIVATE
+    ${CMAKE_SOURCE_DIR}/stb
     ${CMAKE_CURRENT_LIST_DIR}/include/asset
-    ${CMAKE_CURRENT_LIST_DIR}/src    
+    ${CMAKE_CURRENT_LIST_DIR}/src 
 )
 
 target_link_libraries( asset

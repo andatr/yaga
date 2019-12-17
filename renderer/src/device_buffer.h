@@ -15,7 +15,7 @@ class DeviceBuffer : private boost::noncopyable
 {
 public:
   DeviceBuffer(VkDevice device, Allocator* allocator, VkDeviceSize size, VkBufferUsageFlags bufferUsage, VkMemoryPropertyFlags memoryUsage);
-  VkBuffer Buffer() const { return *buffer_; }
+  VkBuffer operator*() const { return *buffer_; }
   VkDeviceMemory Memory() const { return *memory_; }
   void Update(const void* data, size_t size) const;
 private:

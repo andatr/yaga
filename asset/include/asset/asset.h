@@ -5,12 +5,14 @@
 #include <string>
 #include <vector>
 
+#include <boost/noncopyable.hpp>
+
 namespace yaga 
 {
 namespace asset
 {
 
-class Asset
+class Asset : private boost::noncopyable
 {
 public:
   explicit Asset(const std::string& name);

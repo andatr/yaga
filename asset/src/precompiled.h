@@ -10,8 +10,11 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/endian/conversion.hpp>
 #include <boost/filesystem.hpp>
-#include <boost/property_tree/ptree.hpp>  
+#include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/json_parser.hpp>
+
+#include <stb_image.h>
 
 #include "utility/exception.h"
 #include "utility/log.h"

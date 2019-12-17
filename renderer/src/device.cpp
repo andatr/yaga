@@ -79,10 +79,14 @@ DeviceFeatures GetDeviceFeatures(VkPhysicalDevice device, VkSurfaceKHR surface)
 // -------------------------------------------------------------------------------------------------------------------------
 bool CheckDeviceFeatures(const DeviceFeatures& features, const std::set<std::string>& requiredExtensions)
 {
+  VkPhysicalDeviceFeatures physicalFeatures;
+  vkGetPhysicalDeviceFeatures(features.device, &physicalFeatures);
+
   if (features.graphics.empty() ||
       features.surface.empty()  ||
       features.compute.empty()  ||
-      features.transfer.empty())
+      features.transfer.empty() ||
+      !physicalFeatures.samplerAnisotropy)
   {
     return false;
   }
@@ -147,6 +151,8 @@ void Device::CreateDevice()
   }
 
   VkPhysicalDeviceFeatures features = {};
+  features.samplerAnisotropy = VK_TRUE;
+
   VkDeviceCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
   info.pQueueCreateInfos = queueInfos.data();
@@ -206,6 +212,36 @@ void Device::CreateCommandPool()
     THROW("Could not create Command Pool");
   }
   commandPool_.Assign(commandPool, destroyCommandPool);
+}
+
+// -------------------------------------------------------------------------------------------------------------------------
+void Device::SubmitCommand(CommandHandler handler) const
+{
+  VkCommandBufferAllocateInfo info = {};
+  info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+  info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+  info.commandPool = *commandPool_;
+  info.commandBufferCount = 1;
+
+  VkCommandBuffer commandBuffer;
+  vkAllocateCommandBuffers(*logicalDevice_, &info, &commandBuffer);
+
+  VkCommandBufferBeginInfo beginInfo = {};
+  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+
+  vkBeginCommandBuffer(commandBuffer, &beginInfo);
+  handler(commandBuffer);
+  vkEndCommandBuffer(commandBuffer);
+
+  VkSubmitInfo submitInfo = {};
+  submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  submitInfo.commandBufferCount = 1;
+  submitInfo.pCommandBuffers = &commandBuffer;
+  
+  vkQueueSubmit(GraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
+  vkQueueWaitIdle(GraphicsQueue());
+  vkFreeCommandBuffers(*logicalDevice_, *commandPool_, 1, &commandBuffer);
 }
 
 } // !namespace yaga

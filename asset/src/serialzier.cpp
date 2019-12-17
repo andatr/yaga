@@ -4,6 +4,7 @@
 #include "material.h"
 #include "mesh.h"
 #include "shader.h"
+#include "texture.h"
 #include "utility/array.h"
 
 namespace yaga
@@ -48,6 +49,7 @@ void Serializer::RegisterStandard()
   Register<asset::Shader>();
   Register<asset::Material>();
   Register<asset::Mesh>();
+  Register<asset::Texture>();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------

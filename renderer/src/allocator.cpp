@@ -15,7 +15,22 @@ AutoDestroyer<VkDeviceMemory> Allocator::Allocate(VkBuffer buffer, VkMemoryPrope
   const auto device = device_->Logical();
   VkMemoryRequirements requirements;
   vkGetBufferMemoryRequirements(device, buffer, &requirements);
+  return Allocate(requirements, properties);
+}
 
+// -------------------------------------------------------------------------------------------------------------------------
+AutoDestroyer<VkDeviceMemory> Allocator::AllocateImage(VkImage image, VkMemoryPropertyFlags properties) const
+{
+  const auto device = device_->Logical();
+  VkMemoryRequirements requirements;
+  vkGetImageMemoryRequirements(device, image, &requirements);
+  return Allocate(requirements, properties);
+}
+
+// -------------------------------------------------------------------------------------------------------------------------
+AutoDestroyer<VkDeviceMemory> Allocator::Allocate(VkMemoryRequirements requirements, VkMemoryPropertyFlags properties) const
+{
+  const auto device = device_->Logical();
   VkMemoryAllocateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
   info.allocationSize = requirements.size;

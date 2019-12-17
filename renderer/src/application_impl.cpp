@@ -6,6 +6,7 @@
 #include "video_buffer.h"
 #include "asset/material.h"
 #include "asset/serializer.h"
+#include "asset/texture.h"
 
 namespace yaga
 {
@@ -136,7 +137,11 @@ void ApplicationImpl::CreateVideoBuffer(VkExtent2D size)
   mesh_ = std::make_unique<Mesh>(device_.get(), allocator_.get(), meshAsset);
   auto materialAsset = assets_->Get<asset::Material>("material");
   material_ = std::make_unique<Material>(device_.get(), videoBuffer_.get(), materialAsset);
-  model_ = std::make_unique<Model>(device_.get(), videoBuffer_.get(), mesh_.get(), material_.get());
+  auto textureAsset = assets_->Get<asset::Texture>("texture");
+  image_ = std::make_unique<Image>(device_.get(), allocator_.get(), textureAsset);
+  imageView_ = std::make_unique<ImageView>(device_->Logical(), **image_, VK_FORMAT_R8G8B8A8_UNORM);
+  std::vector<ImageView*> textures = { imageView_.get() };
+  model_ = std::make_unique<Model>(device_.get(), videoBuffer_.get(), mesh_.get(), material_.get(), textures);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------

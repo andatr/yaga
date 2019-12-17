@@ -48,7 +48,7 @@ size_t Material::Serialize(Asset* asset, std::ostream& stream, bool)
 {
   auto material = dynamic_cast<Material*>(asset);
   if (!material)
-    THROW("Material serializer was given wrong asset");
+    THROW("Material serializer was given the wrong asset");
   auto size = Serializer::Serialize(stream, material->vertName_);
   return size + Serializer::Serialize(stream, material->fragName_);
 }

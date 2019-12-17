@@ -1,7 +1,7 @@
 #include "precompiled.h"
 #include "video_buffer.h"
 #include "device.h"
-#include "texture.h"
+#include "image_view.h"
 #include "asset/vertex.h"
 
 namespace yaga
@@ -96,7 +96,7 @@ VideoBuffer::VideoBuffer(Device* device, Allocator* allocator, VkSurfaceKHR surf
   info.imageColorSpace = colorFormat.colorSpace;
   info.imageExtent = PickResolution(capabilities, size);
   info.imageArrayLayers = 1;
-  info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+  info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
   format_ = info.imageFormat;
   size_ = info.imageExtent;
 
@@ -131,17 +131,18 @@ VideoBuffer::VideoBuffer(Device* device, Allocator* allocator, VkSurfaceKHR surf
   uint32_t imageCount;
   vkGetSwapchainImagesKHR(logicalDeivce, *swapchain_, &imageCount, nullptr);
   images_.resize(imageCount);
-  textures_.resize(imageCount);
+  imageViews_.resize(imageCount);
   vkGetSwapchainImagesKHR(logicalDeivce, *swapchain_, &imageCount, images_.data());
   for (uint32_t i = 0; i < imageCount; ++i) {
-    textures_[i] = std::make_unique<Texture>(logicalDeivce, images_[i], colorFormat.format);
+    imageViews_[i] = std::make_unique<ImageView>(logicalDeivce, images_[i], colorFormat.format);
   }
 
   CreateUniformBuffers(logicalDeivce, allocator);
+  CreateTextureSampler(logicalDeivce);
   CreateDescriptorPool(logicalDeivce);
   CreateDescriptorLayout(logicalDeivce);
-  CreateDescriptorSets(logicalDeivce);
-  CreatePipelineLayout(logicalDeivce);
+  //CreateDescriptorSets(logicalDeivce);
+  CreatePipelineLayout(logicalDeivce); 
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -152,14 +153,16 @@ VideoBuffer::~VideoBuffer()
 // -------------------------------------------------------------------------------------------------------------------------
 void VideoBuffer::CreateDescriptorPool(VkDevice device)
 {
-  VkDescriptorPoolSize poolSize = {};
-  poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  poolSize.descriptorCount = static_cast<uint32_t>(images_.size());
+  std::array<VkDescriptorPoolSize, 2> poolSizes = {};
+  poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  poolSizes[0].descriptorCount = static_cast<uint32_t>(images_.size());
+  poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  poolSizes[1].descriptorCount = static_cast<uint32_t>(images_.size());
 
   VkDescriptorPoolCreateInfo poolInfo = {};
   poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-  poolInfo.poolSizeCount = 1;
-  poolInfo.pPoolSizes = &poolSize;
+  poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+  poolInfo.pPoolSizes = poolSizes.data();
   poolInfo.maxSets = static_cast<uint32_t>(images_.size());
 
   VkDescriptorPool pool;
@@ -197,17 +200,25 @@ void VideoBuffer::CreatePipelineLayout(VkDevice device)
 // -------------------------------------------------------------------------------------------------------------------------
 void VideoBuffer::CreateDescriptorLayout(VkDevice device)
 {
-  VkDescriptorSetLayoutBinding binding = {};
-  binding.binding = 0;
-  binding.descriptorCount = 1;
-  binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  binding.pImmutableSamplers = nullptr;
-  binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+  VkDescriptorSetLayoutBinding uboBinding = {};
+  uboBinding.binding = 0;
+  uboBinding.descriptorCount = 1;
+  uboBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  uboBinding.pImmutableSamplers = nullptr;
+  uboBinding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
+  VkDescriptorSetLayoutBinding samplerBinding = {};
+  samplerBinding.binding = 1;
+  samplerBinding.descriptorCount = 1;
+  samplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  samplerBinding.pImmutableSamplers = nullptr;
+  samplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+
+  std::array<VkDescriptorSetLayoutBinding, 2> bindings = { uboBinding, samplerBinding };
   VkDescriptorSetLayoutCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-  info.bindingCount = 1;
-  info.pBindings = &binding;
+  info.bindingCount = static_cast<uint32_t>(bindings.size());
+  info.pBindings = bindings.data();
 
   auto destroyLayout = [device](auto layout) {
     vkDestroyDescriptorSetLayout(device, layout, nullptr);
@@ -231,7 +242,36 @@ void VideoBuffer::CreateUniformBuffers(VkDevice device, Allocator* allocator)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void VideoBuffer::CreateDescriptorSets(VkDevice device)
+void VideoBuffer::CreateTextureSampler(VkDevice device)
+{
+  VkSamplerCreateInfo info = {};
+  info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+  info.magFilter = VK_FILTER_LINEAR;
+  info.minFilter = VK_FILTER_LINEAR;
+  info.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+  info.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+  info.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+  info.anisotropyEnable = VK_TRUE;
+  info.maxAnisotropy = 16;
+  info.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
+  info.unnormalizedCoordinates = VK_FALSE;
+  info.compareEnable = VK_FALSE;
+  info.compareOp = VK_COMPARE_OP_ALWAYS;
+  info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+
+  auto destroySampler = [device](auto sampler) {
+    vkDestroySampler(device, sampler, nullptr);
+    LOG(trace) << "Texture Sampler destroyed";
+  };
+  VkSampler sampler;
+  if (vkCreateSampler(device, &info, nullptr, &sampler) != VK_SUCCESS) {
+    throw std::runtime_error("Could not create Texture Sampler");
+  }
+  textureSampler_.Assign(sampler, destroySampler);
+}
+
+// -------------------------------------------------------------------------------------------------------------------------
+/*void VideoBuffer::CreateDescriptorSets(VkDevice device)
 {
   std::vector<VkDescriptorSetLayout> layouts(images_.size(), *descriptorSetLayout_);
   VkDescriptorSetAllocateInfo allocInfo = {};
@@ -247,22 +287,36 @@ void VideoBuffer::CreateDescriptorSets(VkDevice device)
 
   for (size_t i = 0; i < images_.size(); i++) {
     VkDescriptorBufferInfo bufferInfo = {};
-    bufferInfo.buffer = uniformBuffers_[i]->Buffer();
+    bufferInfo.buffer = **uniformBuffers_[i];
     bufferInfo.offset = 0;
     bufferInfo.range = sizeof(UniformObject);
 
-    VkWriteDescriptorSet descriptorWrite = {};
-    descriptorWrite.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descriptorWrite.dstSet = descriptorSets_[i];
-    descriptorWrite.dstBinding = 0;
-    descriptorWrite.dstArrayElement = 0;
-    descriptorWrite.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    descriptorWrite.descriptorCount = 1;
-    descriptorWrite.pBufferInfo = &bufferInfo;
-    
-    vkUpdateDescriptorSets(device, 1, &descriptorWrite, 0, nullptr);
+    std::array<VkWriteDescriptorSet, 2> descriptorWrites = {};
+
+    descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[0].dstSet = descriptorSets_[i];
+    descriptorWrites[0].dstBinding = 0;
+    descriptorWrites[0].dstArrayElement = 0;
+    descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptorWrites[0].descriptorCount = 1;
+    descriptorWrites[0].pBufferInfo = &bufferInfo;
+
+    VkDescriptorImageInfo imageInfo = {};
+    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+    imageInfo.imageView = **imageViews_[i];
+    imageInfo.sampler = *textureSampler_;
+
+    descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    descriptorWrites[1].dstSet = descriptorSets_[i];
+    descriptorWrites[1].dstBinding = 1;
+    descriptorWrites[1].dstArrayElement = 0;
+    descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    descriptorWrites[1].descriptorCount = 1;
+    descriptorWrites[1].pImageInfo = &imageInfo;
+
+    vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
   }
-}
+}*/
 
 // -------------------------------------------------------------------------------------------------------------------------
 void VideoBuffer::TmpUpdate(uint32_t index)

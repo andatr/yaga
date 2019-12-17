@@ -1,7 +1,7 @@
 #include "precompiled.h"
 #include "material.h"
 #include "shader.h"
-#include "texture.h"
+#include "image_view.h"
 #include "asset/vertex.h"
 
 namespace yaga
@@ -21,21 +21,26 @@ VkVertexInputBindingDescription VertexBindingDescription()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-std::array<VkVertexInputAttributeDescription, 2> VertexAttributeDescriptions()
+std::array<VkVertexInputAttributeDescription, 3> VertexAttributeDescriptions()
 {
-  std::array<VkVertexInputAttributeDescription, 2> attributeDescriptions = {};
+  std::array<VkVertexInputAttributeDescription, 3> desc = {};
 
-  attributeDescriptions[0].binding = 0;
-  attributeDescriptions[0].location = 0;
-  attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
-  attributeDescriptions[0].offset = offsetof(Vertex, pos);
+  desc[0].binding = 0;
+  desc[0].location = 0;
+  desc[0].format = VK_FORMAT_R32G32_SFLOAT;
+  desc[0].offset = offsetof(Vertex, pos);
 
-  attributeDescriptions[1].binding = 0;
-  attributeDescriptions[1].location = 1;
-  attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-  attributeDescriptions[1].offset = offsetof(Vertex, color);
+  desc[1].binding = 0;
+  desc[1].location = 1;
+  desc[1].format = VK_FORMAT_R32G32B32_SFLOAT;
+  desc[1].offset = offsetof(Vertex, color);
 
-  return attributeDescriptions;
+  desc[2].binding = 0;
+  desc[2].location = 2;
+  desc[2].format = VK_FORMAT_R32G32_SFLOAT;
+  desc[2].offset = offsetof(Vertex, uv);
+
+  return desc;
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -281,12 +286,12 @@ void Material::CreateFramebuffers(VkDevice device, VideoBuffer* videoBuffer)
     vkDestroyFramebuffer(device, frameBuffer, nullptr);
     LOG(trace) << "Framebuffer destroyed";
   };
-  const auto& textures = videoBuffer->Textures();
-  frameBuffers_.resize(textures.size());
-  frameBufferRefs_.resize(textures.size());
-  for (size_t i = 0; i < textures.size(); i++)
+  const auto& frame = videoBuffer->Frames();
+  frameBuffers_.resize(frame.size());
+  frameBufferRefs_.resize(frame.size());
+  for (size_t i = 0; i < frame.size(); i++)
   {
-    VkImageView attachments[] = { textures[i]->ImageView() };
+    VkImageView attachments[] = { **frame[i] };
     VkFramebufferCreateInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
     info.renderPass = *renderPass_;

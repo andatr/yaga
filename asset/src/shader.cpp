@@ -24,7 +24,7 @@ size_t Shader::Serialize(Asset* asset, std::ostream& stream, bool)
 {
   auto shader = dynamic_cast<Shader*>(asset);
   if (!shader) {
-    THROW("Shader serializer was given wrong asset");
+    THROW("Shader serializer was given the wrong asset");
   }
   stream.write(shader->code_.Data(), shader->code_.Size());
   return shader->code_.Size();

@@ -19,8 +19,8 @@ class Mesh : private boost::noncopyable
 {
 public:
   explicit Mesh(Device* device, Allocator* allocator, asset::Mesh* asset);
-  VkBuffer VertexBuffer() const { return vertexBuffer_->Buffer(); }
-  VkBuffer IndexBuffer() const { return indexBuffer_->Buffer(); }
+  VkBuffer VertexBuffer() const { return **vertexBuffer_; }
+  VkBuffer IndexBuffer() const { return **indexBuffer_; }
   const std::vector<Vertex>& Vertices() const { return asset_->Vertices(); }
   const std::vector<uint16_t>& Indices() const { return asset_->Indices(); }
 private:

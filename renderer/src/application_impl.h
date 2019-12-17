@@ -11,8 +11,9 @@
 #include "allocator.h"
 #include "application.h"
 #include "device.h"
+#include "image.h"
+#include "image_view.h"
 #include "model.h"
-#include "uniform_buffer.h"
 #include "video_buffer.h"
 #include "asset/application.h"
 #include "asset/database.h"
@@ -65,7 +66,6 @@ private:
   static InitGLFW initGLFW_;
   size_t frame_;
   ResizeInfo resize_;
-  // don't reorder - destruction order is important
   asset::DatabasePtr assets_;
   AutoDestroyer<GLFWwindow*> window_;
   AutoDestroyer<VkInstance> instance_;
@@ -77,6 +77,8 @@ private:
   ModelPtr model_;
   MeshPtr mesh_;
   MaterialPtr material_;
+  ImagePtr image_;
+  ImageViewPtr imageView_;
   std::vector<FrameSync> frameSync_;
 };
 

@@ -1,11 +1,11 @@
 #include "precompiled.h"
-#include "texture.h"
+#include "image_view.h"
 
 namespace yaga
 {
 
 // -------------------------------------------------------------------------------------------------------------------------
-Texture::Texture(VkDevice device, VkImage image, VkFormat format)
+ImageView::ImageView(VkDevice device, VkImage image, VkFormat format)
 {
   VkImageViewCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
