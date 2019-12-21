@@ -5,7 +5,7 @@ namespace yaga
 {
 
 // -------------------------------------------------------------------------------------------------------------------------
-ImageView::ImageView(VkDevice device, VkImage image, VkFormat format)
+ImageView::ImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlagBits aspectMask)
 {
   VkImageViewCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
@@ -16,7 +16,7 @@ ImageView::ImageView(VkDevice device, VkImage image, VkFormat format)
   info.components.g = VK_COMPONENT_SWIZZLE_IDENTITY;
   info.components.b = VK_COMPONENT_SWIZZLE_IDENTITY;
   info.components.a = VK_COMPONENT_SWIZZLE_IDENTITY;
-  info.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  info.subresourceRange.aspectMask = aspectMask;
   info.subresourceRange.baseMipLevel = 0;
   info.subresourceRange.levelCount = 1;
   info.subresourceRange.baseArrayLayer = 0;

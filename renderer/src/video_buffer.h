@@ -9,6 +9,7 @@
 #include "allocator.h"
 #include "device.h"
 #include "device_buffer.h"
+#include "image.h"
 #include "image_view.h"
 #include "utility/auto_destroyer.h"
 
@@ -21,9 +22,11 @@ public:
   VideoBuffer(Device* device, Allocator* allocator, VkSurfaceKHR surface, VkExtent2D size);
   virtual ~VideoBuffer();
   const VkFormat& ImageFormat() const { return format_; }
+  const VkFormat& DepthFormat() const { return depthFormat_; }
   const VkExtent2D& Size() const { return size_; }
   VkSampler TextureSampler() const { return *textureSampler_; }
   const std::vector<ImageViewPtr>& Frames() const { return imageViews_; }
+  VkImageView DepthBuffer() const { return **depthImageView_; }
   VkSwapchainKHR Swapchain() const { return *swapchain_; }
   VkPipelineLayout PipelineLayout() const { return *pipelineLayout_; }
   //const std::vector<VkDescriptorSet>& DescriptorSets() const { return descriptorSets_; }
@@ -36,8 +39,9 @@ private:
   void CreateTextureSampler(VkDevice device);
   void CreateDescriptorPool(VkDevice device);
   void CreateDescriptorLayout(VkDevice device);
-  //void CreateDescriptorSets(VkDevice device);  
-  void CreatePipelineLayout(VkDevice device);  
+  //void CreateDescriptorSets(VkDevice device);
+  void CreatePipelineLayout(VkDevice device);
+  void CreateDepthImage(Device* device, Allocator* allocator);
 private:
   VkFormat format_;
   VkExtent2D size_;
@@ -50,6 +54,10 @@ private:
   //std::vector<VkDescriptorSet> descriptorSets_;
   std::vector<DeviceBufferPtr> uniformBuffers_;
   AutoDestroyer<VkSampler> textureSampler_;
+  
+  VkFormat depthFormat_;
+  std::unique_ptr<Image> depthImage_;
+  std::unique_ptr<ImageView> depthImageView_;
 };
 
 typedef std::unique_ptr<VideoBuffer> VideoBufferPtr;

@@ -1,7 +1,5 @@
 #include "precompiled.h"
 #include "video_buffer.h"
-#include "device.h"
-#include "image_view.h"
 #include "asset/vertex.h"
 
 namespace yaga
@@ -78,6 +76,23 @@ uint32_t PickBufferCount(const VkSurfaceCapabilitiesKHR& capabilities)
   return std::min(capabilities.minImageCount + 1, capabilities.maxImageCount);
 }
 
+// -------------------------------------------------------------------------------------------------------------------------
+VkFormat GetDepthImageFormat(VkPhysicalDevice device, const std::vector<VkFormat>& candidates, VkImageTiling tiling,
+  VkFormatFeatureFlags features)
+{
+  for (VkFormat format : candidates) {
+    VkFormatProperties props;
+    vkGetPhysicalDeviceFormatProperties(device, format, &props);
+    if (tiling == VK_IMAGE_TILING_LINEAR && (props.linearTilingFeatures & features) == features) {
+      return format;
+    }
+    if (tiling == VK_IMAGE_TILING_OPTIMAL && (props.optimalTilingFeatures & features) == features) {
+      return format;
+    }
+  }
+  THROW("Could not find supported depth image format");
+}
+
 } // !namespace
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -134,15 +149,15 @@ VideoBuffer::VideoBuffer(Device* device, Allocator* allocator, VkSurfaceKHR surf
   imageViews_.resize(imageCount);
   vkGetSwapchainImagesKHR(logicalDeivce, *swapchain_, &imageCount, images_.data());
   for (uint32_t i = 0; i < imageCount; ++i) {
-    imageViews_[i] = std::make_unique<ImageView>(logicalDeivce, images_[i], colorFormat.format);
+    imageViews_[i] = std::make_unique<ImageView>(logicalDeivce, images_[i], colorFormat.format, VK_IMAGE_ASPECT_COLOR_BIT);
   }
 
   CreateUniformBuffers(logicalDeivce, allocator);
   CreateTextureSampler(logicalDeivce);
   CreateDescriptorPool(logicalDeivce);
   CreateDescriptorLayout(logicalDeivce);
-  //CreateDescriptorSets(logicalDeivce);
-  CreatePipelineLayout(logicalDeivce); 
+  CreatePipelineLayout(logicalDeivce);
+  CreateDepthImage(device, allocator);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -271,52 +286,17 @@ void VideoBuffer::CreateTextureSampler(VkDevice device)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-/*void VideoBuffer::CreateDescriptorSets(VkDevice device)
+void VideoBuffer::CreateDepthImage(Device* device, Allocator* allocator)
 {
-  std::vector<VkDescriptorSetLayout> layouts(images_.size(), *descriptorSetLayout_);
-  VkDescriptorSetAllocateInfo allocInfo = {};
-  allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-  allocInfo.descriptorPool = *descriptorPool_;
-  allocInfo.descriptorSetCount = static_cast<uint32_t>(layouts.size());
-  allocInfo.pSetLayouts = layouts.data();
-
-  descriptorSets_.resize(images_.size());
-  if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSets_.data()) != VK_SUCCESS) {
-    throw std::runtime_error("Could not allocate descriptor sets");
-  }
-
-  for (size_t i = 0; i < images_.size(); i++) {
-    VkDescriptorBufferInfo bufferInfo = {};
-    bufferInfo.buffer = **uniformBuffers_[i];
-    bufferInfo.offset = 0;
-    bufferInfo.range = sizeof(UniformObject);
-
-    std::array<VkWriteDescriptorSet, 2> descriptorWrites = {};
-
-    descriptorWrites[0].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descriptorWrites[0].dstSet = descriptorSets_[i];
-    descriptorWrites[0].dstBinding = 0;
-    descriptorWrites[0].dstArrayElement = 0;
-    descriptorWrites[0].descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    descriptorWrites[0].descriptorCount = 1;
-    descriptorWrites[0].pBufferInfo = &bufferInfo;
-
-    VkDescriptorImageInfo imageInfo = {};
-    imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    imageInfo.imageView = **imageViews_[i];
-    imageInfo.sampler = *textureSampler_;
-
-    descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-    descriptorWrites[1].dstSet = descriptorSets_[i];
-    descriptorWrites[1].dstBinding = 1;
-    descriptorWrites[1].dstArrayElement = 0;
-    descriptorWrites[1].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    descriptorWrites[1].descriptorCount = 1;
-    descriptorWrites[1].pImageInfo = &imageInfo;
-
-    vkUpdateDescriptorSets(device, static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
-  }
-}*/
+  depthFormat_ = GetDepthImageFormat(
+    device->Physical(),
+    { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+    VK_IMAGE_TILING_OPTIMAL,
+    VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
+  );
+  depthImage_ = std::make_unique<Image>(device, allocator, size_, depthFormat_, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+  depthImageView_ = std::make_unique<ImageView>(device->Logical(), **depthImage_, depthFormat_, VK_IMAGE_ASPECT_DEPTH_BIT);
+}
 
 // -------------------------------------------------------------------------------------------------------------------------
 void VideoBuffer::TmpUpdate(uint32_t index)

@@ -27,7 +27,7 @@ std::array<VkVertexInputAttributeDescription, 3> VertexAttributeDescriptions()
 
   desc[0].binding = 0;
   desc[0].location = 0;
-  desc[0].format = VK_FORMAT_R32G32_SFLOAT;
+  desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
   desc[0].offset = offsetof(Vertex, pos);
 
   desc[1].binding = 0;
@@ -168,6 +168,19 @@ VkPipelineShaderStageCreateInfo ShaderStage(VkShaderModule module, VkShaderStage
   return info;
 }
 
+// -------------------------------------------------------------------------------------------------------------------------
+VkPipelineDepthStencilStateCreateInfo DepthStencilState()
+{
+  VkPipelineDepthStencilStateCreateInfo info = {};
+  info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+  info.depthTestEnable = VK_TRUE;
+  info.depthWriteEnable = VK_TRUE;
+  info.depthCompareOp = VK_COMPARE_OP_LESS;
+  info.depthBoundsTestEnable = VK_FALSE;
+  info.stencilTestEnable = VK_FALSE;
+  return info;
+}
+
 } // !namespace
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -198,7 +211,7 @@ void Material::CreatePipeline(Device* device, VideoBuffer* videoBuffer, asset::M
   vertexAttributes.pVertexBindingDescriptions = &bindingDescription;
   vertexAttributes.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
   vertexAttributes.pVertexAttributeDescriptions = attributeDescriptions.data();
-    
+  
   auto primitives = Primitives();
   auto viewport = Viewport(videoBuffer->Size());
   auto scissors = Scissors(videoBuffer->Size());
@@ -207,10 +220,9 @@ void Material::CreatePipeline(Device* device, VideoBuffer* videoBuffer, asset::M
   auto sampler = Sampler();
   auto colorBlender = ColorBlender();
   auto colorBlendState = ColorBlendState(colorBlender);
+  auto depthStencilState = DepthStencilState();
 
-  //CreateDescriptorSet(logicalDevice);
-  //CreateLayout(logicalDevice);
-  CreateRenderPass(logicalDevice, videoBuffer->ImageFormat());
+  CreateRenderPass(logicalDevice, videoBuffer->ImageFormat(), videoBuffer->DepthFormat());
 
   VkGraphicsPipelineCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -222,6 +234,7 @@ void Material::CreatePipeline(Device* device, VideoBuffer* videoBuffer, asset::M
   info.pRasterizationState = &rasterizer;
   info.pMultisampleState = &sampler;
   info.pColorBlendState = &colorBlendState;
+  info.pDepthStencilState = &depthStencilState;
   info.layout = videoBuffer->PipelineLayout();
   info.renderPass = *renderPass_;
   info.subpass = 0;
@@ -239,7 +252,7 @@ void Material::CreatePipeline(Device* device, VideoBuffer* videoBuffer, asset::M
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Material::CreateRenderPass(VkDevice device, VkFormat imageFormat)
+void Material::CreateRenderPass(VkDevice device, VkFormat imageFormat, VkFormat depthFormat)
 {
   VkAttachmentDescription colorAttachment = {};
   colorAttachment.format = imageFormat;
@@ -251,21 +264,47 @@ void Material::CreateRenderPass(VkDevice device, VkFormat imageFormat)
   colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
+  VkAttachmentDescription depthAttachment = {};
+  depthAttachment.format = depthFormat;
+  depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+  depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+  depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+  depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+  depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+  depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
   VkAttachmentReference colorAttachmentRef = {};
   colorAttachmentRef.attachment = 0;
   colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+  VkAttachmentReference depthAttachmentRef = {};
+  depthAttachmentRef.attachment = 1;
+  depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
   VkSubpassDescription subpass = {};
   subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
   subpass.colorAttachmentCount = 1;
   subpass.pColorAttachments = &colorAttachmentRef;
+  subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
+  VkSubpassDependency dependency = {};
+  dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+  dependency.dstSubpass = 0;
+  dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+  dependency.srcAccessMask = 0;
+  dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+  dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
+
+  std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
   VkRenderPassCreateInfo renderPassInfo = {};
   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-  renderPassInfo.attachmentCount = 1;
-  renderPassInfo.pAttachments = &colorAttachment;
+  renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+  renderPassInfo.pAttachments = attachments.data();
   renderPassInfo.subpassCount = 1;
   renderPassInfo.pSubpasses = &subpass;
+  renderPassInfo.dependencyCount = 1;
+  renderPassInfo.pDependencies = &dependency;
 
   auto destroyRenderPass = [device](auto renderPass) {
     vkDestroyRenderPass(device, renderPass, nullptr);
@@ -291,12 +330,12 @@ void Material::CreateFramebuffers(VkDevice device, VideoBuffer* videoBuffer)
   frameBufferRefs_.resize(frame.size());
   for (size_t i = 0; i < frame.size(); i++)
   {
-    VkImageView attachments[] = { **frame[i] };
+    std::array<VkImageView, 2> attachments = { **frame[i], videoBuffer->DepthBuffer() };
     VkFramebufferCreateInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
     info.renderPass = *renderPass_;
-    info.attachmentCount = 1;
-    info.pAttachments = attachments;
+    info.attachmentCount = static_cast<uint32_t>(attachments.size());
+    info.pAttachments = attachments.data();
     info.width = videoBuffer->Size().width;
     info.height = videoBuffer->Size().height;
     info.layers = 1;

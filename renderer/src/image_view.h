@@ -14,7 +14,7 @@ namespace yaga
 class ImageView : private boost::noncopyable
 {
 public:
-  ImageView(VkDevice device, VkImage image, VkFormat format);
+  ImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlagBits aspectMask);
   VkImageView operator*() const { return *imageView_; }
 private:
   AutoDestroyer<VkImageView> imageView_;

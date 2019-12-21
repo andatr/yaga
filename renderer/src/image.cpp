@@ -5,10 +5,18 @@ namespace yaga
 {
 
 // -------------------------------------------------------------------------------------------------------------------------
+Image::Image(Device* device, Allocator* allocator, VkExtent2D size, VkFormat format, VkImageUsageFlags usage)
+{
+  auto ldevice = device->Logical();
+  CreateImage(ldevice, allocator, size, format, usage);
+}
+
+// -------------------------------------------------------------------------------------------------------------------------
 Image::Image(Device* device, Allocator* allocator, asset::Texture* asset)
 {
   auto ldevice = device->Logical();
-  CreateImage(ldevice, allocator, asset);
+  CreateImage(ldevice, allocator, { static_cast<uint32_t>(asset->Width()), static_cast<uint32_t>(asset->Height()) },
+    VK_FORMAT_R8G8B8A8_UNORM, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT);
   auto buffer = CreateBuffer(ldevice, allocator, asset);
   ChangeLayout(device, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
   CopyBuffer(device, **buffer, asset);
@@ -16,20 +24,20 @@ Image::Image(Device* device, Allocator* allocator, asset::Texture* asset)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Image::CreateImage(VkDevice device, Allocator* allocator, asset::Texture* asset)
+void Image::CreateImage(VkDevice device, Allocator* allocator, VkExtent2D size, VkFormat format, VkImageUsageFlags usage)
 {
   VkImageCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   info.imageType = VK_IMAGE_TYPE_2D;
-  info.extent.width = asset->Width();
-  info.extent.height = asset->Height();
+  info.extent.width = size.width;
+  info.extent.height = size.height;
   info.extent.depth = 1;
   info.mipLevels = 1;
   info.arrayLayers = 1;
-  info.format = VK_FORMAT_R8G8B8A8_UNORM;
+  info.format = format;
   info.tiling = VK_IMAGE_TILING_OPTIMAL;
   info.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-  info.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+  info.usage = usage;
   info.samples = VK_SAMPLE_COUNT_1_BIT;
   info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 

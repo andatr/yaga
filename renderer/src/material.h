@@ -25,7 +25,7 @@ public:
   const std::vector<VkFramebuffer>& FrameBuffers() const { return frameBufferRefs_; }
 private:
   void CreatePipeline(Device* device, VideoBuffer* videoBuffer, asset::Material* asset);
-  void CreateRenderPass(VkDevice device, VkFormat imageFormat);    
+  void CreateRenderPass(VkDevice device, VkFormat imageFormat, VkFormat depthFormat);
   void CreateFramebuffers(VkDevice device, VideoBuffer* videoBuffer);
 private:
   VkExtent2D size_;

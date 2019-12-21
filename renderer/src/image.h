@@ -17,10 +17,11 @@ namespace yaga
 class Image : private boost::noncopyable
 {
 public:
+  explicit Image(Device* device, Allocator* allocator, VkExtent2D size, VkFormat format, VkImageUsageFlags usage);
   explicit Image(Device* device, Allocator* allocator, asset::Texture* asset);
   VkImage operator*() const { return *image_; }
 private:
-  void CreateImage(VkDevice device, Allocator* allocator, asset::Texture* asset);
+  void CreateImage(VkDevice device, Allocator* allocator, VkExtent2D size, VkFormat format, VkImageUsageFlags usage);
   DeviceBufferPtr CreateBuffer(VkDevice device, Allocator* allocator, asset::Texture* asset) const;
   void ChangeLayout(Device* device, VkImageLayout oldLayout, VkImageLayout newLayout) const;
   void CopyBuffer(Device* device, VkBuffer buffer, asset::Texture* asset) const;

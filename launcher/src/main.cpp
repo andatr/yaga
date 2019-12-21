@@ -23,14 +23,14 @@ void main(const Options& options)
 // -----------------------------------------------------------------------------------------------------------------------------
 int main(int argc, char *argv[])
 {
-#ifdef NDEBUG
-  try
-#endif // !NDEBUG
+//fdef NDEBUG
+//try
+//ndif // !NDEBUG
   {
     yaga::Options options(argc, argv);
     yaga::main(options);
   }
-#ifdef NDEBUG
+/*fdef NDEBUG
   catch (const Exception& exp) {
     Log(exp); 
     return EXIT_FAILURE;
@@ -43,6 +43,6 @@ int main(int argc, char *argv[])
     Log(log::Severity::fatal, "Unknown exception");
     return EXIT_FAILURE;
   }
-#endif // !NDEBUG
+#endif // !NDEBUG*/
   return EXIT_SUCCESS;
 }
