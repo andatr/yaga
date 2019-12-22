@@ -22,7 +22,7 @@ public:
   VkBuffer VertexBuffer() const { return **vertexBuffer_; }
   VkBuffer IndexBuffer() const { return **indexBuffer_; }
   const std::vector<Vertex>& Vertices() const { return asset_->Vertices(); }
-  const std::vector<uint16_t>& Indices() const { return asset_->Indices(); }
+  const std::vector<uint32_t>& Indices() const { return asset_->Indices(); }
 private:
   void CreateVertexBuffer(VkDevice device, Allocator* allocator);
   void CreateIndexBuffer(VkDevice device, Allocator* allocator);

@@ -16,6 +16,7 @@ target_include_directories( asset
     ${CMAKE_CURRENT_LIST_DIR}/include
   PRIVATE
     ${CMAKE_SOURCE_DIR}/stb
+	${CMAKE_SOURCE_DIR}/tinyobj
     ${CMAKE_CURRENT_LIST_DIR}/include/asset
     ${CMAKE_CURRENT_LIST_DIR}/src 
 )

@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <unordered_map>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/endian/conversion.hpp>
@@ -15,6 +16,7 @@
 #include <boost/property_tree/json_parser.hpp>
 
 #include <stb_image.h>
+#include <tiny_obj_loader.h>
 
 #include "utility/exception.h"
 #include "utility/log.h"
