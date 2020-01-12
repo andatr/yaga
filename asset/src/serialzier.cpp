@@ -19,7 +19,7 @@ namespace
 {
 
 // -------------------------------------------------------------------------------------------------------------------------
-std::string TypeFromPath(const fs::path& path)
+std::string typeFromPath(const fs::path& path)
 {
   auto type = path.extension().string();
   if (type.size() > 0) {
@@ -35,7 +35,7 @@ std::map<Serializer::SInfoId, Serializer::SInfo> Serializer::serializers_;
 std::map<Serializer::SInfoIdFriendly, Serializer::SInfo> Serializer::serializersFriendly_;
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Serializer::Register(const AssetId& id, const SerializeProc& serializer, const DeserializeProc& deserializer)
+void Serializer::registerAsset(const AssetId& id, const SerializeProc& serializer, const DeserializeProc& deserializer)
 {
   SInfo info = { id, serializer, deserializer };
   serializers_[id.binary]  = info;
@@ -43,50 +43,50 @@ void Serializer::Register(const AssetId& id, const SerializeProc& serializer, co
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Serializer::RegisterStandard()
+void Serializer::registerStandardAssets()
 {
-  Register<asset::Application>();
-  Register<asset::Shader>();
-  Register<asset::Material>();
-  Register<asset::Mesh>();
-  Register<asset::Texture>();
+  registerAsset<asset::Application>();
+  registerAsset<asset::Shader>();
+  registerAsset<asset::Material>();
+  registerAsset<asset::Mesh>();
+  registerAsset<asset::Texture>();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Serializer::Deserialize(const std::string& dir, Database* db)
+void Serializer::deserialize(const std::string& dir, Database* db)
 {
   auto parent = fs::path(dir);
   fs::recursive_directory_iterator root(dir);
   for (auto&& entry : root) {
     if (!fs::is_regular_file(entry)) continue;
-    auto type = TypeFromPath(entry.path());
+    auto type = typeFromPath(entry.path());
     auto name = fs::relative(entry, parent).stem().string();
-    auto asset = Deserialize(type, name, entry.path().string());
+    auto asset = deserialize(type, name, entry.path().string());
     if (!asset) {
       LOG(warning) << "Could not load asset of type " << type;
     }
     else {
-      db->Put(std::move(asset), false);
+      db->put(std::move(asset), false);
     }
   }
-  db->ResolveRefs();
+  db->resolveRefs();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Serializer::Deserialize(const std::string& name, const std::string& path, Database* db)
+void Serializer::deserialize(const std::string& name, const std::string& path, Database* db)
 {
-  auto type = TypeFromPath(path);
-  auto asset = Deserialize(type, name, path);
+  auto type = typeFromPath(path);
+  auto asset = deserialize(type, name, path);
   if (!asset) {
     LOG(warning) << "Could not load asset of type " << type;
   }
   else {
-    db->Put(std::move(asset));
+    db->put(std::move(asset));
   }
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-AssetPtr Serializer::Deserialize(const std::string& type, const std::string& name, const std::string& file)
+AssetPtr Serializer::deserialize(const std::string& type, const std::string& name, const std::string& file)
 {
   try {
     auto it = serializersFriendly_.find(type);
@@ -104,7 +104,7 @@ AssetPtr Serializer::Deserialize(const std::string& type, const std::string& nam
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-size_t Serializer::Serialize(std::ostream& stream, const std::string& str)
+size_t Serializer::serialize(std::ostream& stream, const std::string& str)
 {
   size_t size = str.size();
   endian::native_to_little_inplace(size);
@@ -114,7 +114,7 @@ size_t Serializer::Serialize(std::ostream& stream, const std::string& str)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-std::string Serializer::DeserializeString(std::istream& stream)
+std::string Serializer::deserializeString(std::istream& stream)
 {
   const constexpr size_t BSIZE = 64;
   size_t size;
@@ -126,8 +126,8 @@ std::string Serializer::DeserializeString(std::istream& stream)
     return std::string(buffer, size);
   }
   ByteArray buffer(size);
-  stream.read(buffer.Data(), size);
-  return std::string(buffer.Data(), size);
+  stream.read(buffer.data(), size);
+  return std::string(buffer.data(), size);
 }
 
 } // !namespace asset

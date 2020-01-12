@@ -6,7 +6,9 @@
 #include <boost/noncopyable.hpp>
 #include <GLFW/glfw3.h>
 
-#include "utility/auto_destroyer.h"
+#include "device.h"
+#include "image.h"
+#include "utility/auto_destructor.h"
 
 namespace yaga
 {
@@ -14,10 +16,17 @@ namespace yaga
 class ImageView : private boost::noncopyable
 {
 public:
-  ImageView(VkDevice device, VkImage image, VkFormat format, VkImageAspectFlagBits aspectMask);
+  ImageView(Device* device, Image* image, VkImageAspectFlagBits aspectMask);
   VkImageView operator*() const { return *imageView_; }
+  Image* image() const { return image_; }
 private:
-  AutoDestroyer<VkImageView> imageView_;
+  void createImageView();
+private:
+  Device* device_;
+  VkDevice vkDevice_;
+  Image* image_;
+  VkImageAspectFlagBits aspectMask_;
+  AutoDestructor<VkImageView> imageView_;
 };
 
 typedef std::unique_ptr<ImageView> ImageViewPtr;

@@ -7,7 +7,7 @@
 #include <GLFW/glfw3.h>
 
 #include "device.h"
-#include "utility/auto_destroyer.h"
+#include "utility/auto_destructor.h"
 
 namespace yaga
 {
@@ -16,11 +16,12 @@ class Allocator : private boost::noncopyable
 {
 public:
   explicit Allocator(Device* deivce);
-  AutoDestroyer<VkDeviceMemory> Allocate(VkBuffer buffer, VkMemoryPropertyFlags properties) const;
-  AutoDestroyer<VkDeviceMemory> AllocateImage(VkImage image, VkMemoryPropertyFlags properties) const;
-  AutoDestroyer<VkDeviceMemory> Allocate(VkMemoryRequirements requirements, VkMemoryPropertyFlags properties) const;
+  AutoDestructor<VkDeviceMemory> allocate(VkBuffer buffer, VkMemoryPropertyFlags properties) const;
+  AutoDestructor<VkDeviceMemory> allocate(VkMemoryRequirements requirements, VkMemoryPropertyFlags properties) const;
+  AutoDestructor<VkDeviceMemory> allocateImage(VkImage image, VkMemoryPropertyFlags properties) const;  
 private:
   Device* device_;
+  VkDevice vkDevice;
 };
 
 typedef std::unique_ptr<Allocator> AllocatorPtr;

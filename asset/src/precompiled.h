@@ -15,8 +15,8 @@
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
-#include <stb_image.h>
-#include <tiny_obj_loader.h>
+#include <stb/stb_image.h>
+#include <tinyobj/tiny_obj_loader.h>
 
 #include "utility/exception.h"
 #include "utility/log.h"

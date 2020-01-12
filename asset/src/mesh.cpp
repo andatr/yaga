@@ -2,7 +2,7 @@
 #include "mesh.h"
 
 #define TINYOBJLOADER_IMPLEMENTATION
-#include <tiny_obj_loader.h>
+#include <tinyobj/tiny_obj_loader.h>
 
 namespace yaga
 {
@@ -23,7 +23,7 @@ Mesh::~Mesh()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-size_t Mesh::Serialize(Asset* asset, std::ostream&, bool)
+size_t Mesh::serialize(Asset* asset, std::ostream&, bool)
 {
   auto mesh = dynamic_cast<Mesh*>(asset);
   if (!mesh) {
@@ -33,7 +33,7 @@ size_t Mesh::Serialize(Asset* asset, std::ostream&, bool)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-MeshPtr Mesh::Deserialize(const std::string& name, std::istream&, size_t, bool)
+MeshPtr Mesh::deserialize(const std::string& name, std::istream&, size_t, bool)
 {
   auto mesh = std::make_unique<Mesh>(name);
   /*mesh->vertices_ = {

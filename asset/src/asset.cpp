@@ -14,7 +14,7 @@ Asset::Asset(const std::string& name) :
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Asset::ResolveRefs(Database*)
+void Asset::resolveRefs(Database*)
 {
 }
 

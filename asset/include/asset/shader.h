@@ -22,12 +22,12 @@ class Shader : public Asset
 public:
   explicit Shader(const std::string& name);
   virtual ~Shader();
-  const ByteArray& Code() const { return code_; }
-  Shader& Code(const ByteArray& code) { code_ = code; return *this; }
+  const ByteArray& code() const { return code_; }
+  Shader& code(const ByteArray& code) { code_ = code; return *this; }
 public: // Serialization
   static const AssetId assetId;
-  static size_t Serialize(Asset* asset, std::ostream& stream, bool binary);
-  static ShaderPtr Deserialize(const std::string& name, std::istream& stream, size_t size, bool binary);
+  static size_t serialize(Asset* asset, std::ostream& stream, bool binary);
+  static ShaderPtr deserialize(const std::string& name, std::istream& stream, size_t size, bool binary);
 private:
   ByteArray code_;
 };

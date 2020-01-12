@@ -11,12 +11,10 @@ namespace yaga
 // -----------------------------------------------------------------------------------------------------------------------------
 void main(const Options& options)
 {
-  log::Init(options.LogSeverity());
-  auto app = CreateApplication();
-  app->Run(options.AppDir());
+  log::init(options.logSeverity(), log::format::Severity | log::format::Time);
+  auto app = createApplication();
+  app->run(options.appDir());
 }
-
-
 
 } // !namespace yaga
 
@@ -30,7 +28,7 @@ int main(int argc, char *argv[])
     yaga::Options options(argc, argv);
     yaga::main(options);
   }
-/*fdef NDEBUG
+/*ifdef NDEBUG
   catch (const Exception& exp) {
     Log(exp); 
     return EXIT_FAILURE;

@@ -8,7 +8,7 @@
 #include <boost/noncopyable.hpp>
 #include <GLFW/glfw3.h>
 
-#include "utility/auto_destroyer.h"
+#include "utility/auto_destructor.h"
 
 namespace yaga
 {
@@ -29,26 +29,26 @@ public:
 public:
   explicit Device(VkInstance instance, VkSurfaceKHR surface);
   virtual ~Device();
-  VkDevice Logical() const { return *logicalDevice_; }
-  VkPhysicalDevice Physical() const { return physicalDevice_; }
-  const QueueFamilyIndices& QueueFamilies() const { return queueFamilies_; }
-  VkQueue GraphicsQueue() const { return queues_[0]; }
-  VkQueue PresentQueue()  const { return queues_[1]; }
-  VkQueue TransferQueue() const { return queues_[2]; }
-  VkQueue ComputeQueue()  const { return queues_[3]; }
-  uint32_t GetMemoryType(uint32_t filter, VkMemoryPropertyFlags props) const;
-  VkCommandPool CommandPool() const { return *commandPool_; }
-  void SubmitCommand(CommandHandler handler) const;
+  VkDevice operator*() const { return *logicalDevice_; }
+  VkPhysicalDevice physical() const { return physicalDevice_; }
+  const QueueFamilyIndices& queueFamilies() const { return queueFamilies_; }
+  VkQueue graphicsQueue() const { return queues_[0]; }
+  VkQueue presentQueue()  const { return queues_[1]; }
+  VkQueue transferQueue() const { return queues_[2]; }
+  VkQueue computeQueue()  const { return queues_[3]; }
+  uint32_t getMemoryType(uint32_t filter, VkMemoryPropertyFlags props) const;
+  VkCommandPool commandPool() const { return *commandPool_; }
+  void submitCommand(CommandHandler handler) const;
 private:
-  void CreateDevice();
-  void CreateCommandPool();
+  void createDevice();
+  void createCommandPool();
 private:
   VkPhysicalDevice physicalDevice_;
   VkPhysicalDeviceMemoryProperties memoryProperties_;
-  AutoDestroyer<VkDevice> logicalDevice_;
+  AutoDestructor<VkDevice> logicalDevice_;
   QueueFamilyIndices queueFamilies_;
   VkQueue queues_[4];
-  AutoDestroyer<VkCommandPool> commandPool_;
+  AutoDestructor<VkCommandPool> commandPool_;
 };
 
 typedef std::unique_ptr<Device> DevicePtr;

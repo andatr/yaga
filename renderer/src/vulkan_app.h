@@ -13,12 +13,12 @@
 #include "device.h"
 #include "image.h"
 #include "image_view.h"
-#include "model.h"
-#include "video_buffer.h"
+#include "render_object.h"
+#include "swapchain.h"
 #include "asset/application.h"
 #include "asset/database.h"
 #include "utility/array.h"
-#include "utility/auto_destroyer.h"
+#include "utility/auto_destructor.h"
 
 namespace yaga
 {
@@ -35,26 +35,25 @@ public:
 public:
   explicit ApplicationImpl();
   virtual ~ApplicationImpl();
-  void Run(const std::string& dir) override;
+  void run(const std::string& dir) override;
 private:
-  void CreateWindow(asset::Application* props);
-  void CreateInstance(const std::string& appName);
-  void CreateVideoBuffer(VkExtent2D size);
-  void CreateSurface();
-  
-  void CheckValidationLayers();
-  void Loop();
-  void SetupLogging();
-  void CreateSync();
-  void DrawFrame();
-  VkExtent2D GetWindowSize() const;
-  static void ResizeCallback(GLFWwindow* window, int width, int height);
+  void createWindow(asset::Application* props);
+  void createInstance(const std::string& appName);
+  void createSwapchain(VkExtent2D size);
+  void createSurface();
+  void checkValidationLayers();
+  void loop();
+  void setupLogging();
+  void createSync();
+  void drawFrame();
+  VkExtent2D getWindowSize() const;
+  static void resizeCallback(GLFWwindow* window, int width, int height);
 private:
   struct FrameSync
   {
-    AutoDestroyer<VkSemaphore> render;
-    AutoDestroyer<VkSemaphore> present;
-    AutoDestroyer<VkFence> swap;
+    AutoDestructor<VkSemaphore> render;
+    AutoDestructor<VkSemaphore> present;
+    AutoDestructor<VkFence> swap;
   };
   struct ResizeInfo
   {
@@ -67,14 +66,14 @@ private:
   size_t frame_;
   ResizeInfo resize_;
   asset::DatabasePtr assets_;
-  AutoDestroyer<GLFWwindow*> window_;
-  AutoDestroyer<VkInstance> instance_;
-  AutoDestroyer<VkDebugUtilsMessengerEXT> debugMessenger_;
-  AutoDestroyer<VkSurfaceKHR> surface_;
+  AutoDestructor<GLFWwindow*> window_;
+  AutoDestructor<VkInstance> instance_;
+  AutoDestructor<VkDebugUtilsMessengerEXT> debugMessenger_;
+  AutoDestructor<VkSurfaceKHR> surface_;
   DevicePtr device_;
   AllocatorPtr allocator_;
-  VideoBufferPtr videoBuffer_;
-  ModelPtr model_;
+  SwapchainPtr swapchain_;
+  RenderObjectPtr model_;
   MeshPtr mesh_;
   MaterialPtr material_;
   ImagePtr image_;

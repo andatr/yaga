@@ -1,10 +1,9 @@
 cmake_minimum_required( VERSION 3.15 )
 cmake_policy( VERSION 3.15 )
 enable_testing()
+project( yaga VERSION 0.0.1 LANGUAGES CXX )
 
 include( ${CMAKE_CURRENT_SOURCE_DIR}/CMake/assign_source_group.cmake )
-
-project( yaga VERSION 0.0.1 LANGUAGES CXX )
 
 set_property( GLOBAL PROPERTY CXX_STANDARD 14 )
 set_property( GLOBAL PROPERTY USE_FOLDERS ON )
@@ -33,14 +32,15 @@ if( NOT Boost_FOUND )
   message( FATAL_ERROR "BOOST not found" )
 endif()
 
-find_package( GLM )
-if( NOT GLM_FOUND )
-  message( FATAL_ERROR "GLM not found" )
-endif()
+#find_package( GLM )
+#if( NOT GLM_FOUND )
+#  message( FATAL_ERROR "GLM not found" )
+#endif()
+include_directories( external )
 add_definitions( -DGLM_FORCE_RADIANS )
 add_definitions( -DGLM_FORCE_DEPTH_ZERO_TO_ONE )
 
-find_package( GLFW3 )
+find_package( GLFW3 HINTS "${CMAKE_CURRENT_SOURCE_DIR}/external/glfw" )
 if( NOT GLFW3_FOUND )
   message( FATAL_ERROR "GLFW not found" )
 endif()

@@ -1,5 +1,5 @@
 #include "precompiled.h"
-#include "video_buffer.h"
+#include "swapchain.h"
 #include "asset/vertex.h"
 
 namespace yaga
@@ -10,7 +10,7 @@ namespace
 constexpr auto uniBufferSize = sizeof(UniformObject);
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkSurfaceFormatKHR PickColorFormat(VkPhysicalDevice device, VkSurfaceKHR surface)
+VkSurfaceFormatKHR pickColorFormat(VkPhysicalDevice device, VkSurfaceKHR surface)
 {
   std::vector<VkSurfaceFormatKHR> formats;
 
@@ -30,7 +30,7 @@ VkSurfaceFormatKHR PickColorFormat(VkPhysicalDevice device, VkSurfaceKHR surface
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkPresentModeKHR PickBufferingMode(VkPhysicalDevice device, VkSurfaceKHR surface)
+VkPresentModeKHR pickBufferingMode(VkPhysicalDevice device, VkSurfaceKHR surface)
 {
   std::vector<VkPresentModeKHR> modes;
 
@@ -48,7 +48,7 @@ VkPresentModeKHR PickBufferingMode(VkPhysicalDevice device, VkSurfaceKHR surface
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkExtent2D PickResolution(const VkSurfaceCapabilitiesKHR& capabilities, VkExtent2D requested)
+VkExtent2D pickResolution(const VkSurfaceCapabilitiesKHR& capabilities, VkExtent2D requested)
 {
   // if currentExtent is not MAX_UINT32 we must use values provided by Vulkan
   if (capabilities.currentExtent.width != std::numeric_limits<uint32_t>::max()) {
@@ -68,7 +68,7 @@ VkExtent2D PickResolution(const VkSurfaceCapabilitiesKHR& capabilities, VkExtent
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-uint32_t PickBufferCount(const VkSurfaceCapabilitiesKHR& capabilities)
+uint32_t pickBufferCount(const VkSurfaceCapabilitiesKHR& capabilities)
 {
   if (capabilities.maxImageCount == 0) {
     THROW("Could not choose buffering mode");
@@ -77,7 +77,7 @@ uint32_t PickBufferCount(const VkSurfaceCapabilitiesKHR& capabilities)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkFormat GetDepthImageFormat(VkPhysicalDevice device, const std::vector<VkFormat>& candidates, VkImageTiling tiling,
+VkFormat getDepthImageFormat(VkPhysicalDevice device, const std::vector<VkFormat>& candidates, VkImageTiling tiling,
   VkFormatFeatureFlags features)
 {
   for (VkFormat format : candidates) {
@@ -93,29 +93,48 @@ VkFormat GetDepthImageFormat(VkPhysicalDevice device, const std::vector<VkFormat
   THROW("Could not find supported depth image format");
 }
 
+// -------------------------------------------------------------------------------------------------------------------------
+VkSampleCountFlagBits getMaxMsaaLevel(VkPhysicalDevice device)
+{
+  VkPhysicalDeviceProperties props;
+  vkGetPhysicalDeviceProperties(device, &props);
+
+ /* auto msaa = props.limits.framebufferColorSampleCounts & props.limits.framebufferDepthSampleCounts;
+  if (msaa & VK_SAMPLE_COUNT_64_BIT) { return VK_SAMPLE_COUNT_64_BIT; }
+  if (msaa & VK_SAMPLE_COUNT_32_BIT) { return VK_SAMPLE_COUNT_32_BIT; }
+  if (msaa & VK_SAMPLE_COUNT_16_BIT) { return VK_SAMPLE_COUNT_16_BIT; }
+  if (msaa & VK_SAMPLE_COUNT_8_BIT)  { return VK_SAMPLE_COUNT_8_BIT;  }
+  if (msaa & VK_SAMPLE_COUNT_4_BIT)  { return VK_SAMPLE_COUNT_4_BIT;  }
+  if (msaa & VK_SAMPLE_COUNT_2_BIT)  { return VK_SAMPLE_COUNT_2_BIT;  }*/
+  return VK_SAMPLE_COUNT_1_BIT;
+}
+
 } // !namespace
 
 // -------------------------------------------------------------------------------------------------------------------------
-VideoBuffer::VideoBuffer(Device* device, Allocator* allocator, VkSurfaceKHR surface, VkExtent2D size)
+Swapchain::Swapchain(Device* device, Allocator* allocator, VkSurfaceKHR surface, VkExtent2D size) :
+  device_(device), vkDevice_(**device), allocator_(allocator)
 {
-  const auto colorFormat = PickColorFormat(device->Physical(), surface);
+  auto pdevice = device->physical();
+  msaa_ = getMaxMsaaLevel(pdevice);
+  const auto colorFormat = pickColorFormat(pdevice, surface);
   VkSurfaceCapabilitiesKHR capabilities;
-  vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device->Physical(), surface, &capabilities);
+  vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pdevice, surface, &capabilities);
 
   VkSwapchainCreateInfoKHR info = {};
   info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
   info.surface = surface;
   info.oldSwapchain = VK_NULL_HANDLE;
-  info.minImageCount = PickBufferCount(capabilities);
+  info.minImageCount = pickBufferCount(capabilities);
   info.imageFormat = colorFormat.format;
   info.imageColorSpace = colorFormat.colorSpace;
-  info.imageExtent = PickResolution(capabilities, size);
+  info.imageExtent = pickResolution(capabilities, size);
   info.imageArrayLayers = 1;
   info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
   format_ = info.imageFormat;
   size_ = info.imageExtent;
 
-  const auto& queueFamilies = device->QueueFamilies();
+  const auto& queueFamilies = device->queueFamilies();
   if (queueFamilies.graphics == queueFamilies.surface) {
     info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
   }
@@ -128,45 +147,47 @@ VideoBuffer::VideoBuffer(Device* device, Allocator* allocator, VkSurfaceKHR surf
 
   info.preTransform = capabilities.currentTransform;
   info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-  info.presentMode = PickBufferingMode(device->Physical(), surface);
+  info.presentMode = pickBufferingMode(pdevice, surface);
   info.clipped = VK_TRUE;
 
-  auto logicalDeivce = device->Logical();
-  auto destroySwapchain = [logicalDeivce](auto chain) {
-    vkDestroySwapchainKHR(logicalDeivce, chain, nullptr);
+  auto destroySwapchain = [device = vkDevice_](auto chain) {
+    vkDestroySwapchainKHR(device, chain, nullptr);
     LOG(trace) << "Swapchain destroyed";
   };
   VkSwapchainKHR chain;
-  if (vkCreateSwapchainKHR(logicalDeivce, &info, nullptr, &chain) != VK_SUCCESS) {
+  if (vkCreateSwapchainKHR(vkDevice_, &info, nullptr, &chain) != VK_SUCCESS) {
     THROW("Could not create Swapchain");
   }
-  swapchain_.Assign(chain, destroySwapchain);
+  swapchain_.set(chain, destroySwapchain);
   LOG(trace) << "Swapchain created";
 
   uint32_t imageCount;
-  vkGetSwapchainImagesKHR(logicalDeivce, *swapchain_, &imageCount, nullptr);
+  vkGetSwapchainImagesKHR(vkDevice_, *swapchain_, &imageCount, nullptr);
+  std::vector<VkImage> images(imageCount);
+  vkGetSwapchainImagesKHR(vkDevice_, *swapchain_, &imageCount, images.data());
   images_.resize(imageCount);
   imageViews_.resize(imageCount);
-  vkGetSwapchainImagesKHR(logicalDeivce, *swapchain_, &imageCount, images_.data());
   for (uint32_t i = 0; i < imageCount; ++i) {
-    imageViews_[i] = std::make_unique<ImageView>(logicalDeivce, images_[i], colorFormat.format, VK_IMAGE_ASPECT_COLOR_BIT);
+    images_[i] = std::make_unique<Image>(images[i], colorFormat.format);
+    imageViews_[i] = std::make_unique<ImageView>(device_, images_[i].get(), VK_IMAGE_ASPECT_COLOR_BIT);
   }
 
-  CreateUniformBuffers(logicalDeivce, allocator);
-  CreateTextureSampler(logicalDeivce);
-  CreateDescriptorPool(logicalDeivce);
-  CreateDescriptorLayout(logicalDeivce);
-  CreatePipelineLayout(logicalDeivce);
-  CreateDepthImage(device, allocator);
+  createUniformBuffers();
+  createTextureSampler();
+  createDescriptorPool();
+  createDescriptorLayout();
+  createPipelineLayout();
+  createRenderTarget();
+  createDepthImage();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VideoBuffer::~VideoBuffer()
+Swapchain::~Swapchain()
 {
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void VideoBuffer::CreateDescriptorPool(VkDevice device)
+void Swapchain::createDescriptorPool()
 {
   std::array<VkDescriptorPoolSize, 2> poolSizes = {};
   poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -181,18 +202,18 @@ void VideoBuffer::CreateDescriptorPool(VkDevice device)
   poolInfo.maxSets = static_cast<uint32_t>(images_.size());
 
   VkDescriptorPool pool;
-  auto destroyPool = [this, device](auto pool) {
+  auto destroyPool = [device = vkDevice_](auto pool) {
     vkDestroyDescriptorPool(device, pool, nullptr);
     LOG(trace) << "Descriptor Pool destroyed";
   };
-  if (vkCreateDescriptorPool(device, &poolInfo, nullptr, &pool) != VK_SUCCESS) {
+  if (vkCreateDescriptorPool(vkDevice_, &poolInfo, nullptr, &pool) != VK_SUCCESS) {
     throw std::runtime_error("Could not create descriptor pool");
   }
-  descriptorPool_.Assign(pool, destroyPool);
+  descriptorPool_.set(pool, destroyPool);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void VideoBuffer::CreatePipelineLayout(VkDevice device)
+void Swapchain::createPipelineLayout()
 {
   VkPipelineLayoutCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -200,20 +221,20 @@ void VideoBuffer::CreatePipelineLayout(VkDevice device)
   info.pushConstantRangeCount = 0;
   info.pSetLayouts = &*descriptorSetLayout_;
 
-  auto destroyLayout = [device](auto layout) {
+  auto destroyLayout = [device = vkDevice_](auto layout) {
     vkDestroyPipelineLayout(device, layout, nullptr);
     LOG(trace) << "Pipeline Layout destroyed";
   };
   VkPipelineLayout layout;
-  if (vkCreatePipelineLayout(device, &info, nullptr, &layout) != VK_SUCCESS) {
+  if (vkCreatePipelineLayout(vkDevice_, &info, nullptr, &layout) != VK_SUCCESS) {
     THROW("Could not create Pipeline Layout");
   }
-  pipelineLayout_.Assign(layout, destroyLayout);
+  pipelineLayout_.set(layout, destroyLayout);
   LOG(trace) << "Pipeline Layout created";
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void VideoBuffer::CreateDescriptorLayout(VkDevice device)
+void Swapchain::createDescriptorLayout()
 {
   VkDescriptorSetLayoutBinding uboBinding = {};
   uboBinding.binding = 0;
@@ -235,29 +256,29 @@ void VideoBuffer::CreateDescriptorLayout(VkDevice device)
   info.bindingCount = static_cast<uint32_t>(bindings.size());
   info.pBindings = bindings.data();
 
-  auto destroyLayout = [device](auto layout) {
+  auto destroyLayout = [device = vkDevice_](auto layout) {
     vkDestroyDescriptorSetLayout(device, layout, nullptr);
     LOG(trace) << "Descriptor Set Layout destroyed";
   };
   VkDescriptorSetLayout layout;
-  if (vkCreateDescriptorSetLayout(device, &info, nullptr, &layout) != VK_SUCCESS) {
+  if (vkCreateDescriptorSetLayout(vkDevice_, &info, nullptr, &layout) != VK_SUCCESS) {
     throw std::runtime_error("Could not create Descriptor Set Layout!");
   }
-  descriptorSetLayout_.Assign(layout, destroyLayout);
+  descriptorSetLayout_.set(layout, destroyLayout);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void VideoBuffer::CreateUniformBuffers(VkDevice device, Allocator* allocator)
+void Swapchain::createUniformBuffers()
 {
   uniformBuffers_.resize(images_.size());
   for (size_t i = 0; i < images_.size(); i++) {
-    uniformBuffers_[i] = std::make_unique<DeviceBuffer>(device, allocator, uniBufferSize,
+    uniformBuffers_[i] = std::make_unique<DeviceBuffer>(device_, allocator_, uniBufferSize,
       VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
   }
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void VideoBuffer::CreateTextureSampler(VkDevice device)
+void Swapchain::createTextureSampler()
 {
   VkSamplerCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
@@ -273,33 +294,44 @@ void VideoBuffer::CreateTextureSampler(VkDevice device)
   info.compareEnable = VK_FALSE;
   info.compareOp = VK_COMPARE_OP_ALWAYS;
   info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+  info.minLod = 11;
+  info.maxLod = 0;
 
-  auto destroySampler = [device](auto sampler) {
+  auto destroySampler = [device = vkDevice_](auto sampler) {
     vkDestroySampler(device, sampler, nullptr);
     LOG(trace) << "Texture Sampler destroyed";
   };
   VkSampler sampler;
-  if (vkCreateSampler(device, &info, nullptr, &sampler) != VK_SUCCESS) {
+  if (vkCreateSampler(vkDevice_, &info, nullptr, &sampler) != VK_SUCCESS) {
     throw std::runtime_error("Could not create Texture Sampler");
   }
-  textureSampler_.Assign(sampler, destroySampler);
+  textureSampler_.set(sampler, destroySampler);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void VideoBuffer::CreateDepthImage(Device* device, Allocator* allocator)
+void Swapchain::createRenderTarget()
 {
-  depthFormat_ = GetDepthImageFormat(
-    device->Physical(),
+  targetImage_ = std::make_unique<Image>(device_, allocator_, size_, format_, msaa_,
+    VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT);
+  targetImageView_ = std::make_unique<ImageView>(device_, targetImage_.get(), VK_IMAGE_ASPECT_COLOR_BIT);
+}
+
+// -------------------------------------------------------------------------------------------------------------------------
+void Swapchain::createDepthImage()
+{
+  depthFormat_ = getDepthImageFormat(
+    device_->physical(),
     { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
     VK_IMAGE_TILING_OPTIMAL,
     VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
   );
-  depthImage_ = std::make_unique<Image>(device, allocator, size_, depthFormat_, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
-  depthImageView_ = std::make_unique<ImageView>(device->Logical(), **depthImage_, depthFormat_, VK_IMAGE_ASPECT_DEPTH_BIT);
+  depthImage_ = std::make_unique<Image>(device_, allocator_, size_, depthFormat_, msaa_,
+    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT);
+  depthImageView_ = std::make_unique<ImageView>(device_, depthImage_.get(), VK_IMAGE_ASPECT_DEPTH_BIT);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void VideoBuffer::TmpUpdate(uint32_t index)
+void Swapchain::tmpUpdate(uint32_t index)
 {
   static auto startTime = std::chrono::high_resolution_clock::now();
   auto currentTime = std::chrono::high_resolution_clock::now();
@@ -309,7 +341,7 @@ void VideoBuffer::TmpUpdate(uint32_t index)
   uniform.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
   uniform.projection = glm::perspective(glm::radians(45.0f), size_.width / (float)size_.height, 0.1f, 10.0f);
   uniform.projection[1][1] *= -1;
-  uniformBuffers_[index]->Update(&uniform, uniBufferSize);
+  uniformBuffers_[index]->update(&uniform, uniBufferSize);
 }
 
 } // !namespace yaga

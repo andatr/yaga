@@ -21,16 +21,16 @@ class Texture : public Asset
 public:
   explicit Texture(const std::string& name);
   virtual ~Texture();
-  int Width() const { return width_; }
-  int Height() const { return height_; }
-  int Channels() const { return channels_; }
+  int width() const { return width_; }
+  int height() const { return height_; }
+  int channels() const { return channels_; }
   size_t Size() const { return size_; }
-  const std::string& Filename() const { return filename_; }
-  const char* Data() const { return bytes_; }
+  const std::string& filename() const { return filename_; }
+  const char* data() const { return bytes_; }
 public: // Serialization
   static const AssetId assetId;
-  static size_t Serialize(Asset* asset, std::ostream& stream, bool binary);
-  static TexturePtr Deserialize(const std::string& name, std::istream& stream, size_t size, bool binary);
+  static size_t serialize(Asset* asset, std::ostream& stream, bool binary);
+  static TexturePtr deserialize(const std::string& name, std::istream& stream, size_t size, bool binary);
 private:
   char* bytes_;
   int width_;

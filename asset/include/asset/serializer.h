@@ -24,16 +24,16 @@ public:
   typedef std::function<size_t(Asset* asset, std::ostream& stream, bool binary)> SerializeProc;
   typedef std::function<AssetPtr(const std::string& name, std::istream& stream, size_t size, bool binary)> DeserializeProc;
 public:
-  static void Register(const AssetId& id, const SerializeProc& serializer, const DeserializeProc& deserializer);
+  static void registerAsset(const AssetId& id, const SerializeProc& serializer, const DeserializeProc& deserializer);
   template<typename T>
-  static void Register();
-  static void RegisterStandard();
-  static size_t Serialize(std::ostream& stream, const std::string& str);
-  static std::string DeserializeString(std::istream& stream);
-  static void Deserialize(const std::string& name, const std::string& path, Database* db);
-  static void Deserialize(const std::string& dir, Database* db);
+  static void registerAsset();
+  static void registerStandardAssets();
+  static size_t serialize(std::ostream& stream, const std::string& str);
+  static std::string deserializeString(std::istream& stream);
+  static void deserialize(const std::string& name, const std::string& path, Database* db);
+  static void deserialize(const std::string& dir, Database* db);
 private:
-  static AssetPtr Deserialize(const std::string& type, const std::string& name, const std::string& file);
+  static AssetPtr deserialize(const std::string& type, const std::string& name, const std::string& file);
 private:
   class SInfo
   {
@@ -51,9 +51,9 @@ private:
 
 // -------------------------------------------------------------------------------------------------------------------------
 template<typename T>
-void Serializer::Register()
+void Serializer::registerAsset()
 {
-  Serializer::Register(T::assetId, T::Serialize, T::Deserialize);
+  Serializer::registerAsset(T::assetId, T::serialize, T::deserialize);
 }
 
 } // !namespace asset

@@ -16,7 +16,7 @@ struct Version
 };
 
 // -------------------------------------------------------------------------------------------------------------------------
-inline Version::Version(uint16_t major, uint16_t minor, uint32_t build):
+inline Version::Version(uint16_t major, uint16_t minor, uint32_t build) :
   major(major), minor(minor), build(build)
 {
 }

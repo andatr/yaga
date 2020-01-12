@@ -1,7 +1,7 @@
 #include "precompiled.h"
 #include "device.h"
 #include "extensions.h"
-#include "video_buffer.h"
+#include "swapchain.h"
 
 namespace yaga
 {
@@ -26,7 +26,7 @@ struct DeviceFeatures
 };
 
 // -------------------------------------------------------------------------------------------------------------------------
-std::vector<std::string> GetDeviceExtensions(VkPhysicalDevice device)
+std::vector<std::string> getDeviceExtensions(VkPhysicalDevice device)
 {
   uint32_t count;
   vkEnumerateDeviceExtensionProperties(device, nullptr, &count, nullptr);
@@ -38,10 +38,10 @@ std::vector<std::string> GetDeviceExtensions(VkPhysicalDevice device)
   );
   std::sort(result.begin(), result.end());
   return result;
-}  
+}
 
 // -------------------------------------------------------------------------------------------------------------------------
-DeviceFeatures GetDeviceFeatures(VkPhysicalDevice device, VkSurfaceKHR surface)
+DeviceFeatures getDeviceFeatures(VkPhysicalDevice device, VkSurfaceKHR surface)
 {
   uint32_t count;
   vkGetPhysicalDeviceQueueFamilyProperties(device, &count, nullptr);
@@ -77,7 +77,7 @@ DeviceFeatures GetDeviceFeatures(VkPhysicalDevice device, VkSurfaceKHR surface)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-bool CheckDeviceFeatures(const DeviceFeatures& features, const std::set<std::string>& requiredExtensions)
+bool checkDeviceFeatures(const DeviceFeatures& features, const std::set<std::string>& requiredExtensions)
 {
   VkPhysicalDeviceFeatures physicalFeatures;
   vkGetPhysicalDeviceFeatures(features.device, &physicalFeatures);
@@ -90,14 +90,14 @@ bool CheckDeviceFeatures(const DeviceFeatures& features, const std::set<std::str
   {
     return false;
   }
-  auto actualExtensions = GetDeviceExtensions(features.device);
+  auto actualExtensions = getDeviceExtensions(features.device);
   return std::includes(actualExtensions.begin(), actualExtensions.end(), requiredExtensions.begin(), requiredExtensions.end());
 }
 
 } // !namespace
 
 // -------------------------------------------------------------------------------------------------------------------------
-Device::Device(VkInstance instance, VkSurfaceKHR surface):
+Device::Device(VkInstance instance, VkSurfaceKHR surface) :
   physicalDevice_(VK_NULL_HANDLE), memoryProperties_{}, queueFamilies_{}, queues_{}
 {
   // find all available devices and their properties
@@ -107,13 +107,13 @@ Device::Device(VkInstance instance, VkSurfaceKHR surface):
   vkEnumeratePhysicalDevices(instance, &count, devices.data());
   std::vector<DeviceFeatures> devicesWithFeatures;
   std::transform(devices.begin(), devices.end(), std::back_inserter(devicesWithFeatures),
-    [surface](const auto& device) { return GetDeviceFeatures(device, surface); }
+    [surface](const auto& device) { return getDeviceFeatures(device, surface); }
   );
 
   // pick one device that supports our requirements
   std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end()); // need it sorted and unique ...
   auto it = std::find_if(devicesWithFeatures.begin(), devicesWithFeatures.end(),
-    [requiredExtensions](const auto& device) { return CheckDeviceFeatures(device, requiredExtensions); }
+    [requiredExtensions](const auto& device) { return checkDeviceFeatures(device, requiredExtensions); }
   );
   if (it == devicesWithFeatures.end()) {
     THROW("Could not find GPU that supports Vulkan");
@@ -124,9 +124,9 @@ Device::Device(VkInstance instance, VkSurfaceKHR surface):
   queueFamilies_.surface  = it->surface[0];
   queueFamilies_.compute  = it->compute[0];
   queueFamilies_.transfer = it->transfer[0];
-  CreateDevice();
+  createDevice();
   vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memoryProperties_);
-  CreateCommandPool();
+  createCommandPool();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -135,7 +135,7 @@ Device::~Device()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Device::CreateDevice()
+void Device::createDevice()
 {
   std::vector<VkDeviceQueueCreateInfo> queueInfos;
   
@@ -176,7 +176,7 @@ void Device::CreateDevice()
   if (vkCreateDevice(physicalDevice_, &info, nullptr, &device) != VK_SUCCESS) {
     THROW("Could not create Vulkan device");
   }
-  logicalDevice_.Assign(device, destroyDevice);
+  logicalDevice_.set(device, destroyDevice);
   LOG(trace) << "Logical Device created";
 
   vkGetDeviceQueue(*logicalDevice_, queueFamilies_.graphics, 0, queues_ + 0);
@@ -186,7 +186,7 @@ void Device::CreateDevice()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-uint32_t Device::GetMemoryType(uint32_t filter, VkMemoryPropertyFlags props) const
+uint32_t Device::getMemoryType(uint32_t filter, VkMemoryPropertyFlags props) const
 {
   for (uint32_t i = 0; i < memoryProperties_.memoryTypeCount; i++) {
     if (filter & (1 << i) && (memoryProperties_.memoryTypes[i].propertyFlags & props) == props) {
@@ -197,7 +197,7 @@ uint32_t Device::GetMemoryType(uint32_t filter, VkMemoryPropertyFlags props) con
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Device::CreateCommandPool()
+void Device::createCommandPool()
 {
   VkCommandPoolCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -211,11 +211,11 @@ void Device::CreateCommandPool()
   if (vkCreateCommandPool(*logicalDevice_, &info, nullptr, &commandPool) != VK_SUCCESS) {
     THROW("Could not create Command Pool");
   }
-  commandPool_.Assign(commandPool, destroyCommandPool);
+  commandPool_.set(commandPool, destroyCommandPool);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Device::SubmitCommand(CommandHandler handler) const
+void Device::submitCommand(CommandHandler handler) const
 {
   VkCommandBufferAllocateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -239,8 +239,8 @@ void Device::SubmitCommand(CommandHandler handler) const
   submitInfo.commandBufferCount = 1;
   submitInfo.pCommandBuffers = &commandBuffer;
   
-  vkQueueSubmit(GraphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
-  vkQueueWaitIdle(GraphicsQueue());
+  vkQueueSubmit(graphicsQueue(), 1, &submitInfo, VK_NULL_HANDLE);
+  vkQueueWaitIdle(graphicsQueue());
   vkFreeCommandBuffers(*logicalDevice_, *commandPool_, 1, &commandBuffer);
 }
 

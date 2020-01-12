@@ -16,13 +16,13 @@ namespace asset
 class Database
 {
 public:
-  Asset* Get(const std::string& name);
-  void Put(AssetPtr asset, bool resolveRefs = true);
-  void Delete(AssetPtr asset);
-  void Delete(const std::string& name);
-  void ResolveRefs();
+  Asset* get(const std::string& name);
+  void put(AssetPtr asset, bool resolveRefs = true);
+  void remove(AssetPtr asset);
+  void remove(const std::string& name);
+  void resolveRefs();
   template<typename T>
-  T* Get(const std::string& name);
+  T* get(const std::string& name);
 private:
   std::map<std::string, AssetPtr> assets_;
 };
@@ -31,9 +31,9 @@ typedef std::unique_ptr<Database> DatabasePtr;
 
 // -------------------------------------------------------------------------------------------------------------------------
 template<typename T>
-T* Database::Get(const std::string& name)
+T* Database::get(const std::string& name)
 {
-  auto ptr = dynamic_cast<T*>(Get(name));
+  auto ptr = dynamic_cast<T*>(get(name));
   if (!ptr) {
     THROW("Wrong asset type \"%1\"", name);
   }

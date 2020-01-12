@@ -21,45 +21,45 @@ Material::~Material()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Material::ResolveRefs(Database* db)
+void Material::resolveRefs(Database* db)
 {
-  vertShader_ = db->Get<Shader>(vertName_);
-  fragShader_ = db->Get<Shader>(fragName_);
+  vertShader_ = db->get<Shader>(vertName_);
+  fragShader_ = db->get<Shader>(fragName_);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-Material& Material::VertexShader(Shader* shader)
+Material& Material::vertexShader(Shader* shader)
 {
   vertShader_ = shader;
-  vertName_ = vertShader_->Name();
+  vertName_ = vertShader_->name();
   return *this;
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-Material& Material::FragmentShader(Shader* shader)
+Material& Material::fragmentShader(Shader* shader)
 {
   fragShader_ = shader;
-  fragName_ = fragShader_->Name();
+  fragName_ = fragShader_->name();
   return *this;
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-size_t Material::Serialize(Asset* asset, std::ostream& stream, bool)
+size_t Material::serialize(Asset* asset, std::ostream& stream, bool)
 {
   auto material = dynamic_cast<Material*>(asset);
   if (!material)
     THROW("Material serializer was given the wrong asset");
-  auto size = Serializer::Serialize(stream, material->vertName_);
-  return size + Serializer::Serialize(stream, material->fragName_);
+  auto size = Serializer::serialize(stream, material->vertName_);
+  return size + Serializer::serialize(stream, material->fragName_);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-MaterialPtr Material::Deserialize(const std::string& name, std::istream& stream, size_t, bool binary)
+MaterialPtr Material::deserialize(const std::string& name, std::istream& stream, size_t, bool binary)
 {
   auto material = std::make_unique<Material>(name);
   if (binary) {
-    material->vertName_ = Serializer::DeserializeString(stream);
-    material->fragName_ = Serializer::DeserializeString(stream);
+    material->vertName_ = Serializer::deserializeString(stream);
+    material->fragName_ = Serializer::deserializeString(stream);
   }
   else {
     std::getline(stream, material->vertName_);

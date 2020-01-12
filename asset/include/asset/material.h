@@ -19,16 +19,16 @@ class Material : public Asset
 public:
   explicit Material(const std::string& name);
   virtual ~Material();
-  Shader* VertexShader() const { return vertShader_; }
-  Shader* FragmentShader() const { return fragShader_; }
-  Material& VertexShader(Shader* shader);
-  Material& FragmentShader(Shader* shader);
+  Shader* vertexShader() const { return vertShader_; }
+  Shader* fragmentShader() const { return fragShader_; }
+  Material& vertexShader(Shader* shader);
+  Material& fragmentShader(Shader* shader);
 public: // Serialization
   static const AssetId assetId;
-  static size_t Serialize(Asset* asset, std::ostream& stream, bool binary);
-  static MaterialPtr Deserialize(const std::string& name, std::istream& stream, size_t size, bool binary);
+  static size_t serialize(Asset* asset, std::ostream& stream, bool binary);
+  static MaterialPtr deserialize(const std::string& name, std::istream& stream, size_t size, bool binary);
 protected:
-  void ResolveRefs(Database*) override;
+  void resolveRefs(Database*) override;
 private:
   Shader* vertShader_;
   Shader* fragShader_;

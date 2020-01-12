@@ -29,7 +29,9 @@ typedef boost::log::trivial::severity_level Severity;
 BOOST_LOG_ATTRIBUTE_KEYWORD(a_file, "File", std::string)
 BOOST_LOG_ATTRIBUTE_KEYWORD(a_line, "Line", uint32_t)
 
-enum class Format : int
+namespace format
+{
+enum Attributes : int
 {
   Time,
   Severity,
@@ -37,9 +39,10 @@ enum class Format : int
   Line,
   All = std::numeric_limits<int>::max()
 };
+}
 
-void Init(boost::optional<Severity> severity = boost::none, Format format = Format::All);
-Severity SeverityFromString(std::string str);
+void init(boost::optional<Severity> severity = boost::none, int format = format::All);
+Severity severityFromString(std::string str);
 
 } // !namespace log
 } // !namespace yaga

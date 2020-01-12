@@ -13,12 +13,12 @@ class Application : private boost::noncopyable
 {
 public:
   virtual ~Application() {}
-  virtual void Run(const std::string& dir) = 0;
+  virtual void run(const std::string& dir) = 0;
 };
 
 typedef std::unique_ptr<Application> ApplicationPtr;
 
-ApplicationPtr CreateApplication();
+ApplicationPtr createApplication();
 
 } // !namespace yaga
 

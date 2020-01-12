@@ -1,37 +1,37 @@
 #include "precompiled.h"
-#include "model.h"
+#include "render_object.h"
 
 namespace yaga
 {
 
 // -------------------------------------------------------------------------------------------------------------------------
-Model::Model(Device* device, VideoBuffer* videoBuffer, Mesh* mesh, Material* material, const std::vector<ImageView*>& textures) :
-  device_(device->Logical()), videoBuffer_(videoBuffer), mesh_(mesh), material_(material), textures_(textures)
+RenderObject::RenderObject(Device* device, Swapchain* swapchain, Mesh* mesh, Material* material, const std::vector<ImageView*>& textures) :
+  device_(device), vkDevice_(**device), swapchain_(swapchain), mesh_(mesh), material_(material), textures_(textures)
 {
-  CreateDescriptorSets(device->Logical(), videoBuffer);
-  CreateCommandBuffer(device, videoBuffer);
+  createDescriptorSets();
+  createCommandBuffer();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Model::CreateDescriptorSets(VkDevice device, VideoBuffer* videoBuffer)
+void RenderObject::createDescriptorSets()
 {
-  const auto frameCount = videoBuffer->Frames().size();
+  const auto frameCount = swapchain_->frames().size();
 
-  std::vector<VkDescriptorSetLayout> layouts(frameCount, videoBuffer->DescriptorSetLayout());
+  std::vector<VkDescriptorSetLayout> layouts(frameCount, swapchain_->descriptorSetLayout());
   VkDescriptorSetAllocateInfo allocInfo = {};
   allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-  allocInfo.descriptorPool = videoBuffer->DescriptorPool();
+  allocInfo.descriptorPool = swapchain_->descriptorPool();
   allocInfo.descriptorSetCount = static_cast<uint32_t>(layouts.size());
   allocInfo.pSetLayouts = layouts.data();
 
   descriptorSets_.resize(frameCount);
-  if (vkAllocateDescriptorSets(device, &allocInfo, descriptorSets_.data()) != VK_SUCCESS) {
+  if (vkAllocateDescriptorSets(vkDevice_, &allocInfo, descriptorSets_.data()) != VK_SUCCESS) {
     throw std::runtime_error("Could not allocate descriptor sets");
   }
 
   for (size_t i = 0; i < frameCount; i++) {
     VkDescriptorBufferInfo bufferInfo = {};
-    bufferInfo.buffer = **videoBuffer->UniformBuffers()[i];
+    bufferInfo.buffer = **swapchain_->uniformBuffers()[i];
     bufferInfo.offset = 0;
     bufferInfo.range = sizeof(UniformObject);
 
@@ -50,7 +50,7 @@ void Model::CreateDescriptorSets(VkDevice device, VideoBuffer* videoBuffer)
       VkDescriptorImageInfo imageInfo = {};
       imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
       imageInfo.imageView = **textures_[0];
-      imageInfo.sampler = videoBuffer->TextureSampler();
+      imageInfo.sampler = swapchain_->textureSampler();
 
       descriptorWrites[1].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
       descriptorWrites[1].dstSet = descriptorSets_[i];
@@ -61,20 +61,20 @@ void Model::CreateDescriptorSets(VkDevice device, VideoBuffer* videoBuffer)
       descriptorWrites[1].pImageInfo = &imageInfo;
     }
 
-    vkUpdateDescriptorSets(device, static_cast<uint32_t>(textures_.size() > 0 ? descriptorWrites.size() : 1), descriptorWrites.data(), 0, nullptr);
+    vkUpdateDescriptorSets(vkDevice_, static_cast<uint32_t>(textures_.size() > 0 ? descriptorWrites.size() : 1), descriptorWrites.data(), 0, nullptr);
   }
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Model::CreateCommandBuffer(Device* device, VideoBuffer* videoBuffer)
+void RenderObject::createCommandBuffer()
 {
-  commandBuffers_.resize(material_->FrameBuffers().size());
+  commandBuffers_.resize(material_->frameBuffers().size());
   VkCommandBufferAllocateInfo allocInfo = {};
   allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-  allocInfo.commandPool = device->CommandPool();
+  allocInfo.commandPool = device_->commandPool();
   allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
   allocInfo.commandBufferCount = static_cast<uint32_t>(commandBuffers_.size());
-  if (vkAllocateCommandBuffers(device->Logical(), &allocInfo, commandBuffers_.data()) != VK_SUCCESS) {
+  if (vkAllocateCommandBuffers(vkDevice_, &allocInfo, commandBuffers_.data()) != VK_SUCCESS) {
     THROW("Could not allocate command buffers");
   }
   for (size_t i = 0; i < commandBuffers_.size(); i++)
@@ -93,21 +93,21 @@ void Model::CreateCommandBuffer(Device* device, VideoBuffer* videoBuffer)
 
     VkRenderPassBeginInfo renderPassInfo = {};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = material_->RenderPass();
-    renderPassInfo.framebuffer = material_->FrameBuffers()[i];
+    renderPassInfo.renderPass = material_->renderPass();
+    renderPassInfo.framebuffer = material_->frameBuffers()[i];
     renderPassInfo.renderArea.offset = { 0, 0 };
-    renderPassInfo.renderArea.extent = videoBuffer->Size();
+    renderPassInfo.renderArea.extent = swapchain_->size();
     renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
     renderPassInfo.pClearValues = clearValues.data();
     vkCmdBeginRenderPass(command, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-    vkCmdBindPipeline(command, VK_PIPELINE_BIND_POINT_GRAPHICS, material_->Pipeline());
-    vkCmdBindDescriptorSets(command, VK_PIPELINE_BIND_POINT_GRAPHICS, videoBuffer->PipelineLayout(), 0, 1,
+    vkCmdBindPipeline(command, VK_PIPELINE_BIND_POINT_GRAPHICS, material_->pipeline());
+    vkCmdBindDescriptorSets(command, VK_PIPELINE_BIND_POINT_GRAPHICS, swapchain_->pipelineLayout(), 0, 1,
       &descriptorSets_[i], 0, nullptr);
-    VkBuffer vertexBuffers[] = { mesh_->VertexBuffer() };
+    VkBuffer vertexBuffers[] = { mesh_->vertexBuffer() };
     VkDeviceSize offsets[] = { 0 };
     vkCmdBindVertexBuffers(command, 0, 1, vertexBuffers, offsets);
-    vkCmdBindIndexBuffer(command, mesh_->IndexBuffer(), 0, VK_INDEX_TYPE_UINT32);
-    vkCmdDrawIndexed(command, static_cast<uint32_t>(mesh_->Indices().size()), 1, 0, 0, 0);
+    vkCmdBindIndexBuffer(command, mesh_->indexBuffer(), 0, VK_INDEX_TYPE_UINT32);
+    vkCmdDrawIndexed(command, static_cast<uint32_t>(mesh_->indices().size()), 1, 0, 0, 0);
     vkCmdEndRenderPass(command);
 
     if (vkEndCommandBuffer(command) != VK_SUCCESS) {

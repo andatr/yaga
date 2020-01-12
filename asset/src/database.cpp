@@ -7,7 +7,7 @@ namespace asset
 {
 
 // -------------------------------------------------------------------------------------------------------------------------
-Asset* Database::Get(const std::string& name)
+Asset* Database::get(const std::string& name)
 {
   auto it = assets_.find(name);
   if (it == assets_.end()) {
@@ -17,33 +17,33 @@ Asset* Database::Get(const std::string& name)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Database::Put(AssetPtr asset, bool resolveRefs)
+void Database::put(AssetPtr asset, bool resolveRefs)
 {
   // auto it = assets_.find(asset->Name());
   // if (it != assets_.end())
   //  THROW("Asset with name \"%1%\" already exists", asset->Name());
   if (resolveRefs) {
-    asset->ResolveRefs(this);
+    asset->resolveRefs(this);
   }
-  assets_[asset->Name()] = std::move(asset);
+  assets_[asset->name()] = std::move(asset);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Database::ResolveRefs()
+void Database::resolveRefs()
 {
   for (const auto& asset: assets_) {
-    asset.second->ResolveRefs(this);
+    asset.second->resolveRefs(this);
   }
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Database::Delete(AssetPtr asset)
+void Database::remove(AssetPtr asset)
 {
-  assets_.erase(asset->Name());
+  assets_.erase(asset->name());
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Database::Delete(const std::string& name)
+void Database::remove(const std::string& name)
 {
   assets_.erase(name);
 }

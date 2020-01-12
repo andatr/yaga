@@ -28,24 +28,24 @@ namespace impl
 {
 
 // -------------------------------------------------------------------------------------------------------------------------
-inline std::string ExpandFormat(boost::format f)
+inline std::string expandFormat(boost::format f)
 {
   return f.str();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
 template<typename T, typename... Args>
-std::string ExpandFormat(boost::format f, T&& t, Args&&... args)
+std::string expandFormat(boost::format f, T&& t, Args&&... args)
 {
-  return ExpandFormat(f % std::forward<T>(t), std::forward<Args>(args)...);
+  return expandFormat(f % std::forward<T>(t), std::forward<Args>(args)...);
 }
 
 } // !namespace impl
 
 // -------------------------------------------------------------------------------------------------------------------------
 template<typename ...Args>
-Exception::Exception(const std::string& file, int line, const std::string& format, Args... args):
-  file_(file), line_(line), message_(impl::ExpandFormat(boost::format(format), args...))
+Exception::Exception(const std::string& file, int line, const std::string& format, Args... args) :
+  file_(file), line_(line), message_(impl::expandFormat(boost::format(format), args...))
 {
 }
 

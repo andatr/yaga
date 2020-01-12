@@ -20,15 +20,13 @@ Application::~Application()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-size_t Application::Serialize(Asset* asset, std::ostream& stream, bool)
+size_t Application::serialize(Asset* asset, std::ostream& stream, bool)
 {
   auto app = dynamic_cast<Application*>(asset);
   if (!app) {
     THROW("Application serializer was given the wrong asset");
   }
-
-  namespace pt = boost::property_tree;
-    
+  namespace pt = boost::property_tree;  
   std::stringstream ss;
   pt::ptree window;
   window.put<bool>("fullscreen", app->fullscreen_);
@@ -38,16 +36,14 @@ size_t Application::Serialize(Asset* asset, std::ostream& stream, bool)
   pt::ptree props;
   props.add_child("window", window);
   pt::write_json(ss, props);
-
   stream << ss.rdbuf();
   return ss.tellp();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-ApplicationPtr Application::Deserialize(const std::string& name, std::istream& stream, size_t, bool)
+ApplicationPtr Application::deserialize(const std::string& name, std::istream& stream, size_t, bool)
 {
   auto app = std::make_unique<Application>(name);
-
   namespace pt = boost::property_tree;
   pt::ptree props;
   pt::read_json(stream, props);
@@ -56,7 +52,6 @@ ApplicationPtr Application::Deserialize(const std::string& name, std::istream& s
   app->width_ = window.get<uint32_t>("width", 640);
   app->height_ = window.get<uint32_t>("height", 480);
   app->title_ = window.get<std::string>("title", "YAGA Game");
-        
   return std::move(app);
 }
 

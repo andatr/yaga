@@ -10,7 +10,7 @@
 #include "device.h"
 #include "device_buffer.h"
 #include "asset/mesh.h"
-#include "utility/auto_destroyer.h"
+#include "utility/auto_destructor.h"
 
 namespace yaga
 {
@@ -19,16 +19,18 @@ class Mesh : private boost::noncopyable
 {
 public:
   explicit Mesh(Device* device, Allocator* allocator, asset::Mesh* asset);
-  VkBuffer VertexBuffer() const { return **vertexBuffer_; }
-  VkBuffer IndexBuffer() const { return **indexBuffer_; }
-  const std::vector<Vertex>& Vertices() const { return asset_->Vertices(); }
-  const std::vector<uint32_t>& Indices() const { return asset_->Indices(); }
+  VkBuffer vertexBuffer() const { return **vertexBuffer_; }
+  VkBuffer indexBuffer() const { return **indexBuffer_; }
+  const std::vector<Vertex>& vertices() const { return asset_->vertices(); }
+  const std::vector<uint32_t>& indices() const { return asset_->indices(); }
 private:
-  void CreateVertexBuffer(VkDevice device, Allocator* allocator);
-  void CreateIndexBuffer(VkDevice device, Allocator* allocator);
-  void CopyBuffer(VkBuffer destination, VkBuffer source, VkDeviceSize size) const;
+  void createVertexBuffer();
+  void createIndexBuffer();
+  void copyBuffer(VkBuffer destination, VkBuffer source, VkDeviceSize size) const;
 private:
   Device* device_;
+  VkDevice vkDevice_;
+  Allocator* allocator_;
   asset::Mesh* asset_;
   DeviceBufferPtr vertexBuffer_;
   DeviceBufferPtr indexBuffer_;

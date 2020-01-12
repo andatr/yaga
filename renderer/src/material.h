@@ -8,9 +8,9 @@
 #include <GLFW/glfw3.h>
 
 #include "device.h"
-#include "video_buffer.h"
+#include "swapchain.h"
 #include "utility/array.h"
-#include "utility/auto_destroyer.h"
+#include "utility/auto_destructor.h"
 #include "asset/material.h"
 
 namespace yaga
@@ -19,19 +19,23 @@ namespace yaga
 class Material : private boost::noncopyable
 {
 public:
-  Material(Device* device, VideoBuffer* videoBuffer, asset::Material* asset);
-  VkRenderPass RenderPass() const { return *renderPass_; }
-  VkPipeline Pipeline() const { return *pipeline_; }
-  const std::vector<VkFramebuffer>& FrameBuffers() const { return frameBufferRefs_; }
+  Material(Device* device, Swapchain* swapchain, asset::Material* asset);
+  VkRenderPass renderPass() const { return *renderPass_; }
+  VkPipeline pipeline() const { return *pipeline_; }
+  const std::vector<VkFramebuffer>& frameBuffers() const { return frameBufferRefs_; }
 private:
-  void CreatePipeline(Device* device, VideoBuffer* videoBuffer, asset::Material* asset);
-  void CreateRenderPass(VkDevice device, VkFormat imageFormat, VkFormat depthFormat);
-  void CreateFramebuffers(VkDevice device, VideoBuffer* videoBuffer);
+  void createPipeline();
+  void createRenderPass();
+  void createFramebuffers();
 private:
+  Device* device_;
+  VkDevice vkDevice_;
+  Swapchain* swapchain_;
+  asset::Material* asset_;
   VkExtent2D size_;
-  AutoDestroyer<VkRenderPass> renderPass_;
-  AutoDestroyer<VkPipeline> pipeline_;
-  std::vector<AutoDestroyer<VkFramebuffer>> frameBuffers_;
+  AutoDestructor<VkRenderPass> renderPass_;
+  AutoDestructor<VkPipeline> pipeline_;
+  std::vector<AutoDestructor<VkFramebuffer>> frameBuffers_;
   std::vector<VkFramebuffer> frameBufferRefs_;
 };
 

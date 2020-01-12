@@ -6,8 +6,9 @@
 #include <boost/noncopyable.hpp>
 #include <GLFW/glfw3.h>
 
+#include "device.h"
 #include "asset/shader.h"
-#include "utility/auto_destroyer.h"
+#include "utility/auto_destructor.h"
 
 namespace yaga
 {
@@ -15,10 +16,10 @@ namespace yaga
 class Shader : private boost::noncopyable
 {
 public:
-  Shader(VkDevice device, asset::Shader* asset);
-  VkShaderModule ShaderModule() const { return *shader_; }
+  Shader(Device* device, asset::Shader* asset);
+  VkShaderModule operator*() const { return *shader_; }
 private:
-  AutoDestroyer<VkShaderModule> shader_;
+  AutoDestructor<VkShaderModule> shader_;
 };
 
 typedef std::unique_ptr<Shader> ShaderPtr;

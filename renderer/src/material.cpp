@@ -10,7 +10,7 @@ namespace
 {
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkVertexInputBindingDescription VertexBindingDescription()
+VkVertexInputBindingDescription getVertexBindingDescription()
 {
   VkVertexInputBindingDescription bindingDescription = {};
   bindingDescription.binding = 0;
@@ -21,7 +21,7 @@ VkVertexInputBindingDescription VertexBindingDescription()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-std::array<VkVertexInputAttributeDescription, 3> VertexAttributeDescriptions()
+std::array<VkVertexInputAttributeDescription, 3> getVertexAttributeDescriptions()
 {
   std::array<VkVertexInputAttributeDescription, 3> desc = {};
 
@@ -44,10 +44,10 @@ std::array<VkVertexInputAttributeDescription, 3> VertexAttributeDescriptions()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkPipelineVertexInputStateCreateInfo VertexAttributes()
+VkPipelineVertexInputStateCreateInfo getVertexAttributes()
 {
-  auto bindingDescription = VertexBindingDescription();
-  auto attributeDescriptions = VertexAttributeDescriptions();
+  auto bindingDescription = getVertexBindingDescription();
+  auto attributeDescriptions = getVertexAttributeDescriptions();
 
   VkPipelineVertexInputStateCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -59,7 +59,7 @@ VkPipelineVertexInputStateCreateInfo VertexAttributes()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkPipelineInputAssemblyStateCreateInfo Primitives() 
+VkPipelineInputAssemblyStateCreateInfo getPrimitives() 
 {
   VkPipelineInputAssemblyStateCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
@@ -69,7 +69,7 @@ VkPipelineInputAssemblyStateCreateInfo Primitives()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkViewport Viewport(const VkExtent2D& size)
+VkViewport getViewport(const VkExtent2D& size)
 {
   VkViewport viewport = {};
   viewport.x = 0.0f;
@@ -82,7 +82,7 @@ VkViewport Viewport(const VkExtent2D& size)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkRect2D Scissors(const VkExtent2D& size)
+VkRect2D getScissors(const VkExtent2D& size)
 {
   VkRect2D scissors = {};
   scissors.offset = { 0, 0 };
@@ -91,7 +91,7 @@ VkRect2D Scissors(const VkExtent2D& size)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkPipelineViewportStateCreateInfo ViewportState(const VkViewport& viewport, const VkRect2D& scissors)
+VkPipelineViewportStateCreateInfo getViewportState(const VkViewport& viewport, const VkRect2D& scissors)
 {
   VkPipelineViewportStateCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -103,7 +103,7 @@ VkPipelineViewportStateCreateInfo ViewportState(const VkViewport& viewport, cons
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkPipelineRasterizationStateCreateInfo Rasterizer()
+VkPipelineRasterizationStateCreateInfo getRasterizer()
 {
   VkPipelineRasterizationStateCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -122,17 +122,17 @@ VkPipelineRasterizationStateCreateInfo Rasterizer()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkPipelineMultisampleStateCreateInfo Sampler()
+VkPipelineMultisampleStateCreateInfo getSampler(VkSampleCountFlagBits msaa)
 {
   VkPipelineMultisampleStateCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
   info.sampleShadingEnable = VK_FALSE;
-  info.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+  info.rasterizationSamples = msaa;
   return info;
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkPipelineColorBlendAttachmentState ColorBlender()
+VkPipelineColorBlendAttachmentState getColorBlender()
 {
   VkPipelineColorBlendAttachmentState info = {};
   info.colorWriteMask =
@@ -142,7 +142,7 @@ VkPipelineColorBlendAttachmentState ColorBlender()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkPipelineColorBlendStateCreateInfo ColorBlendState(const VkPipelineColorBlendAttachmentState& blender)
+VkPipelineColorBlendStateCreateInfo getColorBlendState(const VkPipelineColorBlendAttachmentState& blender)
 {
   VkPipelineColorBlendStateCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -158,7 +158,7 @@ VkPipelineColorBlendStateCreateInfo ColorBlendState(const VkPipelineColorBlendAt
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkPipelineShaderStageCreateInfo ShaderStage(VkShaderModule module, VkShaderStageFlagBits shaderType)
+VkPipelineShaderStageCreateInfo getShaderStage(VkShaderModule module, VkShaderStageFlagBits shaderType)
 {
   VkPipelineShaderStageCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -169,7 +169,7 @@ VkPipelineShaderStageCreateInfo ShaderStage(VkShaderModule module, VkShaderStage
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkPipelineDepthStencilStateCreateInfo DepthStencilState()
+VkPipelineDepthStencilStateCreateInfo getDepthStencilState()
 {
   VkPipelineDepthStencilStateCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
@@ -184,26 +184,25 @@ VkPipelineDepthStencilStateCreateInfo DepthStencilState()
 } // !namespace
 
 // -------------------------------------------------------------------------------------------------------------------------
-Material::Material(Device* device, VideoBuffer* videoBuffer, asset::Material* asset)
+Material::Material(Device* device, Swapchain* swapchain, asset::Material* asset) :
+  device_(device), vkDevice_(**device), swapchain_(swapchain), asset_(asset)
 {
-  CreatePipeline(device, videoBuffer, asset);
-  CreateFramebuffers(device->Logical(), videoBuffer);
+  createPipeline();
+  createFramebuffers();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Material::CreatePipeline(Device* device, VideoBuffer* videoBuffer, asset::Material* asset)
+void Material::createPipeline()
 {
-  const auto logicalDevice = device->Logical();
-
-  Shader vertexShader(logicalDevice, asset->VertexShader());
-  Shader fragmentShader(logicalDevice, asset->FragmentShader());
+  Shader vertexShader(device_, asset_->vertexShader());
+  Shader fragmentShader(device_, asset_->fragmentShader());
   VkPipelineShaderStageCreateInfo shaderStages[] = {
-    ShaderStage(vertexShader.ShaderModule(),  VK_SHADER_STAGE_VERTEX_BIT),
-    ShaderStage(fragmentShader.ShaderModule(), VK_SHADER_STAGE_FRAGMENT_BIT)
+    getShaderStage(*vertexShader,  VK_SHADER_STAGE_VERTEX_BIT),
+    getShaderStage(*fragmentShader, VK_SHADER_STAGE_FRAGMENT_BIT)
   };
 
-  auto bindingDescription = VertexBindingDescription();
-  auto attributeDescriptions = VertexAttributeDescriptions();
+  auto bindingDescription = getVertexBindingDescription();
+  auto attributeDescriptions = getVertexAttributeDescriptions();
 
   VkPipelineVertexInputStateCreateInfo vertexAttributes = {};
   vertexAttributes.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -212,17 +211,17 @@ void Material::CreatePipeline(Device* device, VideoBuffer* videoBuffer, asset::M
   vertexAttributes.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
   vertexAttributes.pVertexAttributeDescriptions = attributeDescriptions.data();
   
-  auto primitives = Primitives();
-  auto viewport = Viewport(videoBuffer->Size());
-  auto scissors = Scissors(videoBuffer->Size());
-  auto viewportState = ViewportState(viewport, scissors);
-  auto rasterizer = Rasterizer();
-  auto sampler = Sampler();
-  auto colorBlender = ColorBlender();
-  auto colorBlendState = ColorBlendState(colorBlender);
-  auto depthStencilState = DepthStencilState();
+  auto primitives = getPrimitives();
+  auto viewport = getViewport(swapchain_->size());
+  auto scissors = getScissors(swapchain_->size());
+  auto viewportState = getViewportState(viewport, scissors);
+  auto rasterizer = getRasterizer();
+  auto sampler = getSampler(swapchain_->msaa());
+  auto colorBlender = getColorBlender();
+  auto colorBlendState = getColorBlendState(colorBlender);
+  auto depthStencilState = getDepthStencilState();
 
-  CreateRenderPass(logicalDevice, videoBuffer->ImageFormat(), videoBuffer->DepthFormat());
+  createRenderPass();
 
   VkGraphicsPipelineCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -235,44 +234,54 @@ void Material::CreatePipeline(Device* device, VideoBuffer* videoBuffer, asset::M
   info.pMultisampleState = &sampler;
   info.pColorBlendState = &colorBlendState;
   info.pDepthStencilState = &depthStencilState;
-  info.layout = videoBuffer->PipelineLayout();
+  info.layout = swapchain_->pipelineLayout();
   info.renderPass = *renderPass_;
   info.subpass = 0;
   info.basePipelineHandle = VK_NULL_HANDLE;
 
-  auto destroyPipeline = [logicalDevice](auto pipeline) {
-    vkDestroyPipeline(logicalDevice, pipeline, nullptr);
+  auto destroyPipeline = [device = vkDevice_](auto pipeline) {
+    vkDestroyPipeline(device, pipeline, nullptr);
     LOG(trace) << "Pipeline destroyed";
   };
   VkPipeline pipeline;
-  if (vkCreateGraphicsPipelines(logicalDevice, VK_NULL_HANDLE, 1, &info, nullptr, &pipeline) != VK_SUCCESS) {
+  if (vkCreateGraphicsPipelines(vkDevice_, VK_NULL_HANDLE, 1, &info, nullptr, &pipeline) != VK_SUCCESS) {
     THROW("Could not create Pipeline");
   }
-  pipeline_.Assign(pipeline, destroyPipeline);
+  pipeline_.set(pipeline, destroyPipeline);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Material::CreateRenderPass(VkDevice device, VkFormat imageFormat, VkFormat depthFormat)
+void Material::createRenderPass()
 {
   VkAttachmentDescription colorAttachment = {};
-  colorAttachment.format = imageFormat;
-  colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+  colorAttachment.format = swapchain_->imageFormat();
+  colorAttachment.samples = swapchain_->msaa();
   colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
   colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
   colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
   colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
   colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-  colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+  colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
   VkAttachmentDescription depthAttachment = {};
-  depthAttachment.format = depthFormat;
-  depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+  depthAttachment.format = swapchain_->depthFormat();
+  depthAttachment.samples = swapchain_->msaa();
   depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
   depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
   depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
   depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
   depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+
+  VkAttachmentDescription msaaAttachment = {};
+  msaaAttachment.format = swapchain_->imageFormat();
+  msaaAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+  msaaAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+  msaaAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+  msaaAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+  msaaAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+  msaaAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+  msaaAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
   VkAttachmentReference colorAttachmentRef = {};
   colorAttachmentRef.attachment = 0;
@@ -282,11 +291,16 @@ void Material::CreateRenderPass(VkDevice device, VkFormat imageFormat, VkFormat 
   depthAttachmentRef.attachment = 1;
   depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
+  VkAttachmentReference msaaAttachmentRef = {};
+  msaaAttachmentRef.attachment = 2;
+  msaaAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
   VkSubpassDescription subpass = {};
   subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
   subpass.colorAttachmentCount = 1;
   subpass.pColorAttachments = &colorAttachmentRef;
   subpass.pDepthStencilAttachment = &depthAttachmentRef;
+  subpass.pResolveAttachments = &msaaAttachmentRef;
 
   VkSubpassDependency dependency = {};
   dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
@@ -296,7 +310,7 @@ void Material::CreateRenderPass(VkDevice device, VkFormat imageFormat, VkFormat 
   dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
   dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
-  std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
+  std::array<VkAttachmentDescription, 3> attachments = { colorAttachment, depthAttachment, msaaAttachment };
   VkRenderPassCreateInfo renderPassInfo = {};
   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
   renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
@@ -306,6 +320,7 @@ void Material::CreateRenderPass(VkDevice device, VkFormat imageFormat, VkFormat 
   renderPassInfo.dependencyCount = 1;
   renderPassInfo.pDependencies = &dependency;
 
+  auto device = **device_;
   auto destroyRenderPass = [device](auto renderPass) {
     vkDestroyRenderPass(device, renderPass, nullptr);
     LOG(trace) << "Render Pass destroyed";
@@ -314,36 +329,37 @@ void Material::CreateRenderPass(VkDevice device, VkFormat imageFormat, VkFormat 
   if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) != VK_SUCCESS) {
     THROW("Could not create render pass");
   }
-  renderPass_.Assign(renderPass, destroyRenderPass);
+  renderPass_.set(renderPass, destroyRenderPass);
   LOG(trace) << "Render Pass created";
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Material::CreateFramebuffers(VkDevice device, VideoBuffer* videoBuffer)
+void Material::createFramebuffers()
 {
+  auto device = **device_;
   auto destroyFrameBuffer = [device](auto frameBuffer) {
     vkDestroyFramebuffer(device, frameBuffer, nullptr);
     LOG(trace) << "Framebuffer destroyed";
   };
-  const auto& frame = videoBuffer->Frames();
+  const auto& frame = swapchain_->frames();
   frameBuffers_.resize(frame.size());
   frameBufferRefs_.resize(frame.size());
   for (size_t i = 0; i < frame.size(); i++)
   {
-    std::array<VkImageView, 2> attachments = { **frame[i], videoBuffer->DepthBuffer() };
+    std::array<VkImageView, 3> attachments = { swapchain_->renderTarget(), swapchain_->depthBuffer(), **frame[i] };
     VkFramebufferCreateInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
     info.renderPass = *renderPass_;
     info.attachmentCount = static_cast<uint32_t>(attachments.size());
     info.pAttachments = attachments.data();
-    info.width = videoBuffer->Size().width;
-    info.height = videoBuffer->Size().height;
+    info.width = swapchain_->size().width;
+    info.height = swapchain_->size().height;
     info.layers = 1;
     VkFramebuffer frameBuffer;
     if (vkCreateFramebuffer(device, &info, nullptr, &frameBuffer) != VK_SUCCESS) {
       THROW("Could not create framebuffer");
     }
-    frameBuffers_[i].Assign(frameBuffer, destroyFrameBuffer);
+    frameBuffers_[i].set(frameBuffer, destroyFrameBuffer);
     frameBufferRefs_[i] = frameBuffer;
   }
 }

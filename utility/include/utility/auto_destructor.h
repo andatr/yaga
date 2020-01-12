@@ -11,20 +11,20 @@ namespace yaga
 {
 
 template<typename T>
-class AutoDestroyer : private boost::noncopyable
+class AutoDestructor : private boost::noncopyable
 {
 public:
   typedef std::function<void(T)> DestructorT;
 public:
-  AutoDestroyer();
-  AutoDestroyer(T& obj, const DestructorT& dtor);
-  AutoDestroyer(AutoDestroyer<T>&& other) noexcept;
-  AutoDestroyer<T>& operator=(AutoDestroyer<T>&& other) noexcept;
-  ~AutoDestroyer();
-  void Assign(T& obj, const DestructorT& dtor);
-  void Reset();
+  AutoDestructor();
+  AutoDestructor(T& obj, const DestructorT& dtor);
+  AutoDestructor(AutoDestructor<T>&& other) noexcept;
+  AutoDestructor<T>& operator=(AutoDestructor<T>&& other) noexcept;
+  ~AutoDestructor();
+  void set(T& obj, const DestructorT& dtor);
+  void set();
   const T& operator*() const;
-  bool Destoyed() const { return destoyed_; }
+  bool destoyed() const { return destoyed_; }
 private:
   bool destoyed_;
   T object_;
@@ -33,22 +33,22 @@ private:
 
 // -------------------------------------------------------------------------------------------------------------------------
 template<typename T>
-AutoDestroyer<T>::AutoDestroyer():
+AutoDestructor<T>::AutoDestructor() :
   destoyed_(true)
 {
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
 template<typename T>
-AutoDestroyer<T>::AutoDestroyer(T& obj, const DestructorT& dtor):
+AutoDestructor<T>::AutoDestructor(T& obj, const DestructorT& dtor) :
   destoyed_(true)
 {
-  Assign(obj, dtor);
+  set(obj, dtor);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
 template<typename T>
-AutoDestroyer<T>::AutoDestroyer(AutoDestroyer<T>&& other) noexcept
+AutoDestructor<T>::AutoDestructor(AutoDestructor<T>&& other) noexcept
 {
   destoyed_ = other.destoyed_;
   destructor_ = other.destructor_;
@@ -58,9 +58,9 @@ AutoDestroyer<T>::AutoDestroyer(AutoDestroyer<T>&& other) noexcept
 
 // -------------------------------------------------------------------------------------------------------------------------
 template<typename T>
-AutoDestroyer<T>& AutoDestroyer<T>::operator=(AutoDestroyer<T>&& other) noexcept
+AutoDestructor<T>& AutoDestructor<T>::operator=(AutoDestructor<T>&& other) noexcept
 {
-  Reset();
+  set();
   destoyed_ = other.destoyed_;
   destructor_ = other.destructor_;
   object_ = std::move(other.object_);
@@ -70,9 +70,9 @@ AutoDestroyer<T>& AutoDestroyer<T>::operator=(AutoDestroyer<T>&& other) noexcept
 
 // -------------------------------------------------------------------------------------------------------------------------
 template<typename T>
-void AutoDestroyer<T>::Assign(T& obj, const DestructorT& dtor)
+void AutoDestructor<T>::set(T& obj, const DestructorT& dtor)
 {
-  Reset();
+  set();
   destructor_ = dtor;
   object_ = std::move(obj);
   destoyed_ = false;
@@ -80,14 +80,7 @@ void AutoDestroyer<T>::Assign(T& obj, const DestructorT& dtor)
 
 // -------------------------------------------------------------------------------------------------------------------------
 template<typename T>
-AutoDestroyer<T>::~AutoDestroyer()
-{
-  Reset();
-}
-
-// -------------------------------------------------------------------------------------------------------------------------
-template<typename T>
-void AutoDestroyer<T>::Reset()
+void AutoDestructor<T>::set()
 {
   if (destoyed_) return;
   destoyed_ = true;
@@ -96,11 +89,20 @@ void AutoDestroyer<T>::Reset()
 
 // -------------------------------------------------------------------------------------------------------------------------
 template<typename T>
-const T& AutoDestroyer<T>::operator*() const
+AutoDestructor<T>::~AutoDestructor()
 {
+  set();
+}
+
+// -------------------------------------------------------------------------------------------------------------------------
+template<typename T>
+const T& AutoDestructor<T>::operator*() const
+{
+#ifndef NDEBUG 
   if (destoyed_) {
-    THROW("AutoDestroyer: attempt to access destoyed object");
+    THROW("AutoDestructor: attempt to access destoyed object");
   }
+#endif
   return object_;
 }
 

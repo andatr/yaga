@@ -6,60 +6,54 @@ namespace yaga
 namespace log
 {
 
+namespace attrs = boost::log::attributes;
 namespace logging = boost::log;
-namespace attrs = logging::attributes;
-namespace sinks = boost::log::sinks;
 namespace dt = std::chrono;
 
 typedef dt::steady_clock::time_point time_point;
 
 constexpr const char* a_time_str = "a_time";
+constexpr const char* a_format_str = "a_format";
 BOOST_LOG_ATTRIBUTE_KEYWORD(a_time, a_time_str, time_point)
+BOOST_LOG_ATTRIBUTE_KEYWORD(a_format, a_format_str, int)
 const auto a_severity = logging::aux::default_attribute_names::severity();
 
 // --------------------------------------------------------------------------------------------
-class SinkConsole : public sinks::basic_formatted_sink_backend<char, sinks::synchronized_feeding>
+void yagaFormatter(logging::record_view const& rec, logging::formatting_ostream& strm)
 {
-public:
-  static void consume(boost::log::record_view const& rec, string_type const& command_line);
-};
-  
-// --------------------------------------------------------------------------------------------
-void SinkConsole::consume(logging::record_view const& rec, string_type const& message)
-{
-  const auto& now = dt::steady_clock::now();
+  const auto& format = rec.attribute_values()[a_format].get();
   const auto& start = rec.attribute_values()[a_time].get();
+  const auto& now = dt::steady_clock::now();
   const auto time = static_cast<uint64_t>(dt::duration_cast<dt::milliseconds>(now - start).count());
-    
   const auto& severity = rec.attribute_values()[a_severity].extract<Severity>().get();
   const auto& file = rec.attribute_values()[a_file];
   const auto& line = rec.attribute_values()[a_line];
-
-  std::cout
-    //<< time << " "
-    << severity << " "
-    //<< file << " "
-    //<< line << " "
-    << message
-  << std::endl;
+  if (format & format::Time)
+    strm << time << " ";
+  if (format & format::Severity)
+    strm << severity << " ";
+  if (format & format::File)
+    strm << file << " ";
+  if (format & format::Line)
+    strm << line << " ";
+  strm << rec[logging::expressions::smessage];
 }
 
 // --------------------------------------------------------------------------------------------
-void Init(boost::optional<Severity> severity, Format format)
+void init(boost::optional<Severity> severity, int format)
 {
-  typedef sinks::synchronous_sink<SinkConsole> sink_t;
-
   auto core = logging::core::get();
+  core->add_global_attribute(a_time_str, attrs::constant<time_point>(dt::steady_clock::now()));
+  core->add_global_attribute(a_format_str, attrs::constant<int>(format));
+  auto sink = logging::add_console_log(std::cout);
+  sink->set_formatter(&yagaFormatter);
   if (severity) {
     core->set_filter(logging::trivial::severity >= severity.value());
   }
-  core->add_global_attribute(a_time_str, attrs::constant<time_point>(dt::steady_clock::now()));
-  auto sink = boost::make_shared<sink_t>();
-  core->add_sink(sink);
 }
 
 // --------------------------------------------------------------------------------------------
-Severity SeverityFromString(std::string str)
+Severity severityFromString(std::string str)
 {
   using namespace logging::trivial;
 

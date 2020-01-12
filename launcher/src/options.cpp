@@ -11,7 +11,7 @@ namespace
 {
 
 // --------------------------------------------------------------------------------------------
-po::options_description MakeOptions()
+po::options_description makeOptions()
 {
   po::options_description desc("allowed arguments");
   desc.add_options()
@@ -23,7 +23,7 @@ po::options_description MakeOptions()
 
 // --------------------------------------------------------------------------------------------
 template<typename T>
-const T& GetOption(const po::variables_map& options, const std::string& name, const T& defaultVal)
+const T& getOption(const po::variables_map& options, const std::string& name, const T& defaultVal)
 {
   if (options.count(name)) {
     return options[name].as<T>();
@@ -37,10 +37,10 @@ const T& GetOption(const po::variables_map& options, const std::string& name, co
 Options::Options(int argc, char *argv[])
 {
   po::variables_map options;
-  po::store(po::command_line_parser(argc, argv).options(MakeOptions()).run(), options);
+  po::store(po::command_line_parser(argc, argv).options(makeOptions()).run(), options);
   po::notify(options);
 
-  auto appDir = fs::path(GetOption<std::string>(options, "app", "data"));
+  auto appDir = fs::path(getOption<std::string>(options, "app", "data"));
   if (appDir.is_absolute()) {
     appDir_ = appDir.string();
   }
@@ -49,9 +49,9 @@ Options::Options(int argc, char *argv[])
     appDir_ = (parent / appDir).string();
   }
 
-  std::string severity = GetOption<std::string>(options, "log", "");
+  std::string severity = getOption<std::string>(options, "log", "");
   if (!severity.empty()) {
-    severity_ = log::SeverityFromString(severity);
+    severity_ = log::severityFromString(severity);
   }
 }
 

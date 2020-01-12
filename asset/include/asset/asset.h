@@ -17,10 +17,10 @@ class Asset : private boost::noncopyable
 public:
   explicit Asset(const std::string& name);
   virtual ~Asset() {}
-  const std::string& Name() const { return name_; }
+  const std::string& name() const { return name_; }
 protected:
   friend class Database;
-  virtual void ResolveRefs(Database* db);
+  virtual void resolveRefs(Database* db);
 protected:
   const std::string name_;
 };

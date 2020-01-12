@@ -3,7 +3,7 @@ file( GLOB_RECURSE source_list
   "src/*.h"
   "src/*.cpp"
 )
-  
+
 if( MSVC )
   assign_source_group( ${source_list} )
   set_source_files_properties( src/precompiled.cpp PROPERTIES COMPILE_FLAGS "/Ycprecompiled.h" )
@@ -17,7 +17,7 @@ target_include_directories( launcher
 )
 
 target_link_libraries( launcher
-    PRIVATE
+  PRIVATE
     Boost::boost
     Boost::filesystem
     Boost::log

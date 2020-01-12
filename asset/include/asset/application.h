@@ -22,14 +22,14 @@ class Application : public Asset
 public:
   explicit Application(const std::string& name);
   virtual ~Application();
-  bool Fullscreen() const { return fullscreen_; }
-  uint32_t Width() const { return width_; }
-  uint32_t Height() const { return height_; }
-  std::string Title() const { return title_; }
+  bool fullscreen() const { return fullscreen_; }
+  uint32_t width() const { return width_; }
+  uint32_t height() const { return height_; }
+  std::string title() const { return title_; }
 public: // Serialization
   static const AssetId assetId;
-  static size_t Serialize(Asset* asset, std::ostream& stream, bool binary);
-  static ApplicationPtr Deserialize(const std::string& name, std::istream& stream, size_t size, bool binary);
+  static size_t serialize(Asset* asset, std::ostream& stream, bool binary);
+  static ApplicationPtr deserialize(const std::string& name, std::istream& stream, size_t size, bool binary);
 private:
   bool fullscreen_;
   uint32_t width_;

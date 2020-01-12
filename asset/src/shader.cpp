@@ -20,23 +20,23 @@ Shader::~Shader()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-size_t Shader::Serialize(Asset* asset, std::ostream& stream, bool)
+size_t Shader::serialize(Asset* asset, std::ostream& stream, bool)
 {
   auto shader = dynamic_cast<Shader*>(asset);
   if (!shader) {
     THROW("Shader serializer was given the wrong asset");
   }
-  stream.write(shader->code_.Data(), shader->code_.Size());
-  return shader->code_.Size();
+  stream.write(shader->code_.data(), shader->code_.size());
+  return shader->code_.size();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-ShaderPtr Shader::Deserialize(const std::string& name, std::istream& stream, size_t size, bool)
+ShaderPtr Shader::deserialize(const std::string& name, std::istream& stream, size_t size, bool)
 {
   auto shader = std::make_unique<Shader>(name);
   ByteArray code(size);
-  stream.read(code.Data(), code.Size());
-  shader->Code(code);
+  stream.read(code.data(), code.size());
+  shader->code(code);
   return std::move(shader);
 }
 

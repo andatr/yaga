@@ -6,7 +6,7 @@
 
 #include "allocator.h"
 #include "device.h"
-#include "utility/auto_destroyer.h"
+#include "utility/auto_destructor.h"
 
 namespace yaga
 {
@@ -14,14 +14,16 @@ namespace yaga
 class DeviceBuffer : private boost::noncopyable
 {
 public:
-  DeviceBuffer(VkDevice device, Allocator* allocator, VkDeviceSize size, VkBufferUsageFlags bufferUsage, VkMemoryPropertyFlags memoryUsage);
+  DeviceBuffer(Device* device, Allocator* allocator, VkDeviceSize size, VkBufferUsageFlags bufferUsage, VkMemoryPropertyFlags memoryUsage);
   VkBuffer operator*() const { return *buffer_; }
-  VkDeviceMemory Memory() const { return *memory_; }
-  void Update(const void* data, size_t size) const;
+  VkDeviceMemory memory() const { return *memory_; }
+  void update(const void* data, size_t size) const;
 private:
-  VkDevice device_;
-  AutoDestroyer<VkBuffer> buffer_;
-  AutoDestroyer<VkDeviceMemory> memory_;
+  Device* device_;
+  VkDevice vkDevice_;
+  Allocator* allocator_;  
+  AutoDestructor<VkBuffer> buffer_;
+  AutoDestructor<VkDeviceMemory> memory_;
 };
 
 typedef std::unique_ptr<DeviceBuffer> DeviceBufferPtr;

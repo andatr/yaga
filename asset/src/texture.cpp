@@ -2,7 +2,7 @@
 #include "texture.h"
 
 #define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+#include <stb/stb_image.h>
 
 namespace yaga
 {
@@ -24,7 +24,7 @@ Texture::~Texture()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-size_t Texture::Serialize(Asset* asset, std::ostream&, bool)
+size_t Texture::serialize(Asset* asset, std::ostream&, bool)
 {
   auto texture = dynamic_cast<Texture*>(asset);
   if (!texture) {
@@ -34,7 +34,7 @@ size_t Texture::Serialize(Asset* asset, std::ostream&, bool)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-TexturePtr Texture::Deserialize(const std::string& name, std::istream& stream, size_t, bool)
+TexturePtr Texture::deserialize(const std::string& name, std::istream& stream, size_t, bool)
 {
   auto texture = std::make_unique<Texture>(name);
 
