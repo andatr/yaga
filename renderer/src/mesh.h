@@ -9,7 +9,7 @@
 #include "allocator.h"
 #include "device.h"
 #include "device_buffer.h"
-#include "asset/mesh.h"
+#include "engine/asset/mesh.h"
 #include "utility/auto_destructor.h"
 
 namespace yaga

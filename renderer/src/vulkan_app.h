@@ -9,21 +9,20 @@
 #include <GLFW/glfw3.h>
 
 #include "allocator.h"
-#include "application.h"
 #include "device.h"
 #include "image.h"
 #include "image_view.h"
 #include "render_object.h"
 #include "swapchain.h"
-#include "asset/application.h"
-#include "asset/database.h"
+#include "engine/application.h"
+#include "engine/asset/application.h"
 #include "utility/array.h"
 #include "utility/auto_destructor.h"
 
 namespace yaga
 {
 
-class ApplicationImpl : public Application
+class VulkanApp : public Application
 {
 public:
   class InitGLFW
@@ -33,9 +32,9 @@ public:
     ~InitGLFW();
   };
 public:
-  explicit ApplicationImpl();
-  virtual ~ApplicationImpl();
-  void run(const std::string& dir) override;
+  explicit VulkanApp();
+  virtual ~VulkanApp();
+  void run() override;
 private:
   void createWindow(asset::Application* props);
   void createInstance(const std::string& appName);
@@ -65,7 +64,6 @@ private:
   static InitGLFW initGLFW_;
   size_t frame_;
   ResizeInfo resize_;
-  asset::DatabasePtr assets_;
   AutoDestructor<GLFWwindow*> window_;
   AutoDestructor<VkInstance> instance_;
   AutoDestructor<VkDebugUtilsMessengerEXT> debugMessenger_;

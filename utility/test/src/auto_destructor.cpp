@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(AutoDestructorReset)
   {
     int testInt = 0;
     AutoDestructor<int> testObject(testInt, DestroyInt);
-    testObject.Reset();
+    testObject.set();
   }
   BOOST_TEST(counter == 1);
 }
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(AutoDestructorResetEmptyValue )
   auto DestroyInt = [&counter](int) { ++counter; };
   int testInt = 0;
   AutoDestructor<int> testObject(testInt, DestroyInt);
-  testObject.Reset();
+  testObject.set();
   BOOST_TEST(counter == 1);
   try
   {

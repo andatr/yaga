@@ -1,5 +1,5 @@
-#ifndef YAGA_ASSET_VERTEX
-#define YAGA_ASSET_VERTEX
+#ifndef YAGA_ENGINE_VERTEX
+#define YAGA_ENGINE_VERTEX
 
 #include <glm/glm.hpp>
 
@@ -60,4 +60,4 @@ inline size_t hash<yaga::Vertex>::operator()(yaga::Vertex const& vertex) const
 
 } // !namespace std
 
-#endif // !YAGA_ASSET_VERTEX
+#endif // !YAGA_ENGINE_VERTEX

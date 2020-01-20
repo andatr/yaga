@@ -21,9 +21,7 @@ target_include_directories( renderer
 
 target_link_libraries( renderer
   PUBLIC
-    Boost::boost
-    Boost::log
-    asset
+    engine
   PRIVATE
     glfw
     opengl32

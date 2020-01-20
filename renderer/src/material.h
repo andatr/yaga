@@ -9,9 +9,9 @@
 
 #include "device.h"
 #include "swapchain.h"
+#include "engine/asset/material.h"
 #include "utility/array.h"
 #include "utility/auto_destructor.h"
-#include "asset/material.h"
 
 namespace yaga
 {

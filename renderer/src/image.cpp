@@ -23,9 +23,9 @@ Image::Image(Device* device, Allocator* allocator, VkExtent2D size, VkFormat for
 Image::Image(Device* device, Allocator* allocator, asset::Texture* asset) : 
   device_(device), vkDevice_(**device), allocator_(allocator), asset_(asset), format_(VK_FORMAT_R8G8B8A8_UNORM), mipLevels_(1)
 {
-  mipLevels_ = static_cast<uint32_t>(std::floor(std::log2(std::max(asset->width(), asset->height())))) + 1;
+  mipLevels_ = static_cast<uint32_t>(std::floor(std::log2(std::max(asset->image()->width(), asset->image()->height())))) + 1;
   createImage(
-    { static_cast<uint32_t>(asset->width()), static_cast<uint32_t>(asset->height()) },
+    { static_cast<uint32_t>(asset->image()->width()), static_cast<uint32_t>(asset->image()->height()) },
     VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
     VK_SAMPLE_COUNT_1_BIT);
   auto buffer = createBuffer();
@@ -69,9 +69,9 @@ void Image::createImage(VkExtent2D size, VkImageUsageFlags usage, VkSampleCountF
 // -------------------------------------------------------------------------------------------------------------------------
 DeviceBufferPtr Image::createBuffer() const
 {
-  auto stageBuffer = std::make_unique<DeviceBuffer>(device_, allocator_, asset_->Size(),
+  auto stageBuffer = std::make_unique<DeviceBuffer>(device_, allocator_, asset_->image()->Size(),
     VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
-  stageBuffer->update(asset_->data(), asset_->Size());
+  stageBuffer->update(asset_->image()->data(), asset_->image()->Size());
   return stageBuffer;
 }
 
@@ -79,8 +79,8 @@ DeviceBufferPtr Image::createBuffer() const
 void Image::copyBuffer(VkBuffer buffer) const
 {
   auto image = *image_;
-  auto width = static_cast<uint32_t>(asset_->width());
-  auto height = static_cast<uint32_t>(asset_->height());
+  auto width = static_cast<uint32_t>(asset_->image()->width());
+  auto height = static_cast<uint32_t>(asset_->image()->height());
   device_->submitCommand([buffer, image, width, height](auto cmd) {
     VkBufferImageCopy region = {};
     region.bufferOffset = 0;
@@ -106,9 +106,7 @@ void Image::generateMipMaps()
     throw std::runtime_error("texture image format does not support linear blitting!");
   }
 
-  std::cout << mipLevels_ << std::endl;
-
-  device_->submitCommand([mipLevels = mipLevels_, image = *image_, width = asset_->width(), height = asset_->height()](auto cmd) {
+  device_->submitCommand([mipLevels = mipLevels_, image = *image_, width = asset_->image()->width(), height = asset_->image()->height()](auto cmd) {
     VkImageMemoryBarrier barrier = {};
     barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
     barrier.image = image;

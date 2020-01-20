@@ -1,7 +1,7 @@
-#ifndef YAGA_ASSET_SRC_PRECOMPILED
-#define YAGA_ASSET_SRC_PRECOMPILED
+#ifndef YAGA_ENGINE_SRC_PRECOMPILED
+#define YAGA_ENGINE_SRC_PRECOMPILED
 
-#include <fstream>
+#include "precompiled.h"
 #include <map>
 #include <memory>
 #include <string>
@@ -21,5 +21,5 @@
 #include "utility/exception.h"
 #include "utility/log.h"
 
-#endif // !YAGA_ASSET_SRC_PRECOMPILED
+#endif // !YAGA_ENGINE_SRC_PRECOMPILED
 

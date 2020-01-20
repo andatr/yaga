@@ -1,5 +1,5 @@
 #include "precompiled.h"
-#include "database.h"
+#include "asset/database.h"
 
 namespace yaga
 {
@@ -37,7 +37,7 @@ void Database::resolveRefs()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Database::remove(AssetPtr asset)
+void Database::remove(Asset* asset)
 {
   assets_.erase(asset->name());
 }

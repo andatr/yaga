@@ -1,12 +1,12 @@
-#ifndef YAGA_ASSET_APPLICATION
-#define YAGA_ASSET_APPLICATION
+#ifndef YAGA_ENGINE_ASSET_APPLICATION
+#define YAGA_ENGINE_ASSET_APPLICATION
 
 #include <memory>
 #include <istream>
 #include <ostream>
 
-#include "asset.h"
-#include "serializer.h"
+#include "engine/asset/asset.h"
+#include "engine/asset/serializer.h"
 #include "utility/array.h"
 
 namespace yaga
@@ -26,10 +26,10 @@ public:
   uint32_t width() const { return width_; }
   uint32_t height() const { return height_; }
   std::string title() const { return title_; }
-public: // Serialization
-  static const AssetId assetId;
-  static size_t serialize(Asset* asset, std::ostream& stream, bool binary);
-  static ApplicationPtr deserialize(const std::string& name, std::istream& stream, size_t size, bool binary);
+public:
+  static const SerializationInfo serializationInfo;
+  static ApplicationPtr deserialize(const std::string& name, std::istream& stream, size_t size);
+  static ApplicationPtr deserializeFriendly(const std::string& type, const std::string& name, std::istream& stream, size_t size);
 private:
   bool fullscreen_;
   uint32_t width_;
@@ -40,4 +40,4 @@ private:
 } // !namespace asset
 } // !namespace yaga
 
-#endif // !YAGA_ASSET_APPLICATION
+#endif // !YAGA_ENGINE_ASSET_APPLICATION

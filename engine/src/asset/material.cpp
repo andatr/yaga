@@ -1,13 +1,19 @@
 #include "precompiled.h"
-#include "material.h"
-#include "serializer.h"
+#include "asset/material.h"
+#include "asset/serializer.h"
 
 namespace yaga
 {
 namespace asset
 {
 
-const AssetId Material::assetId = { "mt", 3 };
+const SerializationInfo Material::serializationInfo = {
+  6,
+  { "ymat" },
+  "Material",
+  &Material::deserialize,
+  &Material::deserializeFriendly
+};
 
 // -------------------------------------------------------------------------------------------------------------------------
 Material::Material(const std::string& name) :
@@ -44,29 +50,20 @@ Material& Material::fragmentShader(Shader* shader)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-size_t Material::serialize(Asset* asset, std::ostream& stream, bool)
+MaterialPtr Material::deserialize(const std::string&, std::istream&, size_t)
 {
-  auto material = dynamic_cast<Material*>(asset);
-  if (!material)
-    THROW("Material serializer was given the wrong asset");
-  auto size = Serializer::serialize(stream, material->vertName_);
-  return size + Serializer::serialize(stream, material->fragName_);
+  THROW_NOT_IMPLEMENTED;
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-MaterialPtr Material::deserialize(const std::string& name, std::istream& stream, size_t, bool binary)
+MaterialPtr Material::deserializeFriendly(const std::string&, const std::string& name, std::istream& stream, size_t)
 {
+  namespace pt = boost::property_tree;
   auto material = std::make_unique<Material>(name);
-  if (binary) {
-    material->vertName_ = Serializer::deserializeString(stream);
-    material->fragName_ = Serializer::deserializeString(stream);
-  }
-  else {
-    std::getline(stream, material->vertName_);
-    std::getline(stream, material->fragName_);
-    boost::erase_all(material->vertName_, "\r");
-    boost::erase_all(material->fragName_, "\r");
-  }
+  pt::ptree props;
+  pt::read_ini(stream, props);
+  material->vertName_ = props.get<std::string>("vertexShader");
+  material->fragName_ = props.get<std::string>("fragmentShader");
   return material;
 }
 

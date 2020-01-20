@@ -7,14 +7,14 @@ if( MSVC )
   set_source_files_properties( src/precompiled.cpp PROPERTIES COMPILE_FLAGS "/Ycprecompiled.h" )
 endif( MSVC )
 
-add_executable( asset_test ${source_list} )
+add_executable( engine_test ${source_list} )
 
-target_link_libraries( asset_test
+target_link_libraries( engine_test
   PRIVATE
-    asset
-  Boost::unit_test_framework
+    engine
+    Boost::unit_test_framework
 )
 
-set_target_properties( asset_test PROPERTIES FOLDER test )
+set_target_properties( engine_test PROPERTIES FOLDER test )
 
-add_test( asset_test asset_test )
+add_test( engine_test engine_test )

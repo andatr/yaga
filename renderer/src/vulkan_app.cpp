@@ -4,13 +4,13 @@
 #include "extensions.h"
 #include "material.h"
 #include "swapchain.h"
-#include "asset/material.h"
-#include "asset/serializer.h"
-#include "asset/texture.h"
+#include "engine/asset/material.h"
+#include "engine/asset/mesh.h"
+#include "engine/asset/texture.h"
 
 namespace yaga
 {
-  ApplicationImpl::InitGLFW ApplicationImpl::initGLFW_;
+  VulkanApp::InitGLFW VulkanApp::initGLFW_;
 
 namespace
 {
@@ -79,38 +79,36 @@ void setDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& info)
 // -------------------------------------------------------------------------------------------------------------------------
 ApplicationPtr createApplication()
 {
-  return std::make_unique<ApplicationImpl>();
+  return std::make_unique<VulkanApp>();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-ApplicationImpl::InitGLFW::InitGLFW()
+VulkanApp::InitGLFW::InitGLFW()
 {
   glfwInit();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-ApplicationImpl::InitGLFW::~InitGLFW()
+VulkanApp::InitGLFW::~InitGLFW()
 {
   glfwTerminate();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-ApplicationImpl::ApplicationImpl() :
-  frame_(0), assets_(std::make_unique<asset::Database>()), frameSync_(MAX_FRAMES)
+VulkanApp::VulkanApp() :
+  frame_(0), frameSync_(MAX_FRAMES)
 {
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-ApplicationImpl::~ApplicationImpl()
+VulkanApp::~VulkanApp()
 {
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void ApplicationImpl::run(const std::string& dir)
+void VulkanApp::run()
 {
-  asset::Serializer::registerStandardAssets();
-  asset::Serializer::deserialize(dir, assets_.get());
-  auto props = assets_->get<asset::Application>("app");
+  auto props = assets_->get<asset::Application>("application");
   createWindow(props);
   checkValidationLayers();
   createInstance(props->title());
@@ -124,7 +122,7 @@ void ApplicationImpl::run(const std::string& dir)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void ApplicationImpl::createSwapchain(VkExtent2D size)
+void VulkanApp::createSwapchain(VkExtent2D size)
 {
   vkDeviceWaitIdle(**device_);
   model_.reset();
@@ -143,7 +141,7 @@ void ApplicationImpl::createSwapchain(VkExtent2D size)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void ApplicationImpl::createSync()
+void VulkanApp::createSync()
 {
   VkSemaphoreCreateInfo semaphoreInfo = {};
   semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
@@ -184,7 +182,7 @@ void ApplicationImpl::createSync()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void ApplicationImpl::createWindow(asset::Application* props)
+void VulkanApp::createWindow(asset::Application* props)
 {
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
@@ -203,7 +201,7 @@ void ApplicationImpl::createWindow(asset::Application* props)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void ApplicationImpl::loop()
+void VulkanApp::loop()
 {
   while (!glfwWindowShouldClose(*window_)) {
     glfwPollEvents();
@@ -213,7 +211,7 @@ void ApplicationImpl::loop()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void ApplicationImpl::createInstance(const std::string& appName)
+void VulkanApp::createInstance(const std::string& appName)
 {
   VkApplicationInfo appInfo = {};
   appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -254,7 +252,7 @@ void ApplicationImpl::createInstance(const std::string& appName)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void ApplicationImpl::createSurface()
+void VulkanApp::createSurface()
 {
   auto destroySurface = [this](auto surface) {
     vkDestroySurfaceKHR(*instance_, surface, nullptr);
@@ -269,7 +267,7 @@ void ApplicationImpl::createSurface()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void ApplicationImpl::checkValidationLayers()
+void VulkanApp::checkValidationLayers()
 {
   if (validationLayers.empty()) return;
 
@@ -296,7 +294,7 @@ void ApplicationImpl::checkValidationLayers()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void ApplicationImpl::setupLogging()
+void VulkanApp::setupLogging()
 {
   if (validationLayers.empty()) return;
 
@@ -319,7 +317,7 @@ void ApplicationImpl::setupLogging()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void ApplicationImpl::drawFrame()
+void VulkanApp::drawFrame()
 {
   const auto& sync = frameSync_[frame_];
   const auto swapchain = **swapchain_;
@@ -373,7 +371,7 @@ void ApplicationImpl::drawFrame()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkExtent2D ApplicationImpl::getWindowSize() const
+VkExtent2D VulkanApp::getWindowSize() const
 {
   int width = 0;
   int height = 0;
@@ -385,9 +383,9 @@ VkExtent2D ApplicationImpl::getWindowSize() const
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void ApplicationImpl::resizeCallback(GLFWwindow* window, int width, int height)
+void VulkanApp::resizeCallback(GLFWwindow* window, int width, int height)
 {
-  auto app = reinterpret_cast<ApplicationImpl*>(glfwGetWindowUserPointer(window));
+  auto app = reinterpret_cast<VulkanApp*>(glfwGetWindowUserPointer(window));
   app->resize_.size = { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
   app->resize_.resized = true;
 }

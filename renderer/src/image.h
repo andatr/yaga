@@ -8,7 +8,7 @@
 
 #include "allocator.h"
 #include "device_buffer.h"
-#include "asset/texture.h"
+#include "engine/asset/texture.h"
 #include "utility/auto_destructor.h"
 
 namespace yaga

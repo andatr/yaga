@@ -1,6 +1,6 @@
 #include "precompiled.h"
 #include "swapchain.h"
-#include "asset/vertex.h"
+#include "engine/vertex.h"
 
 namespace yaga
 {
@@ -99,13 +99,13 @@ VkSampleCountFlagBits getMaxMsaaLevel(VkPhysicalDevice device)
   VkPhysicalDeviceProperties props;
   vkGetPhysicalDeviceProperties(device, &props);
 
- /* auto msaa = props.limits.framebufferColorSampleCounts & props.limits.framebufferDepthSampleCounts;
+  auto msaa = props.limits.framebufferColorSampleCounts & props.limits.framebufferDepthSampleCounts;
   if (msaa & VK_SAMPLE_COUNT_64_BIT) { return VK_SAMPLE_COUNT_64_BIT; }
   if (msaa & VK_SAMPLE_COUNT_32_BIT) { return VK_SAMPLE_COUNT_32_BIT; }
   if (msaa & VK_SAMPLE_COUNT_16_BIT) { return VK_SAMPLE_COUNT_16_BIT; }
   if (msaa & VK_SAMPLE_COUNT_8_BIT)  { return VK_SAMPLE_COUNT_8_BIT;  }
   if (msaa & VK_SAMPLE_COUNT_4_BIT)  { return VK_SAMPLE_COUNT_4_BIT;  }
-  if (msaa & VK_SAMPLE_COUNT_2_BIT)  { return VK_SAMPLE_COUNT_2_BIT;  }*/
+  if (msaa & VK_SAMPLE_COUNT_2_BIT)  { return VK_SAMPLE_COUNT_2_BIT;  }
   return VK_SAMPLE_COUNT_1_BIT;
 }
 
@@ -294,7 +294,7 @@ void Swapchain::createTextureSampler()
   info.compareEnable = VK_FALSE;
   info.compareOp = VK_COMPARE_OP_ALWAYS;
   info.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
-  info.minLod = 11;
+  info.minLod = 0;
   info.maxLod = 0;
 
   auto destroySampler = [device = vkDevice_](auto sampler) {
@@ -337,9 +337,9 @@ void Swapchain::tmpUpdate(uint32_t index)
   auto currentTime = std::chrono::high_resolution_clock::now();
   float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
   UniformObject uniform = {};
-  uniform.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-  uniform.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-  uniform.projection = glm::perspective(glm::radians(45.0f), size_.width / (float)size_.height, 0.1f, 10.0f);
+  uniform.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 1.0f, 1.0f));
+  uniform.view = glm::lookAt(glm::vec3(6.0f, 6.0f, 6.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
+  uniform.projection = glm::perspective(glm::radians(45.0f), size_.width / (float)size_.height, 0.1f, 100.0f);
   uniform.projection[1][1] *= -1;
   uniformBuffers_[index]->update(&uniform, uniBufferSize);
 }

@@ -6,6 +6,7 @@
 #include <boost/format.hpp>
 
 #define THROW(format, ...) throw yaga::Exception(__FILE__, __LINE__, format, __VA_ARGS__)
+#define THROW_NOT_IMPLEMENTED throw yaga::Exception(__FILE__, __LINE__, "%1% not implemented", __func__)
 
 namespace yaga
 {

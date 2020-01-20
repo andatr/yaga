@@ -22,10 +22,9 @@ target_include_directories( utility
 target_link_libraries( utility
   PUBLIC
     Boost::boost
-    Boost::filesystem
+	Boost::filesystem
     Boost::log
     Boost::log_setup
-    Boost::regex
 )
 
 set_target_properties( utility PROPERTIES FOLDER lib )

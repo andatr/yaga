@@ -1,12 +1,12 @@
-#ifndef YAGA_ASSET_SHADER
-#define YAGA_ASSET_SHADER
+#ifndef YAGA_ENGINE_ASSET_SHADER
+#define YAGA_ENGINE_ASSET_SHADER
 
 #include <memory>
 #include <istream>
 #include <ostream>
 
-#include "asset.h"
-#include "serializer.h"
+#include "engine/asset/asset.h"
+#include "engine/asset/serializer.h"
 #include "utility/array.h"
 
 namespace yaga
@@ -24,10 +24,10 @@ public:
   virtual ~Shader();
   const ByteArray& code() const { return code_; }
   Shader& code(const ByteArray& code) { code_ = code; return *this; }
-public: // Serialization
-  static const AssetId assetId;
-  static size_t serialize(Asset* asset, std::ostream& stream, bool binary);
-  static ShaderPtr deserialize(const std::string& name, std::istream& stream, size_t size, bool binary);
+public:
+  static const SerializationInfo serializationInfo;
+  static ShaderPtr deserialize(const std::string& name, std::istream& stream, size_t size);
+  static ShaderPtr deserializeFriendly(const std::string& type, const std::string& name, std::istream& stream, size_t size);
 private:
   ByteArray code_;
 };
@@ -35,4 +35,4 @@ private:
 } // !namespace asset
 } // !namespace yaga
 
-#endif // !YAGA_ASSET_SHADER
+#endif // !YAGA_ENGINE_ASSET_SHADER

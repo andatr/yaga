@@ -1,10 +1,10 @@
-#ifndef YAGA_ASSET_MATERIAL
-#define YAGA_ASSET_MATERIAL
+#ifndef YAGA_ENGINE_ASSET_MATERIAL
+#define YAGA_ENGINE_ASSET_MATERIAL
 
 #include <memory>
 
-#include "shader.h"
-#include "serializer.h"
+#include "engine/asset/serializer.h"
+#include "engine/asset/shader.h"
 
 namespace yaga
 {
@@ -23,12 +23,12 @@ public:
   Shader* fragmentShader() const { return fragShader_; }
   Material& vertexShader(Shader* shader);
   Material& fragmentShader(Shader* shader);
-public: // Serialization
-  static const AssetId assetId;
-  static size_t serialize(Asset* asset, std::ostream& stream, bool binary);
-  static MaterialPtr deserialize(const std::string& name, std::istream& stream, size_t size, bool binary);
 protected:
   void resolveRefs(Database*) override;
+public:
+  static const SerializationInfo serializationInfo;
+  static MaterialPtr deserialize(const std::string& name, std::istream& stream, size_t size);
+  static MaterialPtr deserializeFriendly(const std::string& type, const std::string& name, std::istream& stream, size_t size);
 private:
   Shader* vertShader_;
   Shader* fragShader_;
@@ -39,4 +39,4 @@ private:
 } // !namespace asset
 } // !namespace yaga
 
-#endif // !YAGA_ASSET_MATERIAL
+#endif // !YAGA_ENGINE_ASSET_MATERIAL

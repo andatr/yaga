@@ -18,12 +18,8 @@ target_include_directories( launcher
 
 target_link_libraries( launcher
   PRIVATE
-    Boost::boost
-    Boost::filesystem
-    Boost::log
-    Boost::log_setup
     Boost::program_options
-    asset
+    engine
     renderer
     utility
 )

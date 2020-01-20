@@ -2,7 +2,7 @@
 #include "material.h"
 #include "shader.h"
 #include "image_view.h"
-#include "asset/vertex.h"
+#include "engine/vertex.h"
 
 namespace yaga
 {
@@ -126,7 +126,8 @@ VkPipelineMultisampleStateCreateInfo getSampler(VkSampleCountFlagBits msaa)
 {
   VkPipelineMultisampleStateCreateInfo info = {};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-  info.sampleShadingEnable = VK_FALSE;
+  info.sampleShadingEnable = VK_TRUE;
+  info.minSampleShading = 1.5f;
   info.rasterizationSamples = msaa;
   return info;
 }

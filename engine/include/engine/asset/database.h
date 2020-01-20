@@ -1,11 +1,11 @@
-#ifndef YAGA_ASSET_DATABASE
-#define YAGA_ASSET_DATABASE
+#ifndef YAGA_ENGINE_DATABASE
+#define YAGA_ENGINE_DATABASE
 
 #include <map>
 #include <memory>
 #include <string>
 
-#include "asset.h"
+#include "engine/asset/asset.h"
 #include "utility/exception.h"
 
 namespace yaga 
@@ -18,7 +18,7 @@ class Database
 public:
   Asset* get(const std::string& name);
   void put(AssetPtr asset, bool resolveRefs = true);
-  void remove(AssetPtr asset);
+  void remove(Asset* asset);
   void remove(const std::string& name);
   void resolveRefs();
   template<typename T>
@@ -35,7 +35,7 @@ T* Database::get(const std::string& name)
 {
   auto ptr = dynamic_cast<T*>(get(name));
   if (!ptr) {
-    THROW("Wrong asset type \"%1\"", name);
+    THROW("Wrong asset type \"%1%\"", name);
   }
   return ptr;
 }
@@ -43,4 +43,4 @@ T* Database::get(const std::string& name)
 } // !namespace asset
 } // !namespace yaga
 
-#endif // !YAGA_ASSET_DATABASE
+#endif // !YAGA_ENGINE_DATABASE

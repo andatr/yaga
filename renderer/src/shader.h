@@ -7,7 +7,7 @@
 #include <GLFW/glfw3.h>
 
 #include "device.h"
-#include "asset/shader.h"
+#include "engine/asset/shader.h"
 #include "utility/auto_destructor.h"
 
 namespace yaga

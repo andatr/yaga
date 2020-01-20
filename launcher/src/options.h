@@ -14,10 +14,10 @@ class Options
 {
 public:
   explicit Options(int argc, char *argv[]);
-  const std::string& appDir() const { return appDir_; }
+  const std::string& appPath() const { return appPath_; }
   boost::optional<log::Severity> logSeverity() const { return severity_; }
 private:
-  std::string appDir_;
+  std::string appPath_;
   boost::optional<log::Severity> severity_;
 };
 

@@ -56,7 +56,7 @@ if( NOT Vulkan_FOUND )
   message( FATAL_ERROR "Vulkan SDK not found" )
 endif()
 
-add_subdirectory( asset )
+add_subdirectory( engine )
 add_subdirectory( launcher )
 add_subdirectory( renderer )
 add_subdirectory( utility )

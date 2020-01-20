@@ -1,6 +1,6 @@
 #include "precompiled.h"
-#include "asset.h"
-#include "database.h"
+#include "asset/asset.h"
+#include "asset/database.h"
 
 namespace yaga
 {
