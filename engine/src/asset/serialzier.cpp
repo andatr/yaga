@@ -4,6 +4,8 @@
 #include "asset/image.h"
 #include "asset/material.h"
 #include "asset/mesh.h"
+#include "asset/model.h"
+#include "asset/scene.h"
 #include "asset/shader.h"
 #include "asset/texture.h"
 #include "utility/array.h"
@@ -58,9 +60,11 @@ void Serializer::registerStandardAssets()
 {
   registerAsset<Application>();
   registerAsset<Image>();
+  registerAsset<Scene>();
   registerAsset<Shader>();
   registerAsset<Material>();
   registerAsset<Mesh>();
+  registerAsset<Model>();
   registerAsset<Texture>();
 }
 

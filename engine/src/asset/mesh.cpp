@@ -1,11 +1,39 @@
 #include "precompiled.h"
 #include "asset/mesh.h"
 
+#define GLM_ENABLE_EXPERIMENTAL
+#include <glm/gtx/hash.hpp>
+
 #define TINYOBJLOADER_IMPLEMENTATION
 #include <tinyobj/tiny_obj_loader.h>
 
+namespace std
+{
+
+template<>
+struct hash<yaga::Vertex>
+{
+  size_t operator()(yaga::Vertex const& vertex) const;
+};
+
+// -------------------------------------------------------------------------------------------------------------------------
+size_t hash<yaga::Vertex>::operator()(yaga::Vertex const& vertex) const
+{
+  return ((hash<glm::vec3>()(vertex.pos) ^
+    (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^
+    (hash<glm::vec2>()(vertex.uv) << 1);
+}
+
+} // !namespace std
+
 namespace yaga
 {
+
+// -------------------------------------------------------------------------------------------------------------------------
+bool operator==(const Vertex& first, const Vertex& second) {
+  return first.pos == second.pos && first.color == second.color && first.uv == second.uv;
+}
+
 namespace asset
 {
 
@@ -45,10 +73,10 @@ MeshPtr Mesh::deserializeFriendly(const std::string&, const std::string& name, s
   if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, &stream)) {
     throw std::runtime_error(warn + err);
   }
-  std::unordered_map<Vertex, uint32_t, std::hash<Vertex>> uniqueVertices = {};
+  std::unordered_map<Vertex, uint32_t, std::hash<Vertex>> uniqueVertices {};
   for (const auto& shape : shapes) {
     for (const auto& index : shape.mesh.indices) {
-      Vertex vertex = {};
+      Vertex vertex {};
 
       vertex.pos = {
         attrib.vertices[3 * index.vertex_index + 0],

@@ -20,7 +20,7 @@ target_link_libraries( launcher
   PRIVATE
     Boost::program_options
     engine
-    renderer
+    vulkan_renderer
     utility
 )
 

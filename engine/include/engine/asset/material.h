@@ -5,6 +5,7 @@
 
 #include "engine/asset/serializer.h"
 #include "engine/asset/shader.h"
+#include "engine/asset/texture.h"
 
 namespace yaga
 {
@@ -23,6 +24,7 @@ public:
   Shader* fragmentShader() const { return fragShader_; }
   Material& vertexShader(Shader* shader);
   Material& fragmentShader(Shader* shader);
+  const std::vector<Texture*>& textures() const { return textures_; }
 protected:
   void resolveRefs(Database*) override;
 public:
@@ -32,8 +34,10 @@ public:
 private:
   Shader* vertShader_;
   Shader* fragShader_;
+  std::vector<Texture*> textures_;
   std::string vertName_;
   std::string fragName_;
+  std::vector<std::string> textureNames_;  
 };
 
 } // !namespace asset

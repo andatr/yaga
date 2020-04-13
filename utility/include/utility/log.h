@@ -15,9 +15,9 @@
     << boost::log::add_value(yaga::log::a_line, __LINE__)
 
 #define LOG_E(severity, exception) BOOST_LOG_TRIVIAL(severity) \
-    << boost::log::add_value(yaga::log::a_file, exception.File()) \
-    << boost::log::add_value(yaga::log::a_line, exception.Line()) \
-    << exception.what()
+    << boost::log::add_value(yaga::log::a_file, (exception).File()) \
+    << boost::log::add_value(yaga::log::a_line, (exception).Line()) \
+    << (exception).what()
 
 namespace yaga 
 {

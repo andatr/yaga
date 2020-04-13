@@ -24,7 +24,7 @@ public:
   int width() const { return width_; }
   int height() const { return height_; }
   int channels() const { return channels_; }
-  size_t Size() const { return size_; }
+  size_t size() const { return size_; }
   const char* data() const { return bytes_; }
 public:
   static const SerializationInfo serializationInfo;

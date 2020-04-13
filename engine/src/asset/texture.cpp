@@ -51,7 +51,7 @@ TexturePtr Texture::deserializeFriendly(const std::string&, const std::string& n
   namespace pt = boost::property_tree;
   auto texture = std::make_unique<Texture>(name);
   pt::ptree props;
-  pt::read_ini(stream, props);
+  pt::read_json(stream, props);
   texture->imageName_ = props.get<std::string>("image");
   return texture;
 }

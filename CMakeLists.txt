@@ -58,7 +58,7 @@ endif()
 
 add_subdirectory( engine )
 add_subdirectory( launcher )
-add_subdirectory( renderer )
+add_subdirectory( vulkan_renderer )
 add_subdirectory( utility )
 
 set_property( DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT launcher )

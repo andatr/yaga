@@ -8,8 +8,8 @@ namespace asset
 
 const SerializationInfo Shader::serializationInfo = {
   2,
-  { "vert", "frag", "comp", "geom", "tesc", "tese", "spv" },
-  "OpenGL shader",
+  { "spv" },
+  "Vulkan compiled shader",
   &Shader::deserialize,
   &Shader::deserializeFriendly
 };

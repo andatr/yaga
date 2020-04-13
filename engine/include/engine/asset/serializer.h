@@ -12,6 +12,16 @@ namespace yaga
 namespace asset
 {
 
+// 1 Application
+// 2 Shader
+// 3 Image
+// 4 Mesh
+// 5 Texture
+// 6 Material
+// 7 Model
+// 8 Scene
+// 9 Camera
+
 struct SerializationInfo
 {
   typedef std::function<AssetPtr(const std::string& name, std::istream& stream, size_t size)> DeserializeProc;

@@ -1,12 +1,12 @@
 #ifndef YAGA_ENGINE_SRC_PRECOMPILED
 #define YAGA_ENGINE_SRC_PRECOMPILED
 
-#include "precompiled.h"
 #include <map>
 #include <memory>
 #include <string>
 #include <vector>
 #include <unordered_map>
+#include <unordered_set>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/endian/conversion.hpp>

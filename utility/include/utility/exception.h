@@ -50,6 +50,17 @@ Exception::Exception(const std::string& file, int line, const std::string& forma
 {
 }
 
+// -------------------------------------------------------------------------------------------------------------------------
+template<typename T1, typename T2>
+T1* dynamicCast(T2* ptr)
+{
+  auto result = dynamic_cast<T1*>(ptr);
+  if (result == nullptr) {
+    THROW("Could not cast \"%1%*\" to \"%2%*\"", typeid(T2).name(), typeid(T1).name());
+  }
+  return result;
+}
+
 } // !namespace yaga
 
 #endif // !YAGA_UTILITY_EXCEPTION

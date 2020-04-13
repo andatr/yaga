@@ -5,8 +5,8 @@ namespace yaga
 {
 
 // -------------------------------------------------------------------------------------------------------------------------
-Application::Application() : 
-  assets_(std::make_unique<asset::Database>())
+Application::Application(GamePtr game) :
+  game_(std::move(game))
 {
 }
   

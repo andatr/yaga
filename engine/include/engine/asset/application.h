@@ -26,6 +26,10 @@ public:
   uint32_t width() const { return width_; }
   uint32_t height() const { return height_; }
   std::string title() const { return title_; }
+  uint32_t maxTextureCount() const { return maxTextureCount_; }
+  uint64_t maxImageSize() const { return maxImageSize_; }
+  uint32_t maxIndexCount() const { return maxIndexCount_; }
+  uint32_t maxVertexCount() const { return maxVertexCount_; }
 public:
   static const SerializationInfo serializationInfo;
   static ApplicationPtr deserialize(const std::string& name, std::istream& stream, size_t size);
@@ -35,6 +39,10 @@ private:
   uint32_t width_;
   uint32_t height_;
   std::string title_;
+  uint32_t maxTextureCount_;
+  uint64_t maxImageSize_;
+  uint32_t maxIndexCount_;
+  uint32_t maxVertexCount_;
 };
 
 } // !namespace asset

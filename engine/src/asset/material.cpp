@@ -31,6 +31,10 @@ void Material::resolveRefs(Database* db)
 {
   vertShader_ = db->get<Shader>(vertName_);
   fragShader_ = db->get<Shader>(fragName_);
+  textures_.reserve(textureNames_.size());
+  for (const auto& t : textureNames_) {
+    textures_.push_back(db->get<Texture>(t));
+  }
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -61,9 +65,16 @@ MaterialPtr Material::deserializeFriendly(const std::string&, const std::string&
   namespace pt = boost::property_tree;
   auto material = std::make_unique<Material>(name);
   pt::ptree props;
-  pt::read_ini(stream, props);
+  pt::read_json(stream, props);
   material->vertName_ = props.get<std::string>("vertexShader");
   material->fragName_ = props.get<std::string>("fragmentShader");
+  if (props.count("textures") > 0) {
+    auto textures = props.get_child("textures");
+    material->textureNames_.reserve(textures.size());
+    for (const auto& texture : textures) {
+      material->textureNames_.push_back(texture.second.get_value<std::string>());
+    }
+  }
   return material;
 }
 

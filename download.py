@@ -8,10 +8,10 @@ import zipfile
 externalDir = os.path.join(sys.path[0], 'external')
 interactive = len(sys.argv) > 1 and sys.argv[1] == 'i'
 if interactive:
-  compiler = input('Specify compiler, empty for default:')
+  compiler = input('Set compiler, empty for default:')
   if compiler:
     compiler = '-G "{}"'.format(compiler)
-  buildType = input('Specify build type: d for Debug, r for Release, other for default:')
+  buildType = input('Set build type: d for Debug, r for Release, other for default:')
   if buildType == 'd':
     buildType = '-DCMAKE_BUILD_TYPE=Debug'
     buildConfigType = '--config Debug'
@@ -97,8 +97,19 @@ def downloadGLFW():
   shutil.rmtree(buildDir)
   shutil.rmtree(sourceDir)
 
-downloadSTB()
-downloadTinyObj()
-downloadGLM()
-downloadGLFW()
+def downloadMemAlloc():
+  print('downloading vulkan memory allocator...')
+  dir = os.path.join(externalDir, 'vk_mem_alloc')
+  if os.path.isdir(dir):
+    shutil.rmtree(dir)
+  os.mkdir(dir)
+  url = 'https://raw.githubusercontent.com/GPUOpen-LibrariesAndSDKs/VulkanMemoryAllocator/master'
+  downloadFiles(url, dir, ['LICENSE.txt'])
+  downloadFiles(url + '/src', dir, ['vk_mem_alloc.h'])
+
+#downloadSTB()
+#downloadTinyObj()
+#downloadGLM()
+#downloadGLFW()
+downloadMemAlloc()
 print('complete')

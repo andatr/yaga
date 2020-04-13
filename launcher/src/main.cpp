@@ -2,7 +2,8 @@
 #include "options.h"
 #include "version.h"
 #include "engine/asset/serializer.h"
-#include "renderer/application.h"
+#include "engine/basic_game.h"
+#include "vulkan_renderer/application.h"
 
 namespace fs = boost::filesystem;
 
@@ -12,19 +13,20 @@ namespace
 {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void runApplication(fs::path assetPath)
+void runApplication(const fs::path& assetPath)
 {
-  auto app = createApplication();
+  auto game = std::make_unique<BasicGame>();
+  auto app = createApplication(std::move(game));
   if (fs::is_directory(assetPath)) {
-    asset::Serializer::deserializeFriendly(assetPath.string(), app->assets());
+    asset::Serializer::deserializeFriendly(assetPath.string(), app->game()->assets());
   }
   else {
     const auto appFilename = assetPath.filename();
     if (appFilename.extension().string() == "data") {
-      asset::Serializer::deserializeBin(assetPath.parent_path().string(), app->assets());
+      asset::Serializer::deserializeBin(assetPath.parent_path().string(), app->game()->assets());
     }
     else {
-      asset::Serializer::deserializeFriendly(assetPath.parent_path().string(), app->assets());
+      asset::Serializer::deserializeFriendly(assetPath.parent_path().string(), app->game()->assets());
     }
   }
   app->run();
@@ -90,7 +92,6 @@ void main(const Options& options)
 int main(int argc, char *argv[])
 {
 #ifdef NDEBUG
-  bool error = false;
   try
 #endif // !NDEBUG
   {
@@ -99,20 +100,13 @@ int main(int argc, char *argv[])
   }
 #ifdef NDEBUG
   catch (const yaga::Exception& exp) {
-    error = true;
     LOG_E(fatal, exp); 
   }
   catch (const std::exception& exp) {
-    error = true;
-    LOG(fatal, exp.what());
+    LOG(fatal) << exp.what();
   }
   catch (...) {
-    error = true;
-    LOG(fatal, "Unknown exception");
-  }
-  if (error) {
-    std::cout << "Press Enter to exit\n";
-    std::cin.get();
+    LOG(fatal) << "Unknown exception";
   }
 #endif // !NDEBUG
   return EXIT_SUCCESS;
