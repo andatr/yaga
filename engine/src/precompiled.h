@@ -1,6 +1,8 @@
 #ifndef YAGA_ENGINE_SRC_PRECOMPILED
 #define YAGA_ENGINE_SRC_PRECOMPILED
 
+#include <chrono>
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
@@ -15,6 +17,8 @@
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/json_parser.hpp>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <stb/stb_image.h>
 #include <tinyobj/tiny_obj_loader.h>
 

@@ -26,37 +26,78 @@ MeshPool::MeshPool(Device* device, VmaAllocator allocator, uint32_t maxVertexCou
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-Mesh* MeshPool::createMesh(asset::Mesh* asset)
+void MeshPool::clear()
 {
-  auto it = meshes_.find(asset);
-  if (it != meshes_.end()) return it->second.get();
+  if (!meshes_.empty()) {
+    THROW("Can not clear Material Pool while its components are still in use");
+  }
+  meshCache_.clear();
+}
+
+// -------------------------------------------------------------------------------------------------------------------------
+void MeshPool::removeMesh(Mesh* mesh)
+{
+  vkDeviceWaitIdle(vkDevice_);
+  meshes_.erase(mesh);
+}
+
+// -------------------------------------------------------------------------------------------------------------------------
+MeshPtr MeshPool::createMesh(Object* object, asset::Mesh* asset)
+{
+  auto it = meshCache_.find(asset);
+  if (it != meshCache_.end()) {
+    auto mesh = std::make_unique<Mesh>(object, asset, this, **it->second.vertexBuffer, **it->second.indexBuffer,
+      it->second.indexCount);
+    meshes_.insert(mesh.get());
+    return mesh;
+  }
 
   auto indexCount = static_cast<uint32_t>(asset->indices().size());
-  auto vertexSize = static_cast<VkDeviceSize>(sizeof(asset->vertices()[0]) * asset->vertices().size());
-  auto indexSize = static_cast<VkDeviceSize>(sizeof(asset->indices()[0])  * indexCount);
+  auto verticesSize = static_cast<VkDeviceSize>(sizeof(asset->vertices()[0]) * asset->vertices().size());
+  auto indicesSize = static_cast<VkDeviceSize>(sizeof(asset->indices()[0])  * indexCount);
   if (indexCount > maxIndexCount_) THROW("mesh exceed max index count");
   if (asset->vertices().size() > maxVertexCount_) THROW("mesh exceed max vertex count");
 
   void* mappedData;
   vmaMapMemory(allocator_, stageVertexBuffer_->allocation(), &mappedData);
-  memcpy(mappedData, asset->vertices().data(), vertexSize);
+  memcpy(mappedData, asset->vertices().data(), verticesSize);
   vmaUnmapMemory(allocator_, stageVertexBuffer_->allocation());
 
   vmaMapMemory(allocator_, stageIndexBuffer_->allocation(), &mappedData);
-  memcpy(mappedData, asset->indices().data(), indexSize);
+  memcpy(mappedData, asset->indices().data(), indicesSize);
   vmaUnmapMemory(allocator_, stageIndexBuffer_->allocation());
 
-  auto mesh = std::make_unique<Mesh>(allocator_, vertexSize, indexSize, indexCount);
+  VkBufferCreateInfo info {};
+  info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+  info.size = verticesSize;
+  info.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
+  info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+  VmaAllocationCreateInfo allocInfo {};
+  allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+  allocInfo.flags = 0;
+
+  auto vertexBuffer = std::make_unique<Buffer>(allocator_, info, allocInfo);
+  info.size = indicesSize;
+  info.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
+  auto indexBuffer = std::make_unique<Buffer>(allocator_, info, allocInfo);
+
+  auto mesh = std::make_unique<Mesh>(object, asset, this, **vertexBuffer, **indexBuffer, indexCount);
   device_->submitCommand([stageVertex = **stageVertexBuffer_, stageIndex = **stageIndexBuffer_,
-    vertexSize, indexSize, mesh = mesh.get()](auto command)
+    verticesSize, indicesSize, mesh = mesh.get()](auto command)
   {
-    copyBuffer(stageVertex, mesh->vertexBuffer(), vertexSize, command);
-    copyBuffer(stageIndex,  mesh->indexBuffer(),  indexSize,  command);
+    copyBuffer(stageVertex, mesh->vertexBuffer(), verticesSize, command);
+    copyBuffer(stageIndex,  mesh->indexBuffer(), indicesSize, command);
   });
 
-  auto meshPtr = mesh.get();
-  meshes_[asset] = std::move(mesh);
-  return meshPtr;
+  MeshCache cache;
+  cache.vertexBuffer = std::move(vertexBuffer);
+  cache.indexBuffer = std::move(indexBuffer);
+  cache.indexCount = indexCount;
+  meshCache_[asset] = std::move(cache);
+
+  meshes_.insert(mesh.get());
+  return mesh;
 }
 
 // -------------------------------------------------------------------------------------------------------------------------

@@ -3,21 +3,22 @@
 
 #include <memory>
 
-#include <boost/core/noncopyable.hpp>
-
-#include "engine/vertex.h"
+#include "component.h"
+#include "engine/asset/mesh.h"
 
 namespace yaga
 {
 
-class Mesh;
-typedef std::unique_ptr<Mesh> MeshPtr;
-
-class Mesh : private boost::noncopyable
+class Mesh : public Component
 {
 public:
+  explicit Mesh(Object* object, asset::Mesh* asset);
   virtual ~Mesh() {}
+protected:
+  asset::Mesh* asset_;
 };
+
+typedef std::unique_ptr<Mesh> MeshPtr;
 
 } // !namespace yaga
 

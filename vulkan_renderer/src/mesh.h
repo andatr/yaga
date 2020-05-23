@@ -11,17 +11,20 @@ namespace yaga
 {
 namespace vk
 {
-
+// -------------------------------------------------------------------------------------------------------------------------
 class Mesh : public yaga::Mesh
 {
+friend class MeshPool;
 public:
-  explicit Mesh(VmaAllocator allocator, VkDeviceSize verticesSize, VkDeviceSize indicesSize, uint32_t indexCount);
-  VkBuffer vertexBuffer() const { return **vertexBuffer_; }
-  VkBuffer indexBuffer() const { return **indexBuffer_; }
+  explicit Mesh(Object* object, asset::Mesh* asset, MeshPool* pool, VkBuffer vertices, VkBuffer indices, uint32_t indexCount);
+  virtual ~Mesh();
+  VkBuffer vertexBuffer() const { return vertexBuffer_; }
+  VkBuffer indexBuffer() const { return indexBuffer_; }
   uint32_t indexCount() const { return indexCount_; }
 private:
-  BufferPtr vertexBuffer_;
-  BufferPtr indexBuffer_;
+  MeshPool* pool_;
+  VkBuffer vertexBuffer_;
+  VkBuffer indexBuffer_;
   uint32_t indexCount_;
 };
 

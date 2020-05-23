@@ -5,9 +5,10 @@
 #include <vector>
 
 #include "device.h"
+#include "renderer3d.h"
+#include "rendering_context.h"
 #include "swapchain.h"
 #include "vulkan.h"
-#include "engine/scene.h"
 #include "utility/auto_destructor.h"
 
 namespace yaga
@@ -20,18 +21,15 @@ class Material;
 class Renderer
 {
 public:
-  explicit Renderer(Device* device, Swapchain* swapchain);
-  void swapchain(Swapchain* swapchain);
-  VkCommandBuffer render(Scene* scene, uint32_t frame);
+  explicit Renderer(Swapchain* swapchain, RenderingContext* context);
+  void swapchain(Swapchain* swapchain) { swapchain_ = swapchain; }
+  void render(uint32_t frame) const;
 private:  
-  void allocateCommandBuffer();
-  void renderModel(Object* object, VkCommandBuffer command, uint32_t frame) const;
+  static void renderObject(Camera* camera, Renderer3D* object, VkCommandBuffer command, uint32_t frame);
 private:
-  Device* device_;
-  VkDevice vkDevice_;
   Swapchain* swapchain_;
+  RenderingContext* context_;
   uint32_t frames_;
-  std::vector<VkCommandBuffer> commandBuffers_;
 };
 
 typedef std::unique_ptr<Renderer> RendererPtr;

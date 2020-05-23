@@ -1,8 +1,9 @@
 #ifndef YAGA_VULKAN_RENDERER_SRC_MATERIAL_POOL
 #define YAGA_VULKAN_RENDERER_SRC_MATERIAL_POOL
 
-#include <map>
 #include <memory>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "device.h"
@@ -22,33 +23,37 @@ namespace vk
 class MaterialPool
 {
 public:
-  explicit MaterialPool(Device* device, Swapchain* swapchain, ImagePool* imagePool, uint32_t maxTextures);
-  Material* createMaterial(asset::Material* asset);
-  void clear() { materials_.clear(); }
+  explicit MaterialPool(Device* device, Swapchain* swapchain, ImagePool* imagePool,
+    VkDescriptorPool descriptorPool, VkDescriptorSetLayout uniformLayout);
   void swapchain(Swapchain* swapchain);
-  const std::vector<VkDescriptorSet>& uniformDescriptorSets() const { return uniformDescriptorSets_; }
+  MaterialPtr createMaterial(Object* object, asset::Material* asset);
+  void removeMaterial(Material* material);
+  void clear();
 private:  
   void createDescriptorLayout();
   void createPipelineLayout();
-  void createDescriptorPool(uint32_t maxTextures);
-  void createUniformDescriptorSets();
-  VkPipeline createPipeline(asset::Shader* vertexShader, asset::Shader* fragmentShader);
+  AutoDestructor<VkPipeline> createPipeline(asset::Shader* vertexShader, asset::Shader* fragmentShader);
   VkShaderModule createShader(asset::Shader* asset);
   std::vector<VkDescriptorSet> createDescriptorSets() const;
   void updateDescriptorSets(const std::vector<VkDescriptorSet>& descriptorSets, const std::vector<Image*>& images) const;
 private:
+  struct MaterialCache
+  {
+    AutoDestructor<VkPipeline> pipeline;
+    std::vector<VkDescriptorSet> descriptorSets;
+  };
+private:
   VkDevice vkDevice_;
   Swapchain* swapchain_;
   ImagePool* imagePool_;
+  VkDescriptorPool descriptorPool_;
+  VkDescriptorSetLayout uniformLayout_;
   uint32_t frames_;
-  AutoDestructor<VkDescriptorSetLayout> uniformLayout_;
   AutoDestructor<VkDescriptorSetLayout> descriptorLayout_;
   AutoDestructor<VkPipelineLayout> pipelineLayout_;
-  AutoDestructor<VkDescriptorPool> descriptorPool_;
-  std::vector<VkDescriptorSet> uniformDescriptorSets_;
-  std::map<asset::Shader*, AutoDestructor<VkShaderModule>> shaders_;
-  std::map<std::pair<asset::Shader*, asset::Shader*>, AutoDestructor<VkPipeline>> pipelines_;
-  std::map<asset::Material*, MaterialPtr> materials_;
+  std::unordered_map<asset::Shader*, AutoDestructor<VkShaderModule>> shaderCache_;
+  std::unordered_map<asset::Material*, MaterialCache> materialCache_;
+  std::unordered_set<Material*> materials_;
 };
 
 typedef std::unique_ptr<MaterialPool> MaterialPoolPtr;

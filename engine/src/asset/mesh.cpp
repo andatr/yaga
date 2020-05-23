@@ -102,5 +102,19 @@ MeshPtr Mesh::deserializeFriendly(const std::string&, const std::string& name, s
   return mesh;
 }
 
+// -------------------------------------------------------------------------------------------------------------------------
+void Mesh::vertices(VertexUpdater handler)
+{
+  handler(vertices_);
+  fireUpdate(MeshProperty::vertices);
+}
+
+// -------------------------------------------------------------------------------------------------------------------------
+void Mesh::indices(IndexUpdater handler)
+{
+  handler(indices_);
+  fireUpdate(MeshProperty::indices);
+}
+
 } // !namespace asset
 } // !namespace yaga

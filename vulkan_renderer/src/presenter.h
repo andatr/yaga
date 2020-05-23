@@ -7,7 +7,6 @@
 #include "device.h"
 #include "swapchain.h"
 #include "vulkan.h"
-#include "engine/scene.h"
 #include "utility/auto_destructor.h"
 
 namespace yaga

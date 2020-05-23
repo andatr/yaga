@@ -3,25 +3,37 @@
 
 #include <memory>
 
-#include "engine/object.h"
+#include "transform.h"
+#include "engine/component.h"
+#include "engine/asset/camera.h"
 
 namespace yaga
 {
 
-class Camera;
-typedef std::unique_ptr<Camera> CameraPtr;
-
-class Camera : public Object
+class Camera : public Component
 {
 public:
-  explicit Camera();
-  virtual ~Camera() {}
+  static const uint32_t viewProperty = 1;
 public:
-  glm::mat4& matrix() { return matrix_; }
-  Camera& matrix(const glm::mat4& m) { matrix_ = m; return *this; }
+  explicit Camera(Object* obj, asset::Camera* asset);
+  virtual ~Camera();
 protected:
-  glm::mat4 matrix_;
+  virtual void updateView();
+private:
+  void onComponentAdd(Component* component) override;
+  void onComponenRemove(Component* component) override;
+  virtual void onTransformUpdated(uint32_t prop);
+  virtual void onAssetUpdated(asset::CameraProperty prop);
+protected:
+  asset::Camera* asset_;
+  glm::mat4 view_;
+  Transform* transform_;
+private:
+  Connection assetConnection_;
+  Connection transformConnection_;
 };
+
+typedef std::unique_ptr<Camera> CameraPtr;
 
 } // !namespace yaga
 

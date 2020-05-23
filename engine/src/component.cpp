@@ -1,16 +1,14 @@
 #include "precompiled.h"
-#include "model.h"
+#include "component.h"
 
 namespace yaga
 {
-namespace vk
-{
 
 // -------------------------------------------------------------------------------------------------------------------------
-Model::Model(Mesh* mesh, Material* material) :
-  mesh_(mesh), material_(material)
+Component::Component(Object* obj) :
+  object_(obj)
 {
 }
 
-} // !namespace vk
 } // !namespace yaga
+

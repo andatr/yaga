@@ -3,11 +3,12 @@
 
 #include <memory>
 
-#include <boost/core/noncopyable.hpp>
+#include <boost/noncopyable.hpp>
 
 #include "asset/database.h"
+#include "engine/camera.h"
 #include "engine/game.h"
-#include "engine/scene.h"
+#include "engine/object.h"
 
 namespace yaga
 {
@@ -17,16 +18,17 @@ class BasicGame : private boost::noncopyable, public Game
 public:
   BasicGame();
   virtual ~BasicGame();
+  asset::Database* assets() const { return assets_.get(); }
+private:
   void init() override;
   void loop(float delta) override;
   void shutdown() override;
-  Scene* scene() override { return scene_; }
-  SceneClipper* sceneClipper() override { return sceneClipper_.get(); }
-  asset::Database* assets() override { return assets_.get(); }
 protected:
-  Scene* scene_;
-  SceneClipperPtr sceneClipper_;
   asset::DatabasePtr assets_;
+  std::vector<ObjectPtr> objects_;
+  Camera* camera_;
+  Transform* cameraPosition_;
+  Transform* objectPosition_;
 };
 
 typedef std::unique_ptr<BasicGame> BasicGamePtr;

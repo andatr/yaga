@@ -1,6 +1,7 @@
 #include "precompiled.h"
 #include "asset/serializer.h"
 #include "asset/application.h"
+#include "asset/camera.h"
 #include "asset/image.h"
 #include "asset/material.h"
 #include "asset/mesh.h"
@@ -62,6 +63,7 @@ void Serializer::registerStandardAssets()
   registerAsset<Image>();
   registerAsset<Scene>();
   registerAsset<Shader>();
+  registerAsset<Camera>();
   registerAsset<Material>();
   registerAsset<Mesh>();
   registerAsset<Model>();

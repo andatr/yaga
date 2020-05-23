@@ -7,7 +7,7 @@ namespace asset
 {
 
 // -------------------------------------------------------------------------------------------------------------------------
-Asset* Database::get(const std::string& name)
+Asset* Database::get(const std::string& name) const
 {
   auto it = assets_.find(name);
   if (it == assets_.end()) {

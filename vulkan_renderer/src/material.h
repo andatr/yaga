@@ -15,14 +15,16 @@ namespace vk
 
 class Material : public yaga::Material
 {
+friend class MaterialPool;
 public:
-  explicit Material(VkPipeline pipeline, VkPipelineLayout layout, const std::vector<VkDescriptorSet>& descriptors);
+  explicit Material(Object* object, asset::Material* asset, MaterialPool* pool, VkPipeline pipeline,
+    VkPipelineLayout layout, const std::vector<VkDescriptorSet>& descriptorSets);
+  virtual ~Material();
   VkPipelineLayout pipelineLayout() const { return layout_; }
   VkPipeline pipeline() const { return pipeline_; }
   const std::vector<VkDescriptorSet>& descriptorSets() const { return descriptorSets_; }
 private:
-  friend class MaterialPool;
-private:
+  MaterialPool* pool_;
   VkPipeline pipeline_;
   VkPipelineLayout layout_;
   std::vector<VkDescriptorSet> descriptorSets_;

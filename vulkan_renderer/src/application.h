@@ -9,7 +9,7 @@
 #include "device.h"
 #include "presenter.h"
 #include "renderer.h"
-#include "resource_manager.h"
+#include "rendering_context.h"
 #include "swapchain.h"
 #include "vulkan.h"
 #include "engine/application.h"
@@ -31,12 +31,12 @@ public:
     ~InitGLFW();
   };
 public:
-  explicit Application(GamePtr game);
+  explicit Application(Game* game, const asset::Application* asset);
   virtual ~Application();
   void run() override;
-  Scene* createScene(asset::Scene* asset) override;
+  RenderingContext* renderingContext() override { return renderingContext_.get(); }
 private:
-  void createWindow(asset::Application* props);
+  void createWindow();
   VulkanExtensions createInstance(const std::string& appName);
   void createSurface();
   void createAllocator();
@@ -56,6 +56,7 @@ private:
   };
 private:
   static InitGLFW initGLFW_;
+  const asset::Application* asset_;
   ResizeInfo resize_;
   AutoDestructor<GLFWwindow*> window_;
   AutoDestructor<VkInstance> instance_;
@@ -64,7 +65,7 @@ private:
   DevicePtr device_;
   AutoDestructor<VmaAllocator> allocator_;
   SwapchainPtr swapchain_;
-  ResourceManagerPtr resourceManager_;
+  RenderingContextPtr renderingContext_;
   RendererPtr renderer_;
   PresenterPtr presenter_;
 };

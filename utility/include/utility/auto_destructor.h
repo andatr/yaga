@@ -3,7 +3,7 @@
 
 #include <functional>
 
-#include <boost/core/noncopyable.hpp>
+#include <boost/noncopyable.hpp>
 
 #include "exception.h"
 

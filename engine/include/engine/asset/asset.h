@@ -14,13 +14,13 @@ namespace asset
 
 class Asset : private boost::noncopyable
 {
+friend class Database;
+friend class Serializer;
 public:
   explicit Asset(const std::string& name);
   virtual ~Asset() {}
   const std::string& name() const { return name_; }
 protected:
-  friend class Database;
-  friend class Serializer;
   virtual void resolveRefs(Database* db);
 protected:
   const std::string name_;

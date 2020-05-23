@@ -2,11 +2,12 @@
 #define YAGA_VULKAN_RENDERER_APPLICATION
 
 #include "engine/application.h"
+#include "engine/asset/application.h"
 
 namespace yaga
 {
 
-ApplicationPtr createApplication(GamePtr game);
+ApplicationPtr createApplication(Game* game, const asset::Application* asset);
 
 } // !namespace yaga
 

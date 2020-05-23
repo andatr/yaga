@@ -5,10 +5,10 @@
 #include <memory>
 #include <string>
 
-#include <boost/core/noncopyable.hpp>
+#include <boost/noncopyable.hpp>
 
 #include "engine/game.h"
-#include "engine/asset/scene.h"
+#include "engine/rendering_context.h"
 
 namespace yaga
 {
@@ -16,13 +16,16 @@ namespace yaga
 class Application : private boost::noncopyable
 {
 public:
-  explicit Application(GamePtr game);
+  explicit Application(Game* game);
   virtual ~Application();
-  Game* game() const { return game_.get(); }
-  virtual Scene* createScene(asset::Scene* asset) = 0;
   virtual void run() = 0;
+  virtual RenderingContext* renderingContext() = 0;
 protected:
-  GamePtr game_;
+  void gameInit() { game_->app_ = this; game_->init(); }
+  void gameLoop(float delta) const { game_->loop(delta); }
+  void gameShutdown() const { game_->shutdown(); }
+protected:
+  Game* game_;
 };
 
 typedef std::unique_ptr<Application> ApplicationPtr;

@@ -1,12 +1,13 @@
 #include "precompiled.h"
-#include "scene.h"
+#include "renderer3d.h"
+#include "object.h"
 
 namespace yaga
 {
 
 // -------------------------------------------------------------------------------------------------------------------------
-Scene::Scene() :
-  root_(nullptr), camera_(nullptr)
+Renderer3D::Renderer3D(Object* obj) :
+  Component(obj)
 {
 }
 

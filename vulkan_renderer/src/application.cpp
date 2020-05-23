@@ -13,9 +13,9 @@ namespace yaga
 {
 
 // -------------------------------------------------------------------------------------------------------------------------
-ApplicationPtr createApplication(GamePtr game)
+ApplicationPtr createApplication(Game* game, const asset::Application* asset)
 {
-  return std::make_unique<vk::Application>(std::move(game));
+  return std::make_unique<vk::Application>(game, asset);
 }
 
 namespace vk
@@ -111,10 +111,9 @@ Application::InitGLFW::~InitGLFW()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-Application::Application(GamePtr game) :
-  yaga::Application(std::move(game))
+Application::Application(Game* game, const asset::Application* asset) :
+  yaga::Application(game), asset_(asset)
 {
-  game_->application(this);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -125,25 +124,24 @@ Application::~Application()
 // -------------------------------------------------------------------------------------------------------------------------
 void Application::run()
 {
-  auto props = game_->assets()->get<asset::Application>("application");
-  createWindow(props);
+  createWindow();
   checkValidationLayers();
-  auto extensions = createInstance(props->title());
+  auto extensions = createInstance(asset_->title());
   setupLogging();
   createSurface();
   device_ = std::make_unique<Device>(*instance_, *surface_, extensions);
   createAllocator();
-  VkExtent2D resolution { props->width(), props->height() };
+  VkExtent2D resolution { asset_->width(), asset_->height() };
   swapchain_ = std::make_unique<Swapchain>(device_.get(), *allocator_, *surface_, resolution);
-  resourceManager_ = std::make_unique<ResourceManager>(device_.get(), *allocator_, swapchain_.get(), props);
-  renderer_ = std::make_unique<Renderer>(device_.get(), swapchain_.get());
+  renderingContext_ = std::make_unique<RenderingContext>(device_.get(), *allocator_, swapchain_.get(), asset_);
+  renderer_ = std::make_unique<Renderer>(swapchain_.get(), renderingContext_.get());
   presenter_ = std::make_unique<Presenter>(device_.get(), swapchain_.get());
-  game_->init();
+  gameInit();
   loop();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Application::createWindow(asset::Application* props)
+void Application::createWindow()
 {
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
@@ -151,7 +149,7 @@ void Application::createWindow(asset::Application* props)
     glfwDestroyWindow(window);
     LOG(trace) << "Window destroyed";
   };
-  auto window = glfwCreateWindow(props->width(), props->height(), props->title().c_str(), nullptr, nullptr);
+  auto window = glfwCreateWindow(asset_->width(), asset_->height(), asset_->title().c_str(), nullptr, nullptr);
   if (!window) {
     THROW("Could not create Window");
   }
@@ -254,7 +252,7 @@ void Application::resize()
   vkDeviceWaitIdle(**device_);
   swapchain_.reset();
   swapchain_ = std::make_unique<Swapchain>(device_.get(), *allocator_, *surface_, getWindowSize());
-  resourceManager_->swapchain(swapchain_.get());
+  renderingContext_->swapchain(swapchain_.get());
   renderer_->swapchain(swapchain_.get());
   presenter_->swapchain(swapchain_.get());
 }
@@ -313,21 +311,25 @@ void Application::loop()
     drawFrame();
   }
   vkDeviceWaitIdle(**device_);
-  game_->shutdown();
+  gameShutdown();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
 void Application::drawFrame()
 {
-  game_->loop(0.0f);
+  gameLoop(0.0f);
   presenter_->waitPrevFrame();
-  auto image = presenter_->acquireTargetImage();
-  if (image == Presenter::BAD_IMAGE || resize_.resized) {
+  auto frame = presenter_->acquireTargetImage();
+  if (frame == Presenter::BAD_IMAGE || resize_.resized) {
     resize();
     return;
   }
-  auto command = renderer_->render(game_->scene(), image);
-  presenter_->present(command, image);
+  renderingContext_->update(frame);
+  renderer_->render(frame);
+  const auto mainCamera = renderingContext_->mainCamera();
+  if (mainCamera != nullptr) {
+    presenter_->present(mainCamera->frame(frame).command, frame);
+  }
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -348,12 +350,6 @@ void Application::resizeCallback(GLFWwindow* window, int width, int height)
   auto app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
   app->resize_.size = { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
   app->resize_.resized = true;
-}
-
-// -------------------------------------------------------------------------------------------------------------------------
-Scene* Application::createScene(asset::Scene* asset)
-{
-  return resourceManager_->changeScene(asset);
 }
 
 } // !namespace vk

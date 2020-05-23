@@ -1,7 +1,8 @@
 #ifndef YAGA_VULKAN_RENDERER_SRC_MESH_POOL
 #define YAGA_VULKAN_RENDERER_SRC_MESH_POOL
 
-#include <map>
+#include <unordered_map>
+#include <unordered_set>
 #include <memory>
 
 #include "buffer.h"
@@ -20,10 +21,18 @@ class MeshPool
 {
 public:
   explicit MeshPool(Device* device, VmaAllocator allocator, uint32_t maxVertexCount, uint32_t maxIndexCount);
-  Mesh* createMesh(asset::Mesh* asset);
-  void clear() { meshes_.clear(); }
+  MeshPtr createMesh(Object* object, asset::Mesh* asset);
+  void clear();
+  void removeMesh(Mesh* mesh);
 private:
   void createStageBuffers(uint32_t maxVertexCount, uint32_t maxIndexCount);
+private:
+  struct MeshCache
+  {
+    uint32_t indexCount;
+    BufferPtr vertexBuffer;
+    BufferPtr indexBuffer;
+  };
 private:
   Device* device_;
   VkDevice vkDevice_;
@@ -32,7 +41,8 @@ private:
   uint32_t maxIndexCount_;
   BufferPtr stageVertexBuffer_;
   BufferPtr stageIndexBuffer_;
-  std::map<asset::Mesh*, MeshPtr> meshes_;
+  std::unordered_map<asset::Mesh*, MeshCache> meshCache_;
+  std::unordered_set<Mesh*> meshes_;
 };
 
 typedef std::unique_ptr<MeshPool> MeshPoolPtr;

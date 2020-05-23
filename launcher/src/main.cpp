@@ -16,19 +16,20 @@ namespace
 void runApplication(const fs::path& assetPath)
 {
   auto game = std::make_unique<BasicGame>();
-  auto app = createApplication(std::move(game));
   if (fs::is_directory(assetPath)) {
-    asset::Serializer::deserializeFriendly(assetPath.string(), app->game()->assets());
+    asset::Serializer::deserializeFriendly(assetPath.string(), game->assets());
   }
   else {
     const auto appFilename = assetPath.filename();
     if (appFilename.extension().string() == "data") {
-      asset::Serializer::deserializeBin(assetPath.parent_path().string(), app->game()->assets());
+      asset::Serializer::deserializeBin(assetPath.parent_path().string(), game->assets());
     }
     else {
-      asset::Serializer::deserializeFriendly(assetPath.parent_path().string(), app->game()->assets());
+      asset::Serializer::deserializeFriendly(assetPath.parent_path().string(), game->assets());
     }
   }
+  const auto appAsset = game->assets()->get<asset::Application>("application");
+  auto app = createApplication(game.get(), appAsset);
   app->run();
 }
 
@@ -55,10 +56,10 @@ void displayAppList(const AppList& apps)
 {
   while (true) {
     std::cout << "Enter index of application to run (1-" << apps.size() << "):\n";
-    for (int i = 0; i < apps.size(); ++i) {
+    for (size_t i = 0; i < apps.size(); ++i) {
       std::cout << (i + 1) << ": " << apps[i].first << "\n";
     }
-    int appIndex = -1;
+    size_t appIndex = 0;
     std::cin >> appIndex;
     if (appIndex <= 0 || appIndex > apps.size()) return;
     runApplication(apps[appIndex - 1].second);
