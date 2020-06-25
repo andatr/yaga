@@ -5,8 +5,12 @@
 #include <string>
 #include <vector>
 
+#pragma warning(push, 0)
+
 #include <GLFW/glfw3.h>
 #include <vk_mem_alloc/vk_mem_alloc.h>
+
+#pragma warning(pop)
 
 #define GET_EXT_PROC_ADDRESS(instance, proc) [](auto inst) { \
   auto result = (PFN_##proc)vkGetInstanceProcAddr(inst, #proc); \

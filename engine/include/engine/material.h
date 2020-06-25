@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "component.h"
-#include "engine/asset/material.h"
+#include "assets/material.h"
 
 namespace yaga
 {
@@ -12,11 +12,11 @@ namespace yaga
 class Material : public Component
 {
 public:
-  explicit Material(Object* object, asset::Material* asset);
+  explicit Material(Object* object, assets::Material* asset);
   virtual ~Material() {}
-  asset::Material* asset() const { return asset_; }
+  assets::Material* asset() const { return asset_; }
 protected:
-  asset::Material* asset_;
+  assets::Material* asset_;
 };
 
 typedef std::unique_ptr<Material> MaterialPtr;

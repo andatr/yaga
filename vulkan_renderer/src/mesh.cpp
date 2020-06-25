@@ -8,7 +8,7 @@ namespace vk
 {
 
 // -------------------------------------------------------------------------------------------------------------------------
-Mesh::Mesh(Object* object, asset::Mesh* asset, MeshPool* pool, VkBuffer vertices, VkBuffer indices, uint32_t indexCount) :
+Mesh::Mesh(Object* object, assets::Mesh* asset, MeshPool* pool, VkBuffer vertices, VkBuffer indices, uint32_t indexCount) :
   yaga::Mesh(object, asset), pool_(pool), vertexBuffer_(vertices), indexBuffer_(indices), indexCount_(indexCount)
 {
 }

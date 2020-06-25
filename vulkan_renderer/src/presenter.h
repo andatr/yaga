@@ -17,12 +17,10 @@ namespace vk
 class Presenter
 {
 public:
-  static const uint32_t BAD_IMAGE = std::numeric_limits<uint32_t>::max();
-public:
   explicit Presenter(Device* device, Swapchain* swapchain);
   void waitPrevFrame();
-  uint32_t acquireTargetImage();
-  void present(VkCommandBuffer command, uint32_t image);
+  bool acquireImage(uint32_t* image);
+  bool present(VkCommandBuffer command, uint32_t image);
   void swapchain(Swapchain* swapchain);
 private:
   struct FrameSync

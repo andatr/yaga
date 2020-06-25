@@ -142,7 +142,7 @@ ImagePool::ImagePool(Device* device, VmaAllocator allocator, VkDeviceSize maxIma
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-Image* ImagePool::createImage(asset::Texture* asset)
+Image* ImagePool::createImage(assets::Texture* asset)
 {
   auto it = images_.find(asset);
   if (it != images_.end()) return it->second.get();

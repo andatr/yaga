@@ -33,15 +33,15 @@ namespace format
 {
 enum Attributes : int
 {
-  Time,
-  Severity,
-  File,
-  Line,
-  All = std::numeric_limits<int>::max()
+  time,
+  severity,
+  file,
+  line,
+  all = std::numeric_limits<int>::max()
 };
 }
 
-void init(boost::optional<Severity> severity = boost::none, int format = format::All);
+void init(boost::optional<Severity> severity = boost::none, int format = format::all);
 Severity severityFromString(std::string str);
 
 } // !namespace log

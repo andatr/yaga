@@ -7,7 +7,7 @@ namespace vk
 {
 
 // -------------------------------------------------------------------------------------------------------------------------
-Shader::Shader(Device* device, asset::Shader* asset)
+Shader::Shader(Device* device, assets::Shader* asset)
 {
   VkShaderModuleCreateInfo createInfo {};
   createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;

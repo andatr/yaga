@@ -19,10 +19,11 @@ class CameraPool
 {
 public:
   explicit CameraPool(Device* device, VmaAllocator allocator, Swapchain* swapchain, VkDescriptorPool descriptorPool);
+  ~CameraPool();
   //void swapchain(Swapchain* swapchain);
   VkDescriptorSetLayout layout() const { return *layout_; }
   const std::unordered_set<Camera*>& cameras() const { return cameras_; }
-  CameraPtr createCamera(Object* object, asset::Camera* asset);
+  CameraPtr createCamera(Object* object, assets::Camera* asset);
   void removeCamera(Camera* camera);
   void clear();
   Camera* mainCamera() const { return mainCamera_; }

@@ -28,13 +28,13 @@ void yagaFormatter(logging::record_view const& rec, logging::formatting_ostream&
   const auto& severity = rec.attribute_values()[a_severity].extract<Severity>().get();
   const auto& file = rec.attribute_values()[a_file];
   const auto& line = rec.attribute_values()[a_line];
-  if (format & format::Time)
+  if (format & format::time)
     strm << time << " ";
-  if (format & format::Severity)
+  if (format & format::severity)
     strm << severity << " ";
-  if (format & format::File)
+  if (format & format::file)
     strm << file << " ";
-  if (format & format::Line)
+  if (format & format::line)
     strm << line << " ";
   strm << rec[logging::expressions::smessage];
 }

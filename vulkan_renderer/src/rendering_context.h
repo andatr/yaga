@@ -13,7 +13,7 @@
 #include "renderer3d.h"
 #include "swapchain.h"
 #include "vulkan.h"
-#include "engine/asset/application.h"
+#include "assets/application.h"
 #include "engine/rendering_context.h"
 #include "utility/auto_destructor.h"
 
@@ -25,12 +25,12 @@ namespace vk
 class RenderingContext : public yaga::RenderingContext
 {
 public:
-  explicit RenderingContext(Device* device, VmaAllocator allocator, Swapchain* swapchain, const asset::Application* limits);
+  explicit RenderingContext(Device* device, VmaAllocator allocator, Swapchain* swapchain, const assets::Application* limits);
   void swapchain(Swapchain* swapchain);
   yaga::Renderer3DPtr createRenderer3D(Object* object) override;
-  yaga::MaterialPtr createMaterial(Object* object, asset::Material* asset) override;
-  yaga::MeshPtr createMesh(Object* object, asset::Mesh* asset) override;
-  yaga::CameraPtr createCamera(Object* object, asset::Camera* asset) override;
+  yaga::MaterialPtr createMaterial(Object* object, assets::Material* asset) override;
+  yaga::MeshPtr createMesh(Object* object, assets::Mesh* asset) override;
+  yaga::CameraPtr createCamera(Object* object, assets::Camera* asset) override;
   const std::unordered_set<Renderer3D*>& renderers3D() const { return renderers3D_; }
   const std::unordered_set<Camera*>& cameras() const { return cameraPool_->cameras(); }
   void removeRenderer3D(Renderer3D* renderer3d);

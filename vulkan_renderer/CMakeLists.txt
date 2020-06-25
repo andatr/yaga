@@ -9,7 +9,7 @@ if( MSVC )
   set_source_files_properties( src/precompiled.cpp PROPERTIES COMPILE_FLAGS "/Ycprecompiled.h" )
 endif( MSVC )
 
-add_library( vulkan_renderer ${source_list} )
+add_library( vulkan_renderer MODULE ${source_list} )
 
 target_include_directories( vulkan_renderer
   PUBLIC 
@@ -30,5 +30,10 @@ target_link_libraries( vulkan_renderer
 )
 
 set_target_properties( vulkan_renderer PROPERTIES FOLDER lib )
+
+add_custom_command( TARGET vulkan_renderer
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:vulkan_renderer> ${PROJECT_SOURCE_DIR}/data/.
+)
 
 add_subdirectory( test )

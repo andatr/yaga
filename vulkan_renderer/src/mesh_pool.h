@@ -9,7 +9,7 @@
 #include "device.h"
 #include "mesh.h"
 #include "vulkan.h"
-#include "engine/asset/mesh.h"
+#include "assets/mesh.h"
 #include "utility/auto_destructor.h"
 
 namespace yaga
@@ -21,7 +21,8 @@ class MeshPool
 {
 public:
   explicit MeshPool(Device* device, VmaAllocator allocator, uint32_t maxVertexCount, uint32_t maxIndexCount);
-  MeshPtr createMesh(Object* object, asset::Mesh* asset);
+  ~MeshPool();
+  MeshPtr createMesh(Object* object, assets::Mesh* asset);
   void clear();
   void removeMesh(Mesh* mesh);
 private:
@@ -41,7 +42,7 @@ private:
   uint32_t maxIndexCount_;
   BufferPtr stageVertexBuffer_;
   BufferPtr stageIndexBuffer_;
-  std::unordered_map<asset::Mesh*, MeshCache> meshCache_;
+  std::unordered_map<assets::Mesh*, MeshCache> meshCache_;
   std::unordered_set<Mesh*> meshes_;
 };
 

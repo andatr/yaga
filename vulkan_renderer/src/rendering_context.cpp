@@ -4,7 +4,7 @@
 #include "mesh.h"
 #include "renderer3d.h"
 #include "shader.h"
-#include "engine/vertex.h"
+#include "assets/vertex.h"
 
 namespace yaga
 {
@@ -13,7 +13,7 @@ namespace vk
 
 // -------------------------------------------------------------------------------------------------------------------------
 RenderingContext::RenderingContext(Device* device, VmaAllocator allocator, Swapchain* swapchain,
-  const asset::Application* limits) :
+  const assets::Application* limits) :
     vkDevice_(**device), allocator_(allocator),
     frames_(static_cast<uint32_t>(swapchain->frameBuffers().size()))
 {
@@ -48,19 +48,19 @@ void RenderingContext::removeRenderer3D(Renderer3D* renderer3d)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-yaga::MaterialPtr RenderingContext::createMaterial(Object* object, asset::Material* asset)
+yaga::MaterialPtr RenderingContext::createMaterial(Object* object, assets::Material* asset)
 {
   return materialPool_->createMaterial(object, asset);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-yaga::MeshPtr RenderingContext::createMesh(Object* object, asset::Mesh* asset)
+yaga::MeshPtr RenderingContext::createMesh(Object* object, assets::Mesh* asset)
 {
   return meshPool_->createMesh(object, asset);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-yaga::CameraPtr RenderingContext::createCamera(Object* object, asset::Camera* asset)
+yaga::CameraPtr RenderingContext::createCamera(Object* object, assets::Camera* asset)
 {
   return cameraPool_->createCamera(object, asset);
 }

@@ -12,6 +12,7 @@ Buffer::Buffer(VmaAllocator allocator, const VkBufferCreateInfo& info, const Vma
 {
   VULKAN_GUARD(vmaCreateBuffer(allocator_, &info, &allocInfo, &buffer_, &allocation_, &memory_),
     "Could not create Vulkan Buffer Object");
+  LOG(trace) << "Vulkan Buffer Object created";
 }
 
 // -------------------------------------------------------------------------------------------------------------------------

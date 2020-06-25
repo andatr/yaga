@@ -40,15 +40,11 @@ Options::Options(int argc, char *argv[])
   po::store(po::command_line_parser(argc, argv).options(makeOptions()).run(), options);
   po::notify(options);
 
-  auto appPath = fs::path(getOption<std::string>(options, "app", "data"));
-  if (appPath.is_absolute()) {
-    appPath_ = appPath.string();
+  workingDir_ = fs::path(argv[0]).parent_path();
+  appPath_ = fs::path(getOption<std::string>(options, "app", "data"));
+  if (!appPath_.is_absolute()) {
+    appPath_ = workingDir_ / appPath_;
   }
-  else {
-    auto parent = fs::path(argv[0]).parent_path();
-    appPath_ = (parent / appPath).string();
-  }
-
   std::string severity = getOption<std::string>(options, "log", "");
   if (!severity.empty()) {
     severity_ = log::severityFromString(severity);

@@ -5,7 +5,7 @@ namespace yaga
 {
 
 // ------------------------------------------------------------------------------------------------------------------------
-Material::Material(Object* object, asset::Material* asset) :
+Material::Material(Object* object, assets::Material* asset) :
   Component(object), asset_(asset)
 {
 }

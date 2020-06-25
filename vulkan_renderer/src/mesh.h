@@ -16,7 +16,7 @@ class Mesh : public yaga::Mesh
 {
 friend class MeshPool;
 public:
-  explicit Mesh(Object* object, asset::Mesh* asset, MeshPool* pool, VkBuffer vertices, VkBuffer indices, uint32_t indexCount);
+  explicit Mesh(Object* object, assets::Mesh* asset, MeshPool* pool, VkBuffer vertices, VkBuffer indices, uint32_t indexCount);
   virtual ~Mesh();
   VkBuffer vertexBuffer() const { return vertexBuffer_; }
   VkBuffer indexBuffer() const { return indexBuffer_; }

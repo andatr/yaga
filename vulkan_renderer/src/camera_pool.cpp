@@ -40,7 +40,15 @@ void CameraPool::createDescriptorLayout()
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
-CameraPtr CameraPool::createCamera(Object* object, asset::Camera* asset)
+CameraPool::~CameraPool()
+{
+  if (cameras_.empty()) {
+    LOG(warning) << "Vulkan Camera Pool memory leak";
+  }
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+CameraPtr CameraPool::createCamera(Object* object, assets::Camera* asset)
 {
   auto camera = std::make_unique<Camera>(object, asset, this, frames_);
   if (mainCamera_ == nullptr) {

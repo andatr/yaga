@@ -8,7 +8,7 @@
 #include "device.h"
 #include "image.h"
 #include "vulkan.h"
-#include "engine/asset/texture.h"
+#include "assets/texture.h"
 #include "utility/auto_destructor.h"
 
 namespace yaga
@@ -20,7 +20,7 @@ class ImagePool
 {
 public:
   explicit ImagePool(Device* device, VmaAllocator allocator, VkDeviceSize maxImageSize);
-  Image* createImage(asset::Texture* asset);
+  Image* createImage(assets::Texture* asset);
   void clear() { images_.clear(); }
 private:
   void createStageBuffer(VkDeviceSize size);
@@ -32,7 +32,7 @@ private:
   VkDeviceSize maxImageSize_;
   BufferPtr stageBuffer_;
   AutoDestructor<VkSampler> sampler_;
-  std::map<asset::Texture*, ImagePtr> images_;
+  std::map<assets::Texture*, ImagePtr> images_;
 };
 
 typedef std::unique_ptr<ImagePool> ImagePoolPtr;

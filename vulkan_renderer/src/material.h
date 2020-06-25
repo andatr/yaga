@@ -17,7 +17,7 @@ class Material : public yaga::Material
 {
 friend class MaterialPool;
 public:
-  explicit Material(Object* object, asset::Material* asset, MaterialPool* pool, VkPipeline pipeline,
+  explicit Material(Object* object, assets::Material* asset, MaterialPool* pool, VkPipeline pipeline,
     VkPipelineLayout layout, const std::vector<VkDescriptorSet>& descriptorSets);
   virtual ~Material();
   VkPipelineLayout pipelineLayout() const { return layout_; }

@@ -4,7 +4,7 @@
 #include <memory>
 
 #include "component.h"
-#include "engine/asset/mesh.h"
+#include "assets/mesh.h"
 
 namespace yaga
 {
@@ -12,10 +12,10 @@ namespace yaga
 class Mesh : public Component
 {
 public:
-  explicit Mesh(Object* object, asset::Mesh* asset);
+  explicit Mesh(Object* object, assets::Mesh* asset);
   virtual ~Mesh() {}
 protected:
-  asset::Mesh* asset_;
+  assets::Mesh* asset_;
 };
 
 typedef std::unique_ptr<Mesh> MeshPtr;

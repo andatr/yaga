@@ -4,9 +4,8 @@
 #include <memory>
 #include <unordered_set>
 
-#include <glm/glm.hpp>
-
 #include "engine/component.h"
+#include "engine/glm.h"
 
 namespace yaga
 {

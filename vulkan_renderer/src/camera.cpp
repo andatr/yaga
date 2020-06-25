@@ -8,7 +8,7 @@ namespace vk
 {
 
 // -------------------------------------------------------------------------------------------------------------------------
-Camera::Camera(Object* obj, asset::Camera* asset, CameraPool* pool, uint32_t frames) :
+Camera::Camera(Object* obj, assets::Camera* asset, CameraPool* pool, uint32_t frames) :
   yaga::Camera(obj, asset), pool_(pool), uniform_{}, frames_(frames)
 {
   uniform_.projection = asset_->projection();
@@ -35,9 +35,9 @@ void Camera::updateView()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Camera::onAssetUpdated(asset::CameraProperty prop)
+void Camera::onAssetUpdated(assets::CameraProperty prop)
 {
-  if (prop == asset::CameraProperty::projection) {
+  if (prop == assets::CameraProperty::projection) {
     uniform_.projection = asset_->projection();
     for (size_t i = 0; i < frames_.size(); ++i) {
       frames_[i].dirty = true;

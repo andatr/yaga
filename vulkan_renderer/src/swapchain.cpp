@@ -1,6 +1,6 @@
 #include "precompiled.h"
 #include "swapchain.h"
-#include "engine/vertex.h"
+#include "assets/vertex.h"
 
 namespace yaga
 {
@@ -19,15 +19,45 @@ VkSurfaceFormatKHR pickColorFormat(VkPhysicalDevice device, VkSurfaceKHR surface
     THROW("Could not choose color format");
   }
   formats.resize(count);
-  vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &count, formats.data());
+  VULKAN_GUARD(vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &count, formats.data()), "Could not enumerate color format");
+
   auto format = std::find_if(formats.begin(), formats.end(), [](const auto& f) {
     // TODO: uncomment
-    //VkFormatProperties props;
+    VkFormatProperties props;
     //vkGetPhysicalDeviceFormatProperties(device, f, &props);
-    return /*props.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT; &&*/
+    return /*props.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT*/
       f.format == VK_FORMAT_B8G8R8A8_UNORM &&
       f.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
   });
+
+
+  // If the surface format list only includes one entry with
+  // VK_FORMAT_UNDEFINED, there is no preferred format.
+  // Assume VK_FORMAT_B8G8R8A8_RGB.
+  // TODO Consider passing in desired format from app.
+  /*if ((formatCount == 1) && (surfaceFormats[0].format == VK_FORMAT_UNDEFINED))
+  {
+    colorFormat = VK_FORMAT_B8G8R8A8_SRGB;
+  }
+  else
+  {
+    assert(formatCount >= 1);
+    uint32_t i;
+    for (i = 0; i < formatCount; i++) {
+      if (surfaceFormats[i].format == VK_FORMAT_B8G8R8A8_SRGB) {
+        break;
+      }
+    }
+    if (i == formatCount) {
+      // Pick the first available, if no SRGB.
+      // FIXME probably should raise an error...
+      i = 0;
+    }
+    colorFormat = surfaceFormats[i].format;
+  }
+  colorSpace = surfaceFormats[0].colorSpace;
+  return true;*/
+
   if (format == formats.end()) {
     THROW("Could not choose color format");
   }

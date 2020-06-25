@@ -1,6 +1,6 @@
 #include "precompiled.h"
 #include "presenter.h"
-#include "engine/vertex.h"
+#include "assets/vertex.h"
 
 namespace yaga
 {
@@ -37,16 +37,16 @@ void Presenter::createSync()
   fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
   auto deleteSemaphore = [this](auto semaphore) {
-    vkDestroySemaphore(**device_, semaphore, nullptr);
+    vkDestroySemaphore(vkDevice_, semaphore, nullptr);
     LOG(trace) << "Vulkan Semaphore destroyed";
   };
   auto deleteFence = [this](auto fence) {
-    vkDestroyFence(**device_, fence, nullptr);
+    vkDestroyFence(vkDevice_, fence, nullptr);
     LOG(trace) << "Vulkan Fence destroyed";
   };
 
   auto createSemaphore = [this, &semaphoreInfo](auto& semaphore) {
-    VULKAN_GUARD(vkCreateSemaphore(**device_, &semaphoreInfo, nullptr, &semaphore), "Could not create Vulkan Semaphore");
+    VULKAN_GUARD(vkCreateSemaphore(vkDevice_, &semaphoreInfo, nullptr, &semaphore), "Could not create Vulkan Semaphore");
     LOG(trace) << "Vulkan Semaphore created";
   };
 
@@ -57,7 +57,7 @@ void Presenter::createSync()
     frameSync_[i].render.set(semaphore, deleteSemaphore);
     createSemaphore(semaphore);
     frameSync_[i].present.set(semaphore, deleteSemaphore);
-    VULKAN_GUARD(vkCreateFence(**device_, &fenceInfo, nullptr, &fence), "Could not create Vulkan Fence");
+    VULKAN_GUARD(vkCreateFence(vkDevice_, &fenceInfo, nullptr, &fence), "Could not create Vulkan Fence");
     frameSync_[i].swap.set(fence, deleteFence);
     LOG(trace) << "Vulkan Fence created";
   }
@@ -67,28 +67,28 @@ void Presenter::createSync()
 void Presenter::waitPrevFrame()
 {
   const auto& sync = frameSync_[frame_];
-  vkWaitForFences(**device_, 1, &*sync.swap, VK_TRUE, UINT64_MAX);
+  vkWaitForFences(vkDevice_, 1, &*sync.swap, VK_TRUE, UINT64_MAX);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-uint32_t Presenter::acquireTargetImage()
+bool Presenter::acquireImage(uint32_t* image)
 {
   const auto& sync = frameSync_[frame_];
-  uint32_t image = 0;
-  auto result = vkAcquireNextImageKHR(**device_, swapchain_, INT64_MAX, *sync.render, VK_NULL_HANDLE, &image);
+  auto result = vkAcquireNextImageKHR(vkDevice_, swapchain_, INT64_MAX, *sync.render, VK_NULL_HANDLE, image);
   if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR) {
-    return BAD_IMAGE;
+    return false;
   }
   if (result != VK_SUCCESS) {
     THROW("Failed to acquire swapchain image");
   }
-  return image;
+  return true;
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Presenter::present(VkCommandBuffer command, uint32_t image)
+bool Presenter::present(VkCommandBuffer command, uint32_t image)
 {
   const auto& sync = frameSync_[frame_];
+  frame_ = ++frame_ % MAX_FRAMES;
 
   VkSubmitInfo submitInfo {};
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
@@ -100,7 +100,7 @@ void Presenter::present(VkCommandBuffer command, uint32_t image)
   submitInfo.pCommandBuffers = &command;
   submitInfo.signalSemaphoreCount = 1;
   submitInfo.pSignalSemaphores = &*sync.present;
-  vkResetFences(**device_, 1, &*sync.swap);
+  vkResetFences(vkDevice_, 1, &*sync.swap);
   VULKAN_GUARD(vkQueueSubmit(device_->graphicsQueue(), 1, &submitInfo, *sync.swap), "Could not draw frame");
 
   VkPresentInfoKHR presentInfo {};
@@ -110,9 +110,14 @@ void Presenter::present(VkCommandBuffer command, uint32_t image)
   presentInfo.swapchainCount = 1;
   presentInfo.pSwapchains = &swapchain_;
   presentInfo.pImageIndices = &image;
-  vkQueuePresentKHR(device_->presentQueue(), &presentInfo);
-
-  frame_ = ++frame_ % MAX_FRAMES;
+  auto result = vkQueuePresentKHR(device_->presentQueue(), &presentInfo);
+  if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+    return false;
+  }
+  if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+    THROW("Could not present image");
+  }
+  return true;
 }
 
 } // !namespace vk

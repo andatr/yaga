@@ -3,7 +3,7 @@
 #include "material.h"
 #include "mesh.h"
 #include "uniform.h"
-#include "engine/vertex.h"
+#include "assets/vertex.h"
 
 namespace yaga
 {
@@ -60,11 +60,10 @@ void Renderer::renderObject(Camera* camera, Renderer3D* object, VkCommandBuffer 
     camera->frame(frame).descriptor,
     material->descriptorSets()[frame]
   };
+  const auto& pconst = object->pushConstant();
   vkCmdBindPipeline(command, VK_PIPELINE_BIND_POINT_GRAPHICS, material->pipeline());
-  vkCmdBindDescriptorSets(command, VK_PIPELINE_BIND_POINT_GRAPHICS, material->pipelineLayout(), 0, 2, descriptors.data(),
-    0, nullptr);
-  vkCmdPushConstants(command, material->pipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0,
-    sizeof(PushConstantVertex), &object->pushConstant());
+  vkCmdBindDescriptorSets(command, VK_PIPELINE_BIND_POINT_GRAPHICS, material->pipelineLayout(), 0, 2, descriptors.data(), 0, nullptr);
+  vkCmdPushConstants(command, material->pipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantVertex), &pconst);
   vkCmdBindVertexBuffers(command, 0, 1, vertexBuffers, offsets);
   vkCmdBindIndexBuffer(command, mesh->indexBuffer(), 0, VK_INDEX_TYPE_UINT32);
   vkCmdDrawIndexed(command, mesh->indexCount(), 1, 0, 0, 0);

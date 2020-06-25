@@ -3,7 +3,9 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <sstream>
 
+#include <boost/dll.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 

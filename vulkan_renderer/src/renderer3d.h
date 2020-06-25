@@ -27,7 +27,7 @@ public:
   PushConstantVertex pushConstant() const;
 private:
   void onComponentAdd(Component* component) override;
-  void onComponenRemove(Component* component) override;
+  void onComponentRemove(Component* component) override;
 protected:
   RenderingContext* pool_;
   Material* material_;

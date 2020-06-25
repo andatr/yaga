@@ -26,6 +26,14 @@ MeshPool::MeshPool(Device* device, VmaAllocator allocator, uint32_t maxVertexCou
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
+MeshPool::~MeshPool()
+{
+  if (meshes_.empty()) {
+    LOG(warning) << "Vulkan Mesh Pool memory leak";
+  }
+}
+
+// -------------------------------------------------------------------------------------------------------------------------
 void MeshPool::clear()
 {
   if (!meshes_.empty()) {
@@ -42,7 +50,7 @@ void MeshPool::removeMesh(Mesh* mesh)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-MeshPtr MeshPool::createMesh(Object* object, asset::Mesh* asset)
+MeshPtr MeshPool::createMesh(Object* object, assets::Mesh* asset)
 {
   auto it = meshCache_.find(asset);
   if (it != meshCache_.end()) {

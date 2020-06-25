@@ -5,8 +5,8 @@ namespace yaga
 {
 
 // -------------------------------------------------------------------------------------------------------------------------
-Application::Application(Game* game) :
-  game_(game)
+Application::Application(GamePtr game) :
+  game_(std::move(game))
 {
 }
   

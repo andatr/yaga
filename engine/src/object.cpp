@@ -13,6 +13,11 @@ Object::Object() :
 // ------------------------------------------------------------------------------------------------------------------------
 Object::~Object()
 {
+  for (const auto& component : components_) {
+    for (const auto& removed : components_) {
+      component.second->onComponentRemove(removed.second.get());
+    }
+  }
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -37,7 +42,7 @@ void Object::removeComponent(Component* component)
     THROW(std::string("Object does not have component of type ") + id.name());
   }
   for (const auto& c : components_) {
-    c.second->onComponenRemove(component);
+    c.second->onComponentRemove(component);
   }
   components_.erase(it);
 }

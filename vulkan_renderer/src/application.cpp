@@ -2,27 +2,19 @@
 #include "application.h"
 #include "device.h"
 #include "swapchain.h"
-#include "engine/asset/material.h"
-#include "engine/asset/mesh.h"
-#include "engine/asset/texture.h"
+#include "assets/material.h"
+#include "assets/mesh.h"
+#include "assets/texture.h"
 
+#pragma warning(push, 0)
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc/vk_mem_alloc.h>
+#pragma warning(pop)
 
 namespace yaga
 {
-
-// -------------------------------------------------------------------------------------------------------------------------
-ApplicationPtr createApplication(Game* game, const asset::Application* asset)
-{
-  return std::make_unique<vk::Application>(game, asset);
-}
-
 namespace vk
 {
-
-Application::InitGLFW Application::initGLFW_;
-
 namespace
 {
 
@@ -98,6 +90,14 @@ VkDebugUtilsMessengerCreateInfoEXT getDebugMessengerCreateInfo()
 
 } // !namespace
 
+Application::InitGLFW Application::initGLFW_;
+
+// -------------------------------------------------------------------------------------------------------------------------
+ApplicationPtr createApplication(GamePtr game, const assets::Application* asset)
+{
+  return std::make_unique<vk::Application>(std::move(game), asset);
+}
+
 // -------------------------------------------------------------------------------------------------------------------------
 Application::InitGLFW::InitGLFW()
 {
@@ -111,14 +111,15 @@ Application::InitGLFW::~InitGLFW()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-Application::Application(Game* game, const asset::Application* asset) :
-  yaga::Application(game), asset_(asset)
+Application::Application(GamePtr game, const assets::Application* asset) :
+  yaga::Application(std::move(game)), asset_(asset), minimised_(false), resized_(false)
 {
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
 Application::~Application()
 {
+  game_.reset();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -136,7 +137,7 @@ void Application::run()
   renderingContext_ = std::make_unique<RenderingContext>(device_.get(), *allocator_, swapchain_.get(), asset_);
   renderer_ = std::make_unique<Renderer>(swapchain_.get(), renderingContext_.get());
   presenter_ = std::make_unique<Presenter>(device_.get(), swapchain_.get());
-  gameInit();
+  game_->init(this);
   loop();
 }
 
@@ -153,9 +154,9 @@ void Application::createWindow()
   if (!window) {
     THROW("Could not create Window");
   }
-  window_.set(window, deleteWindow);
   glfwSetWindowUserPointer(window, this);
   glfwSetFramebufferSizeCallback(window, resizeCallback);
+  window_.set(window, deleteWindow);
   LOG(trace) << "Window created";
 }
 
@@ -248,13 +249,19 @@ void Application::createAllocator()
 // -------------------------------------------------------------------------------------------------------------------------
 void Application::resize()
 {
-  resize_.resized = false;
   vkDeviceWaitIdle(**device_);
+  auto size = getWindowSize();
+  if (size.width == 0 || size.height == 0) {
+    minimised_ = true;
+    return;
+  }
+  minimised_ = false;
   swapchain_.reset();
-  swapchain_ = std::make_unique<Swapchain>(device_.get(), *allocator_, *surface_, getWindowSize());
+  swapchain_ = std::make_unique<Swapchain>(device_.get(), *allocator_, *surface_, size);
   renderingContext_->swapchain(swapchain_.get());
   renderer_->swapchain(swapchain_.get());
   presenter_->swapchain(swapchain_.get());
+  game_->resize();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -306,29 +313,45 @@ void Application::setupLogging()
 // -------------------------------------------------------------------------------------------------------------------------
 void Application::loop()
 {
+  startTime_ = std::chrono::high_resolution_clock::now();
   while (!glfwWindowShouldClose(*window_)) {
     glfwPollEvents();
+    gameLoop();
     drawFrame();
   }
   vkDeviceWaitIdle(**device_);
-  gameShutdown();
+  game_->shutdown();
+}
+
+// -------------------------------------------------------------------------------------------------------------------------
+void Application::gameLoop()
+{
+  auto currentTime = std::chrono::high_resolution_clock::now();
+  auto delta = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime_).count();
+  game_->loop(delta);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
 void Application::drawFrame()
 {
-  gameLoop(0.0f);
+  if (resized_) {
+    resized_ = false;
+    resize();
+  }
+  if (minimised_) return;
   presenter_->waitPrevFrame();
-  auto frame = presenter_->acquireTargetImage();
-  if (frame == Presenter::BAD_IMAGE || resize_.resized) {
+  const auto mainCamera = renderingContext_->mainCamera();
+  if (mainCamera == nullptr) return;
+  uint32_t imageIndex = 0;
+  if (!presenter_->acquireImage(&imageIndex)) {
     resize();
     return;
   }
-  renderingContext_->update(frame);
-  renderer_->render(frame);
-  const auto mainCamera = renderingContext_->mainCamera();
-  if (mainCamera != nullptr) {
-    presenter_->present(mainCamera->frame(frame).command, frame);
+  renderingContext_->update(imageIndex);
+  renderer_->render(imageIndex);
+  if (!presenter_->present(mainCamera->frame(imageIndex).command, imageIndex)) {
+    resize();
+    return;
   }
 }
 
@@ -337,10 +360,7 @@ VkExtent2D Application::getWindowSize() const
 {
   int width = 0;
   int height = 0;
-  while (width == 0 || height == 0) {
-    glfwGetFramebufferSize(*window_, &width, &height);
-    glfwWaitEvents();
-  }
+  glfwGetFramebufferSize(*window_, &width, &height);
   return { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
 }
 
@@ -348,8 +368,9 @@ VkExtent2D Application::getWindowSize() const
 void Application::resizeCallback(GLFWwindow* window, int width, int height)
 {
   auto app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
-  app->resize_.size = { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
-  app->resize_.resized = true;
+  if (app->minimised_ && width > 0 && height > 0) {
+    app->resized_ = true;
+  }
 }
 
 } // !namespace vk

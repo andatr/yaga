@@ -52,7 +52,7 @@ PushConstantVertex Renderer3D::pushConstant() const
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Renderer3D::onComponenRemove(Component* component)
+void Renderer3D::onComponentRemove(Component* component)
 {
   if (component == material_) {
     material_ = nullptr;

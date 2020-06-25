@@ -26,12 +26,12 @@ public:
   };
   typedef yaga::Camera Parent;
 public:
-  explicit Camera(Object* obj, asset::Camera* asset, CameraPool* pool, uint32_t frames);
+  explicit Camera(Object* obj, assets::Camera* asset, CameraPool* pool, uint32_t frames);
   virtual ~Camera();
   Frame& frame(uint32_t index) { return frames_[index]; }
 private:
   void updateView() override;
-  void onAssetUpdated(asset::CameraProperty prop) override;
+  void onAssetUpdated(assets::CameraProperty prop) override;
 private:
   CameraPool* pool_;
   UniformObject uniform_;

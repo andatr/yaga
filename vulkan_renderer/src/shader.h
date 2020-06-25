@@ -7,7 +7,7 @@
 
 #include "device.h"
 #include "vulkan.h"
-#include "engine/asset/shader.h"
+#include "assets/shader.h"
 #include "utility/auto_destructor.h"
 
 namespace yaga
@@ -18,7 +18,7 @@ namespace vk
 class Shader : private boost::noncopyable
 {
 public:
-  Shader(Device* device, asset::Shader* asset);
+  Shader(Device* device, assets::Shader* asset);
   VkShaderModule operator*() const { return *shader_; }
 private:
   AutoDestructor<VkShaderModule> shader_;

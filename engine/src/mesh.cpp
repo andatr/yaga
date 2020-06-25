@@ -5,7 +5,7 @@ namespace yaga
 {
 
 // ------------------------------------------------------------------------------------------------------------------------
-Mesh::Mesh(Object* object, asset::Mesh* asset) :
+Mesh::Mesh(Object* object, assets::Mesh* asset) :
   Component(object), asset_(asset)
 {
 }

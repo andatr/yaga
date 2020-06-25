@@ -6,7 +6,7 @@ namespace yaga
 {
 
 // -------------------------------------------------------------------------------------------------------------------------
-Camera::Camera(Object* obj, asset::Camera* asset) :
+Camera::Camera(Object* obj, assets::Camera* asset) :
   Component(obj), asset_(asset), transform_(obj->getComponent<Transform>()), view_{}
 {
   assetConnection_ = asset_->onUpdate(std::bind(&Camera::onAssetUpdated, this, std::placeholders::_1));
@@ -26,9 +26,9 @@ Camera::~Camera()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Camera::onAssetUpdated(asset::CameraProperty prop)
+void Camera::onAssetUpdated(assets::CameraProperty prop)
 {
-  if (prop == asset::CameraProperty::lookAt) {
+  if (prop == assets::CameraProperty::lookAt) {
     updateView();
   }
 }
@@ -63,7 +63,7 @@ void Camera::onComponentAdd(Component* component)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Camera::onComponenRemove(Component* component)
+void Camera::onComponentRemove(Component* component)
 {
   if (!transform_) return;
   if (component == transform_) {

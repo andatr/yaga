@@ -1,10 +1,13 @@
 #ifndef YAGA_VULKAN_RENDERER_SRC_APPLICATION
 #define YAGA_VULKAN_RENDERER_SRC_APPLICATION
 
+#include <chrono>
 #include <memory>
 #include <string>
 #include <thread>
 #include <vector>
+
+#include <boost/dll/alias.hpp>
 
 #include "device.h"
 #include "presenter.h"
@@ -13,7 +16,7 @@
 #include "swapchain.h"
 #include "vulkan.h"
 #include "engine/application.h"
-#include "engine/asset/application.h"
+#include "assets/application.h"
 #include "utility/auto_destructor.h"
 
 namespace yaga
@@ -31,11 +34,12 @@ public:
     ~InitGLFW();
   };
 public:
-  explicit Application(Game* game, const asset::Application* asset);
+  explicit Application(GamePtr game, const assets::Application* asset);
   virtual ~Application();
   void run() override;
   RenderingContext* renderingContext() override { return renderingContext_.get(); }
 private:
+  static void resizeCallback(GLFWwindow* window, int width, int height);
   void createWindow();
   VulkanExtensions createInstance(const std::string& appName);
   void createSurface();
@@ -44,20 +48,12 @@ private:
   void checkValidationLayers() const;
   void setupLogging();
   void loop();
+  void gameLoop();
   void drawFrame();
   VkExtent2D getWindowSize() const;
-  static void resizeCallback(GLFWwindow* window, int width, int height);
-private:
-  struct ResizeInfo
-  {
-    std::atomic_bool resized;
-    VkExtent2D size;
-    ResizeInfo() : resized(false), size{} {}
-  };
 private:
   static InitGLFW initGLFW_;
-  const asset::Application* asset_;
-  ResizeInfo resize_;
+  const assets::Application* asset_;
   AutoDestructor<GLFWwindow*> window_;
   AutoDestructor<VkInstance> instance_;
   AutoDestructor<VkDebugUtilsMessengerEXT> debugMessenger_;
@@ -68,7 +64,13 @@ private:
   RenderingContextPtr renderingContext_;
   RendererPtr renderer_;
   PresenterPtr presenter_;
+  std::atomic_bool minimised_;
+  std::atomic_bool resized_;
+  std::chrono::high_resolution_clock::time_point startTime_;
 };
+
+ApplicationPtr createApplication(GamePtr game, const assets::Application* asset);
+BOOST_DLL_ALIAS(yaga::vk::createApplication, createApplication)
 
 } // !namespace vk
 } // !namespace yaga

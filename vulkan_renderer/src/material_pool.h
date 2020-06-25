@@ -11,8 +11,8 @@
 #include "material.h"
 #include "swapchain.h"
 #include "vulkan.h"
-#include "engine/asset/material.h"
-#include "engine/asset/shader.h"
+#include "assets/material.h"
+#include "assets/shader.h"
 #include "utility/auto_destructor.h"
 
 namespace yaga
@@ -26,14 +26,14 @@ public:
   explicit MaterialPool(Device* device, Swapchain* swapchain, ImagePool* imagePool,
     VkDescriptorPool descriptorPool, VkDescriptorSetLayout uniformLayout);
   void swapchain(Swapchain* swapchain);
-  MaterialPtr createMaterial(Object* object, asset::Material* asset);
+  MaterialPtr createMaterial(Object* object, assets::Material* asset);
   void removeMaterial(Material* material);
   void clear();
 private:  
   void createDescriptorLayout();
   void createPipelineLayout();
-  AutoDestructor<VkPipeline> createPipeline(asset::Shader* vertexShader, asset::Shader* fragmentShader);
-  VkShaderModule createShader(asset::Shader* asset);
+  AutoDestructor<VkPipeline> createPipeline(assets::Shader* vertexShader, assets::Shader* fragmentShader);
+  VkShaderModule createShader(assets::Shader* asset);
   std::vector<VkDescriptorSet> createDescriptorSets() const;
   void updateDescriptorSets(const std::vector<VkDescriptorSet>& descriptorSets, const std::vector<Image*>& images) const;
 private:
@@ -51,8 +51,8 @@ private:
   uint32_t frames_;
   AutoDestructor<VkDescriptorSetLayout> descriptorLayout_;
   AutoDestructor<VkPipelineLayout> pipelineLayout_;
-  std::unordered_map<asset::Shader*, AutoDestructor<VkShaderModule>> shaderCache_;
-  std::unordered_map<asset::Material*, MaterialCache> materialCache_;
+  std::unordered_map<assets::Shader*, AutoDestructor<VkShaderModule>> shaderCache_;
+  std::unordered_map<assets::Material*, MaterialCache> materialCache_;
   std::unordered_set<Material*> materials_;
 };
 

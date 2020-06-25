@@ -3,6 +3,7 @@
 
 #include <string>
 
+#include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 
 #include "utility/log.h"
@@ -14,10 +15,12 @@ class Options
 {
 public:
   explicit Options(int argc, char *argv[]);
-  const std::string& appPath() const { return appPath_; }
+  const boost::filesystem::path& workingDir() const { return workingDir_; }
+  const boost::filesystem::path& appPath() const { return appPath_; }
   boost::optional<log::Severity> logSeverity() const { return severity_; }
 private:
-  std::string appPath_;
+  boost::filesystem::path workingDir_;
+  boost::filesystem::path appPath_;
   boost::optional<log::Severity> severity_;
 };
 

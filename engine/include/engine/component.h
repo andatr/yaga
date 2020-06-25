@@ -20,7 +20,7 @@ public:
   Object* object() const { return object_; }
 private:
   virtual void onComponentAdd(Component*) {}
-  virtual void onComponenRemove(Component*) {}
+  virtual void onComponentRemove(Component*) {}
 protected:
   Object* object_;
 };

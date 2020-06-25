@@ -2,7 +2,7 @@
 #include "material_pool.h"
 #include "shader.h"
 #include "uniform.h"
-#include "engine/vertex.h"
+#include "assets/vertex.h"
 
 namespace yaga
 {
@@ -255,7 +255,7 @@ void MaterialPool::removeMaterial(Material* material)
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
-MaterialPtr MaterialPool::createMaterial(Object* object, asset::Material* asset)
+MaterialPtr MaterialPool::createMaterial(Object* object, assets::Material* asset)
 {
   auto it = materialCache_.find(asset);
   if (it != materialCache_.end()) {
@@ -282,7 +282,7 @@ MaterialPtr MaterialPool::createMaterial(Object* object, asset::Material* asset)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkShaderModule MaterialPool::createShader(asset::Shader* asset)
+VkShaderModule MaterialPool::createShader(assets::Shader* asset)
 {
   auto it = shaderCache_.find(asset);
   if (it != shaderCache_.end()) return *it->second;
@@ -305,7 +305,7 @@ VkShaderModule MaterialPool::createShader(asset::Shader* asset)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-AutoDestructor<VkPipeline> MaterialPool::createPipeline(asset::Shader* vertexShader, asset::Shader* fragmentShader)
+AutoDestructor<VkPipeline> MaterialPool::createPipeline(assets::Shader* vertexShader, assets::Shader* fragmentShader)
 {
   VkPipelineShaderStageCreateInfo shaderStages[] = {
     getShaderStage(createShader(vertexShader),  VK_SHADER_STAGE_VERTEX_BIT),
