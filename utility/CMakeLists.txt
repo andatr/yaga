@@ -10,6 +10,7 @@ if( MSVC )
 endif( MSVC )
 
 add_library( utility ${source_list} )
+set_target_properties( utility PROPERTIES FOLDER lib )
 
 target_include_directories( utility
   PUBLIC
@@ -22,11 +23,9 @@ target_include_directories( utility
 target_link_libraries( utility
   PUBLIC
     Boost::boost
-	Boost::filesystem
+    Boost::filesystem
     Boost::log
     Boost::log_setup
 )
-
-set_target_properties( utility PROPERTIES FOLDER lib )
 
 add_subdirectory( test )

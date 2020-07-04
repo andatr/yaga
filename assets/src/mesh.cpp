@@ -7,7 +7,7 @@
 #include <glm/gtx/hash.hpp>
 
 #define TINYOBJLOADER_IMPLEMENTATION
-#include <tinyobj/tiny_obj_loader.h>
+#include <tiny_obj_loader.h>
 
 #pragma warning(pop)
 
@@ -94,11 +94,11 @@ MeshPtr Mesh::deserializeBinary(const std::string&, std::istream&, size_t, RefRe
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-MeshPtr Mesh::deserializeFriendly(const std::string& name, const std::string& path, RefResolver&)
+MeshPtr Mesh::deserializeFriendly(const std::string& name, const std::string&, RefResolver&)
 {
   // TODO: rework!
-
   auto mesh = std::make_unique<Mesh>(name);
+ /*
   tinyobj::attrib_t attrib;
   std::vector<tinyobj::shape_t> shapes;
   std::vector<tinyobj::material_t> materials;
@@ -132,7 +132,7 @@ MeshPtr Mesh::deserializeFriendly(const std::string& name, const std::string& pa
 
       mesh->indices_.push_back(uniqueVertices[vertex]);
     }
-  }
+  }*/
   return mesh;
 }
 

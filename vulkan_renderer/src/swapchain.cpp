@@ -23,7 +23,7 @@ VkSurfaceFormatKHR pickColorFormat(VkPhysicalDevice device, VkSurfaceKHR surface
 
   auto format = std::find_if(formats.begin(), formats.end(), [](const auto& f) {
     // TODO: uncomment
-    VkFormatProperties props;
+    //VkFormatProperties props;
     //vkGetPhysicalDeviceFormatProperties(device, f, &props);
     return /*props.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT*/
       f.format == VK_FORMAT_B8G8R8A8_UNORM &&

@@ -8,10 +8,11 @@ if( MSVC )
 endif( MSVC )
 
 add_custom_target( shaders
-  COMMAND ${PROJECT_SOURCE_DIR}/shaders.py ${CMAKE_CURRENT_LIST_DIR} ${PROJECT_SOURCE_DIR}/data
-  SOURCES ${source_list} "${PROJECT_SOURCE_DIR}/shaders.py"
+  COMMAND ${CMAKE_CURRENT_LIST_DIR}/shaders.py ${CMAKE_CURRENT_LIST_DIR} ${PROJECT_SOURCE_DIR}/data
+  SOURCES ${source_list} "shaders.py"
 )
 
 set_target_properties( shaders PROPERTIES
-  FOLDER tools
-  PROJECT_LABEL COMPILE_SHADERS )
+  FOLDER app
+  PROJECT_LABEL shaders
+)

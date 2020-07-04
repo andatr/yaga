@@ -8,7 +8,7 @@
 
 #pragma warning(push, 0)
 #define VMA_IMPLEMENTATION
-#include <vk_mem_alloc/vk_mem_alloc.h>
+#include <vk_mem_alloc.h>
 #pragma warning(pop)
 
 namespace yaga
@@ -231,9 +231,10 @@ void Application::createAllocator()
   if (extensions.EXT_memoryBudget && extensions.KHR_getPhysicalDeviceProperties2) {
     info.flags |= VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT;
   }
-  if (extensions.AMD_deviceCoherentMemory ) {
-    info.flags |= VMA_ALLOCATOR_CREATE_AMD_DEVICE_COHERENT_MEMORY_BIT;
-  }
+  //TODO: check
+  //if (extensions.AMD_deviceCoherentMemory ) {
+  //  info.flags |= VMA_ALLOCATOR_CREATE_AMD_DEVICE_COHERENT_MEMORY_BIT;
+  //}
   auto destroyAllocator = [](VmaAllocator allocator) {
     vmaDestroyAllocator(allocator);
     LOG(trace) << "Video Memory Allocator destroyed";

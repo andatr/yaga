@@ -10,6 +10,7 @@ if( MSVC )
 endif( MSVC )
 
 add_library( vulkan_renderer MODULE ${source_list} )
+set_target_properties( vulkan_renderer PROPERTIES FOLDER lib )
 
 target_include_directories( vulkan_renderer
   PUBLIC 
@@ -23,13 +24,12 @@ target_link_libraries( vulkan_renderer
   PUBLIC
     engine
   PRIVATE
-    glfw
-    opengl32
     Vulkan::Vulkan
     utility
 )
-
-set_target_properties( vulkan_renderer PROPERTIES FOLDER lib )
+target_link_libraries_alt( vulkan_renderer PRIVATE glfw::glfw glfw )
+target_link_libraries_alt( vulkan_renderer PRIVATE opengl::opengl opengl32 )
+target_link_libraries_alt( vulkan_renderer PRIVATE vma::vma vma )
 
 add_custom_command( TARGET vulkan_renderer
   POST_BUILD

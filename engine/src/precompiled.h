@@ -20,8 +20,6 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <stb/stb_image.h>
-#include <tinyobj/tiny_obj_loader.h>
 
 #pragma warning(pop)
 

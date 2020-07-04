@@ -10,6 +10,11 @@ if( MSVC )
 endif( MSVC )
 
 add_executable( launcher ${source_list} )
+set_target_properties( launcher PROPERTIES
+  VS_DEBUGGER_COMMAND_ARGUMENTS "-a ${PROJECT_SOURCE_DIR}/data/appList.txt"
+  FOLDER exe
+)
+
 add_dependencies( launcher shaders )
 add_dependencies( launcher tube_race )
 add_dependencies( launcher model_viewer )
@@ -26,9 +31,4 @@ target_link_libraries( launcher
     Boost::program_options
     engine
     utility
-)
-
-set_target_properties( launcher PROPERTIES
-  VS_DEBUGGER_COMMAND_ARGUMENTS "-a ${PROJECT_SOURCE_DIR}/data/appList.txt"
-  FOLDER exe
 )

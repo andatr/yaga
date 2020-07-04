@@ -9,13 +9,12 @@ if( MSVC )
 endif( MSVC )
 
 add_executable( vulkan_renderer_test ${source_list} )
+set_target_properties( vulkan_renderer_test PROPERTIES FOLDER test )
 
 target_link_libraries( vulkan_renderer_test
   PRIVATE
     renderer
   Boost::unit_test_framework
 )
-
-set_target_properties( vulkan_renderer_test PROPERTIES FOLDER test )
 
 add_test( vulkan_renderer_test vulkan_renderer_test )

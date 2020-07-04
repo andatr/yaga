@@ -10,6 +10,7 @@ if( MSVC )
 endif( MSVC )
 
 add_library( orbit_sim MODULE ${source_list} )
+set_target_properties( orbit_sim PROPERTIES FOLDER app )
 
 target_include_directories( orbit_sim
   PRIVATE
@@ -20,10 +21,6 @@ target_link_libraries( orbit_sim
   PRIVATE
     engine
     utility
-)
-
-set_target_properties( orbit_sim PROPERTIES
-  FOLDER app
 )
 
 add_custom_command( TARGET orbit_sim

@@ -8,13 +8,12 @@ if( MSVC )
 endif( MSVC )
 
 add_executable( utility_test ${source_list} )
+set_target_properties( utility_test PROPERTIES FOLDER test )
 
 target_link_libraries( utility_test
   PRIVATE
     utility
   Boost::unit_test_framework
 )
-
-set_target_properties( utility_test PROPERTIES FOLDER test )
 
 add_test( utility_test utility_test )

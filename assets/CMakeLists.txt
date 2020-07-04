@@ -10,6 +10,7 @@ if( MSVC )
 endif( MSVC )
 
 add_library( assets ${source_list} )
+set_target_properties( assets PROPERTIES FOLDER lib )
 
 target_include_directories( assets
   PUBLIC
@@ -23,5 +24,6 @@ target_link_libraries( assets
   PRIVATE
     utility
 )
-
-set_target_properties( assets PROPERTIES FOLDER lib )
+target_link_libraries_alt( assets PRIVATE glm::glm glm )
+target_link_libraries_alt( assets PRIVATE stb::stb stb )
+target_link_libraries_alt( assets PRIVATE tinyobjloader::tinyobjloader tinyobjloader )

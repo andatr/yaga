@@ -8,7 +8,7 @@
 #pragma warning(push, 0)
 
 #include <GLFW/glfw3.h>
-#include <vk_mem_alloc/vk_mem_alloc.h>
+#include <vk_mem_alloc.h>
 
 #pragma warning(pop)
 

@@ -10,6 +10,7 @@ if( MSVC )
 endif( MSVC )
 
 add_library( tube_race MODULE ${source_list} )
+set_target_properties( tube_race PROPERTIES FOLDER app )
 
 target_include_directories( tube_race
   PRIVATE
@@ -20,10 +21,6 @@ target_link_libraries( tube_race
   PRIVATE
     engine
     utility
-)
-
-set_target_properties( tube_race PROPERTIES
-  FOLDER app
 )
 
 add_custom_command(TARGET tube_race

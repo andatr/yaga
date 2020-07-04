@@ -47,7 +47,7 @@ CameraPtr Camera::deserializeBinary(const std::string&, std::istream&, size_t, R
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-CameraPtr Camera::deserializeFriendly(const std::string& name, const std::string& path, RefResolver&)
+CameraPtr Camera::deserializeFriendly(const std::string& name, const std::string&, RefResolver&)
 {
   auto camera = std::make_unique<Camera>(name);
   return camera;

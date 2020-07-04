@@ -10,6 +10,7 @@ if( MSVC )
 endif( MSVC )
 
 add_library( engine ${source_list} )
+set_target_properties( engine PROPERTIES FOLDER lib )
 
 target_include_directories( engine
   PUBLIC
@@ -24,7 +25,6 @@ target_link_libraries( engine
     assets
     utility
 )
-
-set_target_properties( engine PROPERTIES FOLDER lib )
+target_link_libraries_alt( engine PUBLIC glm::glm glm )
 
 add_subdirectory( test )

@@ -10,6 +10,7 @@ if( MSVC )
 endif( MSVC )
 
 add_library( model_viewer MODULE ${source_list} )
+set_target_properties( model_viewer PROPERTIES FOLDER app )
 
 target_include_directories( model_viewer
   PUBLIC
@@ -20,10 +21,6 @@ target_link_libraries( model_viewer
   PRIVATE
     engine
     utility
-)
-
-set_target_properties( model_viewer PROPERTIES
-  FOLDER app
 )
 
 add_custom_command(TARGET model_viewer
