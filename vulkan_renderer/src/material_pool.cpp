@@ -4,17 +4,14 @@
 #include "uniform.h"
 #include "assets/vertex.h"
 
-namespace yaga
-{
-namespace vk
-{
-namespace
-{
+namespace yaga {
+namespace vk {
+namespace {
 
 // -------------------------------------------------------------------------------------------------------------------------
 VkVertexInputBindingDescription getVertexBindingDescription()
 {
-  VkVertexInputBindingDescription bindingDescription {};
+  VkVertexInputBindingDescription bindingDescription{};
   bindingDescription.binding = 0;
   bindingDescription.stride = sizeof(Vertex);
   bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
@@ -24,7 +21,7 @@ VkVertexInputBindingDescription getVertexBindingDescription()
 // -------------------------------------------------------------------------------------------------------------------------
 std::array<VkVertexInputAttributeDescription, 3> getVertexAttributeDescriptions()
 {
-  std::array<VkVertexInputAttributeDescription, 3> desc {};
+  std::array<VkVertexInputAttributeDescription, 3> desc{};
   desc[0].binding = 0;
   desc[0].location = 0;
   desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
@@ -43,7 +40,7 @@ std::array<VkVertexInputAttributeDescription, 3> getVertexAttributeDescriptions(
 // -------------------------------------------------------------------------------------------------------------------------
 VkPipelineInputAssemblyStateCreateInfo getPrimitives()
 {
-  VkPipelineInputAssemblyStateCreateInfo info {};
+  VkPipelineInputAssemblyStateCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
   info.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
   info.primitiveRestartEnable = VK_FALSE;
@@ -53,7 +50,7 @@ VkPipelineInputAssemblyStateCreateInfo getPrimitives()
 // -------------------------------------------------------------------------------------------------------------------------
 VkViewport getViewport(const VkExtent2D& size)
 {
-  VkViewport viewport {};
+  VkViewport viewport{};
   viewport.x = 0.0f;
   viewport.y = 0.0f;
   viewport.width = (float)size.width;
@@ -66,7 +63,7 @@ VkViewport getViewport(const VkExtent2D& size)
 // -------------------------------------------------------------------------------------------------------------------------
 VkRect2D getScissors(const VkExtent2D& size)
 {
-  VkRect2D scissors {};
+  VkRect2D scissors{};
   scissors.offset = { 0, 0 };
   scissors.extent = size;
   return scissors;
@@ -75,7 +72,7 @@ VkRect2D getScissors(const VkExtent2D& size)
 // -------------------------------------------------------------------------------------------------------------------------
 VkPipelineViewportStateCreateInfo getViewportState(const VkViewport& viewport, const VkRect2D& scissors)
 {
-  VkPipelineViewportStateCreateInfo info {};
+  VkPipelineViewportStateCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
   info.viewportCount = 1;
   info.pViewports = &viewport;
@@ -87,7 +84,7 @@ VkPipelineViewportStateCreateInfo getViewportState(const VkViewport& viewport, c
 // -------------------------------------------------------------------------------------------------------------------------
 VkPipelineRasterizationStateCreateInfo getRasterizer()
 {
-  VkPipelineRasterizationStateCreateInfo info {};
+  VkPipelineRasterizationStateCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
   info.depthClampEnable = VK_FALSE;
   info.rasterizerDiscardEnable = VK_FALSE;
@@ -95,7 +92,7 @@ VkPipelineRasterizationStateCreateInfo getRasterizer()
   info.lineWidth = 1.0f;
   info.cullMode = VK_CULL_MODE_BACK_BIT;
   info.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-  //info.frontFace = VK_FRONT_FACE_CLOCKWISE;
+  // info.frontFace = VK_FRONT_FACE_CLOCKWISE;
   info.depthBiasEnable = VK_FALSE;
   return info;
 }
@@ -103,7 +100,7 @@ VkPipelineRasterizationStateCreateInfo getRasterizer()
 // -------------------------------------------------------------------------------------------------------------------------
 VkPipelineMultisampleStateCreateInfo getSampler(VkSampleCountFlagBits msaa)
 {
-  VkPipelineMultisampleStateCreateInfo info {};
+  VkPipelineMultisampleStateCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
   info.sampleShadingEnable = VK_FALSE;
   info.minSampleShading = 1.0f;
@@ -114,7 +111,7 @@ VkPipelineMultisampleStateCreateInfo getSampler(VkSampleCountFlagBits msaa)
 // -------------------------------------------------------------------------------------------------------------------------
 VkPipelineColorBlendAttachmentState getColorBlender()
 {
-  VkPipelineColorBlendAttachmentState info {};
+  VkPipelineColorBlendAttachmentState info{};
   info.colorWriteMask =
     VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
   info.blendEnable = VK_FALSE;
@@ -124,7 +121,7 @@ VkPipelineColorBlendAttachmentState getColorBlender()
 // -------------------------------------------------------------------------------------------------------------------------
 VkPipelineColorBlendStateCreateInfo getColorBlendState(const VkPipelineColorBlendAttachmentState& blender)
 {
-  VkPipelineColorBlendStateCreateInfo info {};
+  VkPipelineColorBlendStateCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
   info.logicOpEnable = VK_FALSE;
   info.logicOp = VK_LOGIC_OP_COPY;
@@ -140,7 +137,7 @@ VkPipelineColorBlendStateCreateInfo getColorBlendState(const VkPipelineColorBlen
 // -------------------------------------------------------------------------------------------------------------------------
 VkPipelineDepthStencilStateCreateInfo getDepthStencilState()
 {
-  VkPipelineDepthStencilStateCreateInfo info {};
+  VkPipelineDepthStencilStateCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
   info.depthTestEnable = VK_TRUE;
   info.depthWriteEnable = VK_TRUE;
@@ -153,7 +150,7 @@ VkPipelineDepthStencilStateCreateInfo getDepthStencilState()
 // -------------------------------------------------------------------------------------------------------------------------
 VkPipelineShaderStageCreateInfo getShaderStage(VkShaderModule module, VkShaderStageFlagBits shaderType)
 {
-  VkPipelineShaderStageCreateInfo info {};
+  VkPipelineShaderStageCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
   info.stage = shaderType;
   info.module = module;
@@ -164,10 +161,11 @@ VkPipelineShaderStageCreateInfo getShaderStage(VkShaderModule module, VkShaderSt
 } // !namespace
 
 // -------------------------------------------------------------------------------------------------------------------------
-MaterialPool::MaterialPool(Device* device, Swapchain* swapchain, ImagePool* imagePool,
-  VkDescriptorPool descriptorPool, VkDescriptorSetLayout uniformLayout) :
-    vkDevice_(**device), swapchain_(swapchain), imagePool_(imagePool), descriptorPool_(descriptorPool), 
-    uniformLayout_(uniformLayout), frames_(static_cast<uint32_t>(swapchain->frameBuffers().size()))
+MaterialPool::MaterialPool(Device* device, Swapchain* swapchain, ImagePool* imagePool, VkDescriptorPool descriptorPool,
+  VkDescriptorSetLayout uniformLayout) :
+  vkDevice_(**device),
+  swapchain_(swapchain), imagePool_(imagePool), descriptorPool_(descriptorPool), uniformLayout_(uniformLayout),
+  frames_(static_cast<uint32_t>(swapchain->frameBuffers().size()))
 {
   createDescriptorLayout();
   createPipelineLayout();
@@ -188,7 +186,7 @@ void MaterialPool::swapchain(Swapchain* swapchain)
 // -------------------------------------------------------------------------------------------------------------------------
 void MaterialPool::createDescriptorLayout()
 {
-  VkDescriptorSetLayoutBinding samplerBinding {};
+  VkDescriptorSetLayoutBinding samplerBinding{};
   samplerBinding.binding = 0;
   samplerBinding.descriptorCount = 1;
   samplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
@@ -200,7 +198,7 @@ void MaterialPool::createDescriptorLayout()
     LOG(trace) << "Descriptor Set Layout destroyed";
   };
 
-  VkDescriptorSetLayoutCreateInfo info {};
+  VkDescriptorSetLayoutCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
   info.bindingCount = 1;
   info.pBindings = &samplerBinding;
@@ -220,7 +218,7 @@ void MaterialPool::createPipelineLayout()
   pushConstants[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
 
   std::array<VkDescriptorSetLayout, 2> setLayouts = { uniformLayout_, *descriptorLayout_ };
-  VkPipelineLayoutCreateInfo info {};
+  VkPipelineLayoutCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
   info.pushConstantRangeCount = static_cast<uint32_t>(pushConstants.size());
   info.pPushConstantRanges = pushConstants.data();
@@ -259,8 +257,8 @@ MaterialPtr MaterialPool::createMaterial(Object* object, assets::Material* asset
 {
   auto it = materialCache_.find(asset);
   if (it != materialCache_.end()) {
-    auto material = std::make_unique<Material>(object, asset, this, *it->second.pipeline,
-      *pipelineLayout_, it->second.descriptorSets);
+    auto material =
+      std::make_unique<Material>(object, asset, this, *it->second.pipeline, *pipelineLayout_, it->second.descriptorSets);
     materials_.insert(material.get());
     return material;
   }
@@ -287,7 +285,7 @@ VkShaderModule MaterialPool::createShader(assets::Shader* asset)
   auto it = shaderCache_.find(asset);
   if (it != shaderCache_.end()) return *it->second;
 
-  VkShaderModuleCreateInfo createInfo {};
+  VkShaderModuleCreateInfo createInfo{};
   createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
   createInfo.codeSize = asset->code().size();
   createInfo.pCode = reinterpret_cast<const uint32_t*>(asset->code().data());
@@ -308,14 +306,13 @@ VkShaderModule MaterialPool::createShader(assets::Shader* asset)
 AutoDestructor<VkPipeline> MaterialPool::createPipeline(assets::Shader* vertexShader, assets::Shader* fragmentShader)
 {
   VkPipelineShaderStageCreateInfo shaderStages[] = {
-    getShaderStage(createShader(vertexShader),  VK_SHADER_STAGE_VERTEX_BIT),
+    getShaderStage(createShader(vertexShader), VK_SHADER_STAGE_VERTEX_BIT),
     getShaderStage(createShader(fragmentShader), VK_SHADER_STAGE_FRAGMENT_BIT)
   };
-
   auto bindingDescription = getVertexBindingDescription();
   auto attributeDescriptions = getVertexAttributeDescriptions();
 
-  VkPipelineVertexInputStateCreateInfo vertexAttributes {};
+  VkPipelineVertexInputStateCreateInfo vertexAttributes{};
   vertexAttributes.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
   vertexAttributes.vertexBindingDescriptionCount = 1;
   vertexAttributes.pVertexBindingDescriptions = &bindingDescription;
@@ -331,8 +328,8 @@ AutoDestructor<VkPipeline> MaterialPool::createPipeline(assets::Shader* vertexSh
   auto colorBlender = getColorBlender();
   auto colorBlendState = getColorBlendState(colorBlender);
   auto depthStencilState = getDepthStencilState();
-  
-  VkGraphicsPipelineCreateInfo info {};
+
+  VkGraphicsPipelineCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
   info.pVertexInputState = &vertexAttributes;
   info.pInputAssemblyState = &primitives;
@@ -363,24 +360,25 @@ AutoDestructor<VkPipeline> MaterialPool::createPipeline(assets::Shader* vertexSh
 std::vector<VkDescriptorSet> MaterialPool::createDescriptorSets() const
 {
   std::vector<VkDescriptorSetLayout> layouts(frames_, *descriptorLayout_);
-  VkDescriptorSetAllocateInfo allocInfo {};
+  VkDescriptorSetAllocateInfo allocInfo{};
   allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
   allocInfo.descriptorPool = descriptorPool_;
   allocInfo.descriptorSetCount = frames_;
   allocInfo.pSetLayouts = layouts.data();
 
   std::vector<VkDescriptorSet> descriptorSets(frames_);
-  VULKAN_GUARD(vkAllocateDescriptorSets(vkDevice_, &allocInfo, descriptorSets.data()), "Could not allocate Descriptor Sets");
+  VULKAN_GUARD(vkAllocateDescriptorSets(vkDevice_, &allocInfo, descriptorSets.data()),
+    "Could not allocate Descriptor Sets");
   return descriptorSets;
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void MaterialPool::updateDescriptorSets(const std::vector<VkDescriptorSet>& descriptorSets,
-  const std::vector<Image*>& images) const
+void MaterialPool::updateDescriptorSets(
+  const std::vector<VkDescriptorSet>& descriptorSets, const std::vector<Image*>& images) const
 {
   std::vector<VkWriteDescriptorSet> writers(images.size() * frames_);
   for (size_t i = 0; i < frames_; ++i) {
-    VkDescriptorImageInfo imageInfo {};
+    VkDescriptorImageInfo imageInfo{};
     imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     for (size_t j = 0; j < images.size(); ++j) {
       auto index = i * images.size() + j;

@@ -2,23 +2,23 @@
 #define YAGA_ORBIT_SIM_SRC_ORBIT_SIM
 
 #include <memory>
-
 #include <boost/dll/alias.hpp>
 
 #include "engine/basic_game.h"
 
-namespace yaga
-{
+namespace yaga {
 
 class OrbitSim : public BasicGame
 {
 public:
   OrbitSim(assets::SerializerPtr serializer, assets::StoragePtr storage);
   virtual ~OrbitSim();
+
 private:
   void init(Application* app) override;
   void loop(float delta) override;
   void shutdown() override;
+
 private:
   typedef BasicGame base;
 };

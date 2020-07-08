@@ -2,12 +2,9 @@
 #include "presenter.h"
 #include "assets/vertex.h"
 
-namespace yaga
-{
-namespace vk
-{
-namespace
-{
+namespace yaga {
+namespace vk {
+namespace {
 
 constexpr size_t MAX_FRAMES = 2;
 
@@ -29,10 +26,10 @@ void Presenter::swapchain(Swapchain* swapchain)
 // -------------------------------------------------------------------------------------------------------------------------
 void Presenter::createSync()
 {
-  VkSemaphoreCreateInfo semaphoreInfo {};
+  VkSemaphoreCreateInfo semaphoreInfo{};
   semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
 
-  VkFenceCreateInfo fenceInfo {};
+  VkFenceCreateInfo fenceInfo{};
   fenceInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
   fenceInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
 
@@ -90,7 +87,7 @@ bool Presenter::present(VkCommandBuffer command, uint32_t image)
   const auto& sync = frameSync_[frame_];
   frame_ = ++frame_ % MAX_FRAMES;
 
-  VkSubmitInfo submitInfo {};
+  VkSubmitInfo submitInfo{};
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   VkPipelineStageFlags waitStages[] = { VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT };
   submitInfo.waitSemaphoreCount = 1;
@@ -103,7 +100,7 @@ bool Presenter::present(VkCommandBuffer command, uint32_t image)
   vkResetFences(vkDevice_, 1, &*sync.swap);
   VULKAN_GUARD(vkQueueSubmit(device_->graphicsQueue(), 1, &submitInfo, *sync.swap), "Could not draw frame");
 
-  VkPresentInfoKHR presentInfo {};
+  VkPresentInfoKHR presentInfo{};
   presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
   presentInfo.waitSemaphoreCount = 1;
   presentInfo.pWaitSemaphores = &*sync.present;

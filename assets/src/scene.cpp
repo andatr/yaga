@@ -2,12 +2,10 @@
 #include "assets/scene.h"
 #include "utility/array.h"
 
-namespace yaga
-{
-namespace assets
-{
+namespace yaga {
+namespace assets {
 
-const SerializationInfo Scene::serializationInfo = {
+const SerializationInfo Scene::serializationInfo = { 
   (uint32_t)StandardAssetId::scene,
   { "yscn" },
   &Scene::deserializeBinary,
@@ -15,8 +13,7 @@ const SerializationInfo Scene::serializationInfo = {
 };
 
 // -------------------------------------------------------------------------------------------------------------------------
-Scene::Scene(const std::string& name) :
-  Asset(name), model_(nullptr)
+Scene::Scene(const std::string& name) : Asset(name), model_(nullptr)
 {
 }
 

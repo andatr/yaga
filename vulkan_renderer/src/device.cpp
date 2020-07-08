@@ -2,16 +2,11 @@
 #include "device.h"
 #include "swapchain.h"
 
-namespace yaga
-{
-namespace vk
-{
-namespace
-{
+namespace yaga {
+namespace vk {
+namespace {
 
-const std::set<std::string> requiredExtensions = {
-  VK_KHR_SWAPCHAIN_EXTENSION_NAME
-};
+const std::set<std::string> requiredExtensions = { VK_KHR_SWAPCHAIN_EXTENSION_NAME };
 
 struct DeviceFeatures
 {
@@ -31,9 +26,8 @@ std::vector<std::string> getDeviceExtensions(VkPhysicalDevice device)
   std::vector<VkExtensionProperties> extensions(count);
   vkEnumerateDeviceExtensionProperties(device, nullptr, &count, extensions.data());
   std::vector<std::string> result;
-  std::transform(extensions.begin(), extensions.end(), std::back_inserter(result),
-    [](const auto& prop) { return prop.extensionName; }
-  );
+  std::transform(
+    extensions.begin(), extensions.end(), std::back_inserter(result), [](const auto& prop) { return prop.extensionName; });
   std::sort(result.begin(), result.end());
   return result;
 }
@@ -46,7 +40,7 @@ DeviceFeatures getDeviceFeatures(VkPhysicalDevice device, VkSurfaceKHR surface)
   std::vector<VkQueueFamilyProperties> properties(count);
   vkGetPhysicalDeviceQueueFamilyProperties(device, &count, properties.data());
 
-  DeviceFeatures features {};
+  DeviceFeatures features{};
   for (uint32_t i = 0; i < (uint32_t)properties.size(); ++i) {
     const auto& props = properties[i];
     if (props.queueCount == 0) continue;
@@ -75,17 +69,12 @@ DeviceFeatures getDeviceFeatures(VkPhysicalDevice device, VkSurfaceKHR surface)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-bool checkDeviceFeatures(VkPhysicalDevice device, const DeviceFeatures& features,
-  const std::vector<std::string>& extensions)
+bool checkDeviceFeatures(VkPhysicalDevice device, const DeviceFeatures& features, const std::vector<std::string>& extensions)
 {
   VkPhysicalDeviceFeatures physicalFeatures;
   vkGetPhysicalDeviceFeatures(device, &physicalFeatures);
-  if (features.graphics.empty() ||
-    features.surface.empty() ||
-    features.compute.empty() ||
-    features.transfer.empty() ||
-    !physicalFeatures.samplerAnisotropy)
-  {
+  if (features.graphics.empty() || features.surface.empty() || features.compute.empty() || features.transfer.empty() ||
+      !physicalFeatures.samplerAnisotropy) {
     return false;
   }
   return std::includes(extensions.begin(), extensions.end(), requiredExtensions.begin(), requiredExtensions.end());
@@ -104,20 +93,16 @@ std::vector<const char*> filterExtensions(const std::vector<std::string>& extens
     if (extension == VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME) {
       result.KHR_getMemoryRequirements2 = true;
       filtered.push_back(VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME);
-    }
-    else if (extension == VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME) {
+    } else if (extension == VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME) {
       result.KHR_dedicatedAllocation = true;
       filtered.push_back(VK_KHR_DEDICATED_ALLOCATION_EXTENSION_NAME);
-    }
-    else if (extension == VK_KHR_BIND_MEMORY_2_EXTENSION_NAME) {
+    } else if (extension == VK_KHR_BIND_MEMORY_2_EXTENSION_NAME) {
       result.KHR_bindMemory2 = true;
       filtered.push_back(VK_KHR_BIND_MEMORY_2_EXTENSION_NAME);
-    }
-    else if (result.KHR_getPhysicalDeviceProperties2 && extension == VK_EXT_MEMORY_BUDGET_EXTENSION_NAME) {
+    } else if (result.KHR_getPhysicalDeviceProperties2 && extension == VK_EXT_MEMORY_BUDGET_EXTENSION_NAME) {
       result.EXT_memoryBudget = true;
       filtered.push_back(VK_EXT_MEMORY_BUDGET_EXTENSION_NAME);
-    }
-    else if (extension == VK_AMD_DEVICE_COHERENT_MEMORY_EXTENSION_NAME) {
+    } else if (extension == VK_AMD_DEVICE_COHERENT_MEMORY_EXTENSION_NAME) {
       result.AMD_deviceCoherentMemory = true;
       filtered.push_back(VK_AMD_DEVICE_COHERENT_MEMORY_EXTENSION_NAME);
     }
@@ -161,9 +146,7 @@ Device::Device(VkInstance instance, VkSurfaceKHR surface, const VulkanExtensions
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-Device::~Device()
-{
-}
+Device::~Device() {}
 
 // -------------------------------------------------------------------------------------------------------------------------
 void Device::createDevice(std::vector<const char*>& extensions)
@@ -172,16 +155,16 @@ void Device::createDevice(std::vector<const char*>& extensions)
   float priority = 1.0f;
   std::set<uint32_t> families = { queueFamilies_.graphics, queueFamilies_.compute, queueFamilies_.transfer };
   for (uint32_t family : families) {
-    VkDeviceQueueCreateInfo info {};
+    VkDeviceQueueCreateInfo info{};
     info.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
     info.queueFamilyIndex = family;
     info.queueCount = 1;
     info.pQueuePriorities = &priority;
     queueInfos.push_back(info);
   }
-  VkPhysicalDeviceFeatures features {};
+  VkPhysicalDeviceFeatures features{};
   features.samplerAnisotropy = VK_TRUE;
-  VkDeviceCreateInfo info {};
+  VkDeviceCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
   info.pQueueCreateInfos = queueInfos.data();
   info.queueCreateInfoCount = static_cast<uint32_t>(queueInfos.size());
@@ -193,8 +176,7 @@ void Device::createDevice(std::vector<const char*>& extensions)
   info.ppEnabledExtensionNames = extensions.data();
   if (validationLayers.empty()) {
     info.enabledLayerCount = 0;
-  }
-  else {
+  } else {
     info.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
     info.ppEnabledLayerNames = validationLayers.data();
   }
@@ -209,9 +191,9 @@ void Device::createDevice(std::vector<const char*>& extensions)
   LOG(trace) << "Logical Device created";
 
   vkGetDeviceQueue(*logicalDevice_, queueFamilies_.graphics, 0, queues_ + 0);
-  vkGetDeviceQueue(*logicalDevice_, queueFamilies_.surface,  0, queues_ + 1);
+  vkGetDeviceQueue(*logicalDevice_, queueFamilies_.surface, 0, queues_ + 1);
   vkGetDeviceQueue(*logicalDevice_, queueFamilies_.transfer, 0, queues_ + 2);
-  vkGetDeviceQueue(*logicalDevice_, queueFamilies_.compute,  0, queues_ + 3);
+  vkGetDeviceQueue(*logicalDevice_, queueFamilies_.compute, 0, queues_ + 3);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -228,7 +210,7 @@ uint32_t Device::getMemoryType(uint32_t filter, VkMemoryPropertyFlags props) con
 // -------------------------------------------------------------------------------------------------------------------------
 void Device::createCommandPool()
 {
-  VkCommandPoolCreateInfo info {};
+  VkCommandPoolCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
   info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
   info.queueFamilyIndex = queueFamilies_.graphics;
@@ -245,7 +227,7 @@ void Device::createCommandPool()
 // -------------------------------------------------------------------------------------------------------------------------
 void Device::createImmediateCommand()
 {
-  VkCommandBufferAllocateInfo info {};
+  VkCommandBufferAllocateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
   info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
   info.commandPool = *commandPool_;
@@ -263,7 +245,7 @@ void Device::createImmediateCommand()
 // -------------------------------------------------------------------------------------------------------------------------
 void Device::submitCommand(const CommandHandler& handler) const
 {
-  VkCommandBufferBeginInfo beginInfo {};
+  VkCommandBufferBeginInfo beginInfo{};
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
   beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
 
@@ -271,7 +253,7 @@ void Device::submitCommand(const CommandHandler& handler) const
   handler(*immediateCommand_);
   VULKAN_GUARD(vkEndCommandBuffer(*immediateCommand_), "Could not finish Vulkan Command");
 
-  VkSubmitInfo submitInfo {};
+  VkSubmitInfo submitInfo{};
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submitInfo.commandBufferCount = 1;
   submitInfo.pCommandBuffers = &*immediateCommand_;

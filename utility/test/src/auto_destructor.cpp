@@ -1,8 +1,7 @@
 #include "precompiled.h"
+#include "utility/auto_destructor.h"
 
 #include <boost/test/unit_test.hpp>
-
-#include "utility/auto_destructor.h"
 
 using namespace yaga;
 
@@ -21,7 +20,7 @@ BOOST_AUTO_TEST_CASE(AutoDestructorEmpty)
 BOOST_AUTO_TEST_CASE(AutoDestructorCtor)
 {
   int counter = 0;
-  auto DestroyInt = [&counter](int){ ++counter; };
+  auto DestroyInt = [&counter](int) { ++counter; };
   {
     int testInt = 0;
     AutoDestructor<int> testObject(testInt, DestroyInt);
@@ -125,19 +124,16 @@ BOOST_AUTO_TEST_CASE(AutoDestructorGetValue)
 BOOST_AUTO_TEST_CASE(AutoDestructorEmptyValue)
 {
   AutoDestructor<int> testObject;
-  try
-  {
+  try {
     testObject.operator*();
     BOOST_TEST(false);
-  }
-  catch (...)
-  {
+  } catch (...) {
     BOOST_TEST(true);
   }
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-BOOST_AUTO_TEST_CASE(AutoDestructorResetEmptyValue )
+BOOST_AUTO_TEST_CASE(AutoDestructorResetEmptyValue)
 {
   int counter = 0;
   auto DestroyInt = [&counter](int) { ++counter; };
@@ -145,15 +141,12 @@ BOOST_AUTO_TEST_CASE(AutoDestructorResetEmptyValue )
   AutoDestructor<int> testObject(testInt, DestroyInt);
   testObject.set();
   BOOST_TEST(counter == 1);
-  try
-  {
+  try {
     testObject.operator*();
     BOOST_TEST(false);
-  }
-  catch(...)
-  {
+  } catch (...) {
     BOOST_TEST(true);
-  }    
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END() // !AutoDestructorTest

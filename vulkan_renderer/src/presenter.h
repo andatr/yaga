@@ -9,10 +9,8 @@
 #include "vulkan.h"
 #include "utility/auto_destructor.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 class Presenter
 {
@@ -22,6 +20,7 @@ public:
   bool acquireImage(uint32_t* image);
   bool present(VkCommandBuffer command, uint32_t image);
   void swapchain(Swapchain* swapchain);
+
 private:
   struct FrameSync
   {
@@ -29,8 +28,10 @@ private:
     AutoDestructor<VkSemaphore> present;
     AutoDestructor<VkFence> swap;
   };
+
 private:
   void createSync();
+
 private:
   Device* device_;
   VkDevice vkDevice_;

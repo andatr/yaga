@@ -1,0 +1,21 @@
+BasedOnStyle: Mozilla
+AlignAfterOpenBracket: DontAlign
+AlwaysBreakAfterReturnType: None
+AlwaysBreakAfterDefinitionReturnType: None
+AllowShortIfStatementsOnASingleLine: 'true'
+BinPackArguments: 'true'
+BinPackParameters: 'true'
+BreakConstructorInitializers: AfterColon
+SpaceAfterTemplateKeyword: 'true'
+ColumnLimit: '128'
+IncludeCategories:
+ - Regex:          '^"precompiled.h"$'
+   Priority:        -1
+ - Regex:           '^<[^/]*>$'
+   Priority:        1
+ - Regex:           '^<.*/.*>$'
+   Priority:        2
+ - Regex:           '^"[^/]*"$'
+   Priority:        3
+ - Regex:           '^".*/.*"$'
+   Priority:        4

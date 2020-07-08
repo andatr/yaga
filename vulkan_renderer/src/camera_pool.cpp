@@ -1,10 +1,8 @@
 #include "precompiled.h"
 #include "camera_pool.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 // -------------------------------------------------------------------------------------------------------------------------
 CameraPool::CameraPool(Device* device, VmaAllocator allocator, Swapchain* swapchain, VkDescriptorPool descriptorPool) :
@@ -17,7 +15,7 @@ CameraPool::CameraPool(Device* device, VmaAllocator allocator, Swapchain* swapch
 // -------------------------------------------------------------------------------------------------------------------------
 void CameraPool::createDescriptorLayout()
 {
-  VkDescriptorSetLayoutBinding uboBinding {};
+  VkDescriptorSetLayoutBinding uboBinding{};
   uboBinding.binding = 0;
   uboBinding.descriptorCount = 1;
   uboBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
@@ -29,7 +27,7 @@ void CameraPool::createDescriptorLayout()
     LOG(trace) << "Descriptor Set Layout destroyed";
   };
 
-  VkDescriptorSetLayoutCreateInfo info {};
+  VkDescriptorSetLayoutCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
   info.bindingCount = 1;
   info.pBindings = &uboBinding;
@@ -85,7 +83,7 @@ void CameraPool::clear() // would be strange to make it const
 void CameraPool::createDescriptorSets(Camera* camera) const
 {
   std::vector<VkDescriptorSetLayout> layouts(frames_, *layout_);
-  VkDescriptorSetAllocateInfo allocInfo {};
+  VkDescriptorSetAllocateInfo allocInfo{};
   allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
   allocInfo.descriptorPool = descriptorPool_;
   allocInfo.descriptorSetCount = frames_;
@@ -102,13 +100,13 @@ void CameraPool::createDescriptorSets(Camera* camera) const
 // -------------------------------------------------------------------------------------------------------------------------
 void CameraPool::createBuffers(Camera* camera) const
 {
-  VkBufferCreateInfo info {};
+  VkBufferCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   info.size = sizeof(UniformObject);
   info.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
   info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  VmaAllocationCreateInfo allocInfo {};
+  VmaAllocationCreateInfo allocInfo{};
   allocInfo.usage = VMA_MEMORY_USAGE_CPU_TO_GPU;
 
   for (uint32_t i = 0; i < frames_; i++) {
@@ -140,7 +138,7 @@ void CameraPool::updateDescriptorSets(Camera* camera) const
 // -------------------------------------------------------------------------------------------------------------------------
 void CameraPool::createCommandBuffers(Camera* camera) const
 {
-  VkCommandBufferAllocateInfo allocInfo {};
+  VkCommandBufferAllocateInfo allocInfo{};
   allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
   allocInfo.commandPool = device_->commandPool();
   allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;

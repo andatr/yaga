@@ -1,11 +1,9 @@
 #include "precompiled.h"
 #include "model_viewer.h"
-
-#include "engine/application.h"
 #include "assets/scene.h"
+#include "engine/application.h"
 
-namespace yaga
-{
+namespace yaga {
 
 // -------------------------------------------------------------------------------------------------------------------------
 GamePtr createGame(assets::SerializerPtr serializer, assets::StoragePtr storage)
@@ -91,7 +89,7 @@ void ModelViewer::loop(float delta)
   auto cameraAsset = persistentAssets_->get<assets::Camera>("camera");
   cameraAsset->projection(projection);
 
-  objectPosition_->local(glm::rotate(glm::mat4(1.0f), glm::radians(90.0f) *time, glm::vec3(0.0f, 0.0f, 1.0f)));
+  objectPosition_->local(glm::rotate(glm::mat4(1.0f), glm::radians(90.0f) * time, glm::vec3(0.0f, 0.0f, 1.0f)));
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -101,4 +99,3 @@ void ModelViewer::shutdown()
 }
 
 } // !namespace yaga
-

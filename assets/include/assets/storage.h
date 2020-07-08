@@ -8,10 +8,8 @@
 #include "assets/asset.h"
 #include "utility/exception.h"
 
-namespace yaga 
-{
-namespace assets
-{
+namespace yaga {
+namespace assets {
 
 class Storage
 {
@@ -21,10 +19,11 @@ public:
   void put(AssetPtr asset);
   void remove(Asset* asset);
   void remove(const std::string& name);
-  template<typename T>
+  template <typename T>
   T* get(const std::string& name) const;
-  template<typename T>
+  template <typename T>
   T* tryGet(const std::string& name) const;
+
 private:
   std::map<std::string, AssetPtr> assets_;
 };
@@ -32,7 +31,7 @@ private:
 typedef std::unique_ptr<Storage> StoragePtr;
 
 // -------------------------------------------------------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 T* Storage::get(const std::string& name) const
 {
   auto ptr = dynamic_cast<T*>(get(name));
@@ -43,7 +42,7 @@ T* Storage::get(const std::string& name) const
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 T* Storage::tryGet(const std::string& name) const
 {
   return dynamic_cast<T*>(tryGet(name));

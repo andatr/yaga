@@ -3,13 +3,12 @@
 
 #include <memory>
 
-#include "component.h"
-#include "material.h"
-#include "mesh.h"
-#include "transform.h"
+#include "engine/component.h"
+#include "engine/material.h"
+#include "engine/mesh.h"
+#include "engine/transform.h"
 
-namespace yaga
-{
+namespace yaga {
 
 class Renderer3D : public Component
 {

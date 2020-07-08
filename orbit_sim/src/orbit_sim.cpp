@@ -1,11 +1,10 @@
 #include "precompiled.h"
 #include "orbit_sim.h"
 
-#include "engine/application.h"
 #include "assets/scene.h"
+#include "engine/application.h"
 
-namespace yaga
-{
+namespace yaga {
 
 // -------------------------------------------------------------------------------------------------------------------------
 GamePtr createGame(assets::SerializerPtr serializer, assets::StoragePtr storage)
@@ -43,4 +42,3 @@ void OrbitSim::shutdown()
 }
 
 } // !namespace yaga
-

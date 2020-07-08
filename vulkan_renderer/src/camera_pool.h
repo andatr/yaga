@@ -4,23 +4,21 @@
 #include <memory>
 #include <unordered_set>
 
-#include "device.h"
 #include "camera.h"
+#include "device.h"
 #include "swapchain.h"
 #include "vulkan.h"
 #include "utility/auto_destructor.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 class CameraPool
 {
 public:
   explicit CameraPool(Device* device, VmaAllocator allocator, Swapchain* swapchain, VkDescriptorPool descriptorPool);
   ~CameraPool();
-  //void swapchain(Swapchain* swapchain);
+  // void swapchain(Swapchain* swapchain);
   VkDescriptorSetLayout layout() const { return *layout_; }
   const std::unordered_set<Camera*>& cameras() const { return cameras_; }
   CameraPtr createCamera(Object* object, assets::Camera* asset);
@@ -29,13 +27,15 @@ public:
   Camera* mainCamera() const { return mainCamera_; }
   void mainCamera(Camera* camera) { mainCamera_ = camera; }
   void update(uint32_t frameIndex);
-private:  
+
+private:
   void createDescriptorLayout();
   void createDescriptorSets(Camera* camera) const;
   void createBuffers(Camera* camera) const;
   void updateDescriptorSets(Camera* camera) const;
   void createCommandBuffers(Camera* camera) const;
   void updateBuffers(Camera* camera, Camera::Frame& frame);
+
 private:
   Device* device_;
   VkDevice vkDevice_;

@@ -8,21 +8,21 @@
 #include "engine/material.h"
 #include "utility/auto_destructor.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 class Material : public yaga::Material
 {
-friend class MaterialPool;
+  friend class MaterialPool;
+
 public:
-  explicit Material(Object* object, assets::Material* asset, MaterialPool* pool, VkPipeline pipeline,
-    VkPipelineLayout layout, const std::vector<VkDescriptorSet>& descriptorSets);
+  explicit Material(Object* object, assets::Material* asset, MaterialPool* pool, VkPipeline pipeline, VkPipelineLayout layout,
+    const std::vector<VkDescriptorSet>& descriptorSets);
   virtual ~Material();
   VkPipelineLayout pipelineLayout() const { return layout_; }
   VkPipeline pipeline() const { return pipeline_; }
   const std::vector<VkDescriptorSet>& descriptorSets() const { return descriptorSets_; }
+
 private:
   MaterialPool* pool_;
   VkPipeline pipeline_;

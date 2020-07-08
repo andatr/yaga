@@ -1,19 +1,16 @@
 #include "precompiled.h"
 #include "application.h"
 
-namespace yaga
-{
+namespace yaga {
 
 // -------------------------------------------------------------------------------------------------------------------------
-Application::Application(GamePtr game) :
-  game_(std::move(game))
+Application::Application(GamePtr game) : game_(std::move(game))
 {
 }
-  
+
 // -------------------------------------------------------------------------------------------------------------------------
 Application::~Application()
 {
 }
 
 } // !namespace yaga
-

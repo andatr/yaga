@@ -8,10 +8,8 @@
 #include "uniform.h"
 #include "engine/renderer3d.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 class RenderingContext;
 
@@ -25,9 +23,11 @@ public:
   Material* material() const { return material_; }
   Transform* transform() const { return transform_; }
   PushConstantVertex pushConstant() const;
+
 private:
   void onComponentAdd(Component* component) override;
   void onComponentRemove(Component* component) override;
+
 protected:
   RenderingContext* pool_;
   Material* material_;

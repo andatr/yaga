@@ -1,17 +1,14 @@
 #include "precompiled.h"
 #include "image_pool.h"
 
-namespace yaga
-{
-namespace vk
-{
-namespace
-{
+namespace yaga {
+namespace vk {
+namespace {
 
 // -------------------------------------------------------------------------------------------------------------------------
 void changeImageLayout(Image* image, VkCommandBuffer command, VkImageLayout oldLayout, VkImageLayout newLayout)
 {
-  VkImageMemoryBarrier barrier {};
+  VkImageMemoryBarrier barrier{};
   barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
   barrier.oldLayout = oldLayout;
   barrier.newLayout = newLayout;
@@ -30,14 +27,12 @@ void changeImageLayout(Image* image, VkCommandBuffer command, VkImageLayout oldL
     barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
     sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
     destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-  }
-  else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+  } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
     barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
     barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
     sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
     destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
-  }
-  else {
+  } else {
     THROW("Unsupported image layout transition");
   }
   vkCmdPipelineBarrier(command, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
@@ -46,7 +41,7 @@ void changeImageLayout(Image* image, VkCommandBuffer command, VkImageLayout oldL
 // -------------------------------------------------------------------------------------------------------------------------
 void setImageData(Image* image, VkBuffer buffer, VkCommandBuffer command)
 {
-  VkBufferImageCopy region {};
+  VkBufferImageCopy region{};
   region.bufferOffset = 0;
   region.bufferRowLength = 0;
   region.bufferImageHeight = 0;
@@ -67,7 +62,7 @@ void generateMipMaps(Image* image, VkCommandBuffer command)
     return;
   }
 
-  VkImageMemoryBarrier barrier {};
+  VkImageMemoryBarrier barrier{};
   barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
   barrier.image = **image;
   barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
@@ -87,10 +82,10 @@ void generateMipMaps(Image* image, VkCommandBuffer command)
     barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
     barrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
 
-    vkCmdPipelineBarrier(command, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT,
-      0, 0, nullptr, 0, nullptr, 1, &barrier);
+    vkCmdPipelineBarrier(
+      command, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_TRANSFER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
-    VkImageBlit blit {};
+    VkImageBlit blit{};
     blit.srcOffsets[0] = { 0, 0, 0 };
     blit.srcOffsets[1] = { mipWidth, mipHeight, 1 };
     blit.srcSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
@@ -104,18 +99,16 @@ void generateMipMaps(Image* image, VkCommandBuffer command)
     blit.dstSubresource.baseArrayLayer = 0;
     blit.dstSubresource.layerCount = 1;
 
-    vkCmdBlitImage(command,
-      **image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL,
-      **image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-      1, &blit, VK_FILTER_LINEAR);
+    vkCmdBlitImage(command, **image, VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL, **image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1,
+      &blit, VK_FILTER_LINEAR);
 
     barrier.oldLayout = VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL;
     barrier.newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
     barrier.srcAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
     barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-    vkCmdPipelineBarrier(command, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-      0, 0, nullptr, 0, nullptr, 1, &barrier);
+    vkCmdPipelineBarrier(
+      command, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
     if (mipWidth > 1) mipWidth /= 2;
     if (mipHeight > 1) mipHeight /= 2;
@@ -127,8 +120,8 @@ void generateMipMaps(Image* image, VkCommandBuffer command)
   barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
   barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
 
-  vkCmdPipelineBarrier(command, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
-    0, 0, nullptr, 0, nullptr, 1, &barrier);
+  vkCmdPipelineBarrier(
+    command, VK_PIPELINE_STAGE_TRANSFER_BIT, VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
 } // !namespace
@@ -148,7 +141,7 @@ Image* ImagePool::createImage(assets::Texture* asset)
   if (it != images_.end()) return it->second.get();
   if (asset->image()->size() > maxImageSize_) THROW("image exceed max size");
 
-  VkImageCreateInfo info {};
+  VkImageCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   info.imageType = VK_IMAGE_TYPE_2D;
   info.extent.width = static_cast<uint32_t>(asset->image()->width());
@@ -164,7 +157,7 @@ Image* ImagePool::createImage(assets::Texture* asset)
   info.samples = VK_SAMPLE_COUNT_1_BIT;
   info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  VkImageViewCreateInfo viewInfo {};
+  VkImageViewCreateInfo viewInfo{};
   viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
   viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
   viewInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -176,7 +169,7 @@ Image* ImagePool::createImage(assets::Texture* asset)
   viewInfo.subresourceRange.baseArrayLayer = 0;
   viewInfo.subresourceRange.layerCount = 1;
 
-  VmaAllocationCreateInfo allocInfo {};
+  VmaAllocationCreateInfo allocInfo{};
   allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
   auto image = std::make_unique<Image>(device_, allocator_, info, viewInfo, allocInfo, *sampler_);
@@ -195,12 +188,12 @@ Image* ImagePool::createImage(assets::Texture* asset)
 // -------------------------------------------------------------------------------------------------------------------------
 void ImagePool::createStageBuffer(VkDeviceSize size)
 {
-  VkBufferCreateInfo info {};
+  VkBufferCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   info.size = size;
   info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
 
-  VmaAllocationCreateInfo allocInfo {};
+  VmaAllocationCreateInfo allocInfo{};
   allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
   allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
 
@@ -210,7 +203,7 @@ void ImagePool::createStageBuffer(VkDeviceSize size)
 // -------------------------------------------------------------------------------------------------------------------------
 void ImagePool::createSampler()
 {
-  VkSamplerCreateInfo info {};
+  VkSamplerCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
   info.magFilter = VK_FILTER_LINEAR;
   info.minFilter = VK_FILTER_LINEAR;

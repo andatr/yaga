@@ -2,10 +2,8 @@
 #include "mesh.h"
 #include "mesh_pool.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 // -------------------------------------------------------------------------------------------------------------------------
 Mesh::Mesh(Object* object, assets::Mesh* asset, MeshPool* pool, VkBuffer vertices, VkBuffer indices, uint32_t indexCount) :

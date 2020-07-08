@@ -2,35 +2,32 @@
 #define YAGA_UTILITY_LOG
 
 #include <string>
-
-#include <boost/optional.hpp>
+#include <boost/log/expressions/keyword.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/utility/manipulators/add_value.hpp>
-#include <boost/log/expressions/keyword.hpp>
+#include <boost/optional.hpp>
 
 #include "exception.h"
 
-#define LOG(severity) BOOST_LOG_TRIVIAL(severity) \
-    << boost::log::add_value(yaga::log::a_file, __FILE__) \
-    << boost::log::add_value(yaga::log::a_line, __LINE__)
+#define LOG(severity) BOOST_LOG_TRIVIAL(severity)                                                                              \
+  << boost::log::add_value(yaga::log::a_file, __FILE__)                                                                        \
+  << boost::log::add_value(yaga::log::a_line, __LINE__)
 
-#define LOG_E(severity, exception) BOOST_LOG_TRIVIAL(severity) \
-    << boost::log::add_value(yaga::log::a_file, (exception).File()) \
-    << boost::log::add_value(yaga::log::a_line, (exception).Line()) \
-    << (exception).what()
+#define LOG_E(severity, exception) BOOST_LOG_TRIVIAL(severity)                                                                 \
+  << boost::log::add_value(yaga::log::a_file, (exception).File())                                                              \
+  << boost::log::add_value(yaga::log::a_line, (exception).Line())                                                              \
+  << (exception).what()
 
-namespace yaga 
-{
-namespace log
-{
+namespace yaga {
+namespace log {
 
 typedef boost::log::trivial::severity_level Severity;
 
 BOOST_LOG_ATTRIBUTE_KEYWORD(a_file, "File", std::string)
 BOOST_LOG_ATTRIBUTE_KEYWORD(a_line, "Line", uint32_t)
 
-namespace format
-{
+namespace format {
+
 enum Attributes : int
 {
   time,
@@ -39,7 +36,8 @@ enum Attributes : int
   line,
   all = std::numeric_limits<int>::max()
 };
-}
+
+} // !namespace format
 
 void init(boost::optional<Severity> severity = boost::none, int format = format::all);
 Severity severityFromString(std::string str);

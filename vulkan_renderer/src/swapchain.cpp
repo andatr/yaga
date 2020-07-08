@@ -2,12 +2,9 @@
 #include "swapchain.h"
 #include "assets/vertex.h"
 
-namespace yaga
-{
-namespace vk
-{
-namespace
-{
+namespace yaga {
+namespace vk {
+namespace {
 
 // -------------------------------------------------------------------------------------------------------------------------
 VkSurfaceFormatKHR pickColorFormat(VkPhysicalDevice device, VkSurfaceKHR surface)
@@ -19,17 +16,16 @@ VkSurfaceFormatKHR pickColorFormat(VkPhysicalDevice device, VkSurfaceKHR surface
     THROW("Could not choose color format");
   }
   formats.resize(count);
-  VULKAN_GUARD(vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &count, formats.data()), "Could not enumerate color format");
+  VULKAN_GUARD(
+    vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &count, formats.data()), "Could not enumerate color format");
 
   auto format = std::find_if(formats.begin(), formats.end(), [](const auto& f) {
     // TODO: uncomment
-    //VkFormatProperties props;
-    //vkGetPhysicalDeviceFormatProperties(device, f, &props);
+    // VkFormatProperties props;
+    // vkGetPhysicalDeviceFormatProperties(device, f, &props);
     return /*props.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT*/
-      f.format == VK_FORMAT_B8G8R8A8_UNORM &&
-      f.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+      f.format == VK_FORMAT_B8G8R8A8_UNORM && f.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
   });
-
 
   // If the surface format list only includes one entry with
   // VK_FORMAT_UNDEFINED, there is no preferred format.
@@ -88,12 +84,10 @@ VkExtent2D pickResolution(const VkSurfaceCapabilitiesKHR& capabilities, VkExtent
     return capabilities.currentExtent;
   }
   // init with min supported values
-  VkExtent2D resolution = {
-    std::min(capabilities.maxImageExtent.width, requested.width),
-    std::min(capabilities.maxImageExtent.height, requested.height)
-  };
+  VkExtent2D resolution = { std::min(capabilities.maxImageExtent.width, requested.width),
+    std::min(capabilities.maxImageExtent.height, requested.height) };
   // update to max supported
-  resolution.width  = std::max(resolution.width,  capabilities.minImageExtent.width);
+  resolution.width = std::max(resolution.width, capabilities.minImageExtent.width);
   resolution.height = std::max(resolution.height, capabilities.minImageExtent.height);
   return resolution;
 }
@@ -108,8 +102,8 @@ uint32_t pickBufferCount(const VkSurfaceCapabilitiesKHR& capabilities)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkFormat getDepthImageFormat(VkPhysicalDevice device, const std::vector<VkFormat>& candidates, VkImageTiling tiling,
-  VkFormatFeatureFlags features)
+VkFormat getDepthImageFormat(
+  VkPhysicalDevice device, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
 {
   for (VkFormat format : candidates) {
     VkFormatProperties props;
@@ -127,14 +121,26 @@ VkFormat getDepthImageFormat(VkPhysicalDevice device, const std::vector<VkFormat
 // -------------------------------------------------------------------------------------------------------------------------
 VkSampleCountFlagBits getMaxMsaaLevel(Device* device)
 {
-  auto msaa = device->properties().limits.framebufferColorSampleCounts &
-    device->properties().limits.framebufferDepthSampleCounts;
-  if (msaa & VK_SAMPLE_COUNT_64_BIT) { return VK_SAMPLE_COUNT_64_BIT; }
-  if (msaa & VK_SAMPLE_COUNT_32_BIT) { return VK_SAMPLE_COUNT_32_BIT; }
-  if (msaa & VK_SAMPLE_COUNT_16_BIT) { return VK_SAMPLE_COUNT_16_BIT; }
-  if (msaa & VK_SAMPLE_COUNT_8_BIT)  { return VK_SAMPLE_COUNT_8_BIT;  }
-  if (msaa & VK_SAMPLE_COUNT_4_BIT)  { return VK_SAMPLE_COUNT_4_BIT;  }
-  if (msaa & VK_SAMPLE_COUNT_2_BIT)  { return VK_SAMPLE_COUNT_2_BIT;  }
+  auto msaa =
+    device->properties().limits.framebufferColorSampleCounts & device->properties().limits.framebufferDepthSampleCounts;
+  if (msaa & VK_SAMPLE_COUNT_64_BIT) {
+    return VK_SAMPLE_COUNT_64_BIT;
+  }
+  if (msaa & VK_SAMPLE_COUNT_32_BIT) {
+    return VK_SAMPLE_COUNT_32_BIT;
+  }
+  if (msaa & VK_SAMPLE_COUNT_16_BIT) {
+    return VK_SAMPLE_COUNT_16_BIT;
+  }
+  if (msaa & VK_SAMPLE_COUNT_8_BIT) {
+    return VK_SAMPLE_COUNT_8_BIT;
+  }
+  if (msaa & VK_SAMPLE_COUNT_4_BIT) {
+    return VK_SAMPLE_COUNT_4_BIT;
+  }
+  if (msaa & VK_SAMPLE_COUNT_2_BIT) {
+    return VK_SAMPLE_COUNT_2_BIT;
+  }
   return VK_SAMPLE_COUNT_1_BIT;
 }
 
@@ -142,7 +148,7 @@ VkSampleCountFlagBits getMaxMsaaLevel(Device* device)
 ImagePtr createImage(Device* device, VmaAllocator allocator, VkExtent2D resolution, VkFormat format,
   VkSampleCountFlagBits msaa, VkImageUsageFlags usage, VkImageAspectFlagBits aspectMask)
 {
-  VkImageCreateInfo info {};
+  VkImageCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
   info.imageType = VK_IMAGE_TYPE_2D;
   info.extent.width = resolution.width;
@@ -158,7 +164,7 @@ ImagePtr createImage(Device* device, VmaAllocator allocator, VkExtent2D resoluti
   info.samples = msaa;
   info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  VkImageViewCreateInfo viewInfo {};
+  VkImageViewCreateInfo viewInfo{};
   viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
   viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
   viewInfo.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -170,7 +176,7 @@ ImagePtr createImage(Device* device, VmaAllocator allocator, VkExtent2D resoluti
   viewInfo.subresourceRange.baseArrayLayer = 0;
   viewInfo.subresourceRange.layerCount = 1;
 
-  VmaAllocationCreateInfo allocInfo {};
+  VmaAllocationCreateInfo allocInfo{};
   allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
 
   return std::make_unique<Image>(device, allocator, info, viewInfo, allocInfo);
@@ -187,15 +193,12 @@ Swapchain::Swapchain(Device* device, VmaAllocator allocator, VkSurfaceKHR surfac
   renderTarget_ = createImage(device_, allocator_, resolution_, format, msaa_,
     VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
     VK_IMAGE_ASPECT_COLOR_BIT);
-  auto depthFormat = getDepthImageFormat(
-    device_->physical(),
+  auto depthFormat = getDepthImageFormat(device_->physical(),
     { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
     VK_IMAGE_TILING_OPTIMAL,
-    VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT
-  );
+    VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
   depthImage_ = createImage(device_, allocator_, resolution_, depthFormat, msaa_,
-    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-    VK_IMAGE_ASPECT_DEPTH_BIT);
+    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_IMAGE_ASPECT_DEPTH_BIT);
   createRenderPass(format);
   createFrameImages(format);
   createFramebuffers();
@@ -214,7 +217,7 @@ VkFormat Swapchain::createSwapchain(VkSurfaceKHR surface, VkExtent2D resolution)
   VkSurfaceCapabilitiesKHR capabilities;
   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pdevice, surface, &capabilities);
 
-  VkSwapchainCreateInfoKHR info {};
+  VkSwapchainCreateInfoKHR info{};
   info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
   info.surface = surface;
   info.oldSwapchain = VK_NULL_HANDLE;
@@ -228,12 +231,11 @@ VkFormat Swapchain::createSwapchain(VkSurfaceKHR surface, VkExtent2D resolution)
   info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
   info.presentMode = pickBufferingMode(pdevice, surface);
   info.clipped = VK_TRUE;
-  
+
   const auto& queueFamilies = device_->queueFamilies();
   if (queueFamilies.graphics == queueFamilies.surface) {
     info.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
-  }
-  else {
+  } else {
     uint32_t queueFamiliesArray[] = { queueFamilies.graphics, queueFamilies.surface };
     info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
     info.queueFamilyIndexCount = 2;
@@ -260,7 +262,7 @@ void Swapchain::createFrameImages(VkFormat format)
     LOG(trace) << "Vulkan Image View destroyed";
   };
 
-  VkImageViewCreateInfo info {};
+  VkImageViewCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
   info.viewType = VK_IMAGE_VIEW_TYPE_2D;
   info.components.r = VK_COMPONENT_SWIZZLE_IDENTITY;
@@ -290,7 +292,7 @@ void Swapchain::createFrameImages(VkFormat format)
 // -------------------------------------------------------------------------------------------------------------------------
 void Swapchain::createRenderPass(VkFormat format)
 {
-  VkAttachmentDescription colorAttachment {};
+  VkAttachmentDescription colorAttachment{};
   colorAttachment.format = format;
   colorAttachment.samples = msaa_;
   colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -300,7 +302,7 @@ void Swapchain::createRenderPass(VkFormat format)
   colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-  VkAttachmentDescription depthAttachment {};
+  VkAttachmentDescription depthAttachment{};
   depthAttachment.format = depthImage_->info().format;
   depthAttachment.samples = msaa_;
   depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
@@ -310,7 +312,7 @@ void Swapchain::createRenderPass(VkFormat format)
   depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-  VkAttachmentDescription msaaAttachment {};
+  VkAttachmentDescription msaaAttachment{};
   msaaAttachment.format = format;
   msaaAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
   msaaAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
@@ -320,26 +322,26 @@ void Swapchain::createRenderPass(VkFormat format)
   msaaAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
   msaaAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
-  VkAttachmentReference colorAttachmentRef {};
+  VkAttachmentReference colorAttachmentRef{};
   colorAttachmentRef.attachment = 0;
   colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-  VkAttachmentReference depthAttachmentRef {};
+  VkAttachmentReference depthAttachmentRef{};
   depthAttachmentRef.attachment = 1;
   depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
-  VkAttachmentReference msaaAttachmentRef {};
+  VkAttachmentReference msaaAttachmentRef{};
   msaaAttachmentRef.attachment = 2;
   msaaAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
 
-  VkSubpassDescription subpass {};
+  VkSubpassDescription subpass{};
   subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
   subpass.colorAttachmentCount = 1;
   subpass.pColorAttachments = &colorAttachmentRef;
   subpass.pDepthStencilAttachment = &depthAttachmentRef;
   subpass.pResolveAttachments = &msaaAttachmentRef;
 
-  VkSubpassDependency dependency {};
+  VkSubpassDependency dependency{};
   dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
   dependency.dstSubpass = 0;
   dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
@@ -348,7 +350,7 @@ void Swapchain::createRenderPass(VkFormat format)
   dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT;
 
   std::array<VkAttachmentDescription, 3> attachments = { colorAttachment, depthAttachment, msaaAttachment };
-  VkRenderPassCreateInfo renderPassInfo {};
+  VkRenderPassCreateInfo renderPassInfo{};
   renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
   renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
   renderPassInfo.pAttachments = attachments.data();
@@ -378,7 +380,7 @@ void Swapchain::createFramebuffers()
   frameBufferRefs_.resize(frameImages_.size());
   for (size_t i = 0; i < frameImages_.size(); i++) {
     std::array<VkImageView, 3> attachments = { renderTarget_->view(), depthImage_->view(), *frameImages_[i] };
-    VkFramebufferCreateInfo info {};
+    VkFramebufferCreateInfo info{};
     info.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
     info.renderPass = *renderPass_;
     info.attachmentCount = static_cast<uint32_t>(attachments.size());

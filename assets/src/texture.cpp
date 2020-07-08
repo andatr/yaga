@@ -1,10 +1,8 @@
 #include "precompiled.h"
 #include "assets/texture.h"
 
-namespace yaga
-{
-namespace assets
-{
+namespace yaga {
+namespace assets {
 
 const SerializationInfo Texture::serializationInfo = {
   (uint32_t)StandardAssetId::texture,
@@ -14,8 +12,7 @@ const SerializationInfo Texture::serializationInfo = {
 };
 
 // -------------------------------------------------------------------------------------------------------------------------
-Texture::Texture(const std::string& name) :
-  Asset(name), image_(nullptr)
+Texture::Texture(const std::string& name) : Asset(name), image_(nullptr)
 {
 }
 
@@ -34,7 +31,7 @@ void Texture::image(Image* image)
 // -------------------------------------------------------------------------------------------------------------------------
 TexturePtr Texture::deserializeBinary(const std::string&, std::istream&, size_t, RefResolver&)
 {
-  THROW_NOT_IMPLEMENTED; 
+  THROW_NOT_IMPLEMENTED;
 }
 
 // -------------------------------------------------------------------------------------------------------------------------

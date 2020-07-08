@@ -1,8 +1,8 @@
 #ifndef YAGA_VULKAN_RENDERER_SRC_PRECOMPILED
 #define YAGA_VULKAN_RENDERER_SRC_PRECOMPILED
 
-#include <array>
 #include <algorithm>
+#include <array>
 #include <chrono>
 #include <functional>
 #include <iostream>
@@ -16,11 +16,11 @@
 
 #pragma warning(push, 0)
 
-#include <boost/optional.hpp>
+#include <vk_mem_alloc.h>
 #include <GLFW/glfw3.h>
+#include <boost/optional.hpp>
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include <vk_mem_alloc.h>
 
 #pragma warning(pop)
 

@@ -2,8 +2,7 @@
 #include "camera.h"
 #include "object.h"
 
-namespace yaga
-{
+namespace yaga {
 
 // -------------------------------------------------------------------------------------------------------------------------
 Camera::Camera(Object* obj, assets::Camera* asset) :
@@ -73,4 +72,3 @@ void Camera::onComponentRemove(Component* component)
 }
 
 } // !namespace yaga
-

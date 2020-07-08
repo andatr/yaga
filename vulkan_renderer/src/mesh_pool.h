@@ -1,9 +1,9 @@
 #ifndef YAGA_VULKAN_RENDERER_SRC_MESH_POOL
 #define YAGA_VULKAN_RENDERER_SRC_MESH_POOL
 
+#include <memory>
 #include <unordered_map>
 #include <unordered_set>
-#include <memory>
 
 #include "buffer.h"
 #include "device.h"
@@ -12,10 +12,8 @@
 #include "assets/mesh.h"
 #include "utility/auto_destructor.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 class MeshPool
 {
@@ -25,8 +23,10 @@ public:
   MeshPtr createMesh(Object* object, assets::Mesh* asset);
   void clear();
   void removeMesh(Mesh* mesh);
+
 private:
   void createStageBuffers(uint32_t maxVertexCount, uint32_t maxIndexCount);
+
 private:
   struct MeshCache
   {
@@ -34,6 +34,7 @@ private:
     BufferPtr vertexBuffer;
     BufferPtr indexBuffer;
   };
+
 private:
   Device* device_;
   VkDevice vkDevice_;

@@ -1,21 +1,16 @@
 #include "precompiled.h"
 #include "renderer3d.h"
-#include "engine/object.h"
 #include "rendering_context.h"
+#include "engine/object.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 // -------------------------------------------------------------------------------------------------------------------------
 Renderer3D::Renderer3D(Object* obj, RenderingContext* pool) :
-  yaga::Renderer3D(obj), pool_(pool),
-  material_(obj->getComponent<Material>()),
-  mesh_(obj->getComponent<Mesh>()),
+  yaga::Renderer3D(obj), pool_(pool), material_(obj->getComponent<Material>()), mesh_(obj->getComponent<Mesh>()),
   transform_(obj->getComponent<Transform>())
-{
-}
+{}
 
 // -------------------------------------------------------------------------------------------------------------------------
 Renderer3D::~Renderer3D()

@@ -1,15 +1,13 @@
 #include "precompiled.h"
 #include "shader.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 // -------------------------------------------------------------------------------------------------------------------------
 Shader::Shader(Device* device, assets::Shader* asset)
 {
-  VkShaderModuleCreateInfo createInfo {};
+  VkShaderModuleCreateInfo createInfo{};
   createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
   createInfo.codeSize = asset->code().size();
   createInfo.pCode = reinterpret_cast<const uint32_t*>(asset->code().data());

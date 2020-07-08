@@ -2,15 +2,12 @@
 #define YAGA_VULKAN_RENDERER_SRC_BUFFER
 
 #include <memory>
-
 #include <boost/noncopyable.hpp>
 
 #include "vulkan.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 class Buffer : private boost::noncopyable
 {
@@ -20,6 +17,7 @@ public:
   VkBuffer operator*() const { return buffer_; }
   const VmaAllocation& allocation() const { return allocation_; }
   const VmaAllocationInfo& memory() const { return memory_; }
+
 private:
   VmaAllocator allocator_;
   VkBuffer buffer_;

@@ -7,14 +7,14 @@
 #include "engine/component.h"
 #include "engine/glm.h"
 
-namespace yaga
-{
+namespace yaga {
 
 class Transform : public Component
 {
 public:
   static const uint32_t worldProperty = 1;
   typedef std::unordered_set<Transform*> TransformSet;
+
 public:
   explicit Transform(Object* obj);
   virtual ~Transform();
@@ -24,8 +24,10 @@ public:
   Transform* parent() const { return parent_; }
   virtual void parent(Transform* parent);
   const TransformSet& children() const { return children_; }
+
 protected:
   void updateWorld();
+
 protected:
   glm::mat4 world_;
   glm::mat4 local_;

@@ -3,10 +3,9 @@
 
 #include <boost/signals2.hpp>
 
-namespace yaga
-{
+namespace yaga {
 
-template<typename T>
+template <typename T>
 class UpdateNotifier
 {
 public:
@@ -14,10 +13,15 @@ public:
   typedef boost::signals2::connection Connection;
   Connection onUpdate(const Handler& handler) { return signal_.connect(handler); }
   void onUpdate(const Connection& handler) { return signal_.disconnect(handler); }
+
 protected:
   void fireUpdate(T id) { signal_(id); }
-  template<typename P>
-  void fireUpdate(P id) { signal_(static_cast<T>(id)); }
+  template <typename P>
+  void fireUpdate(P id)
+  {
+    signal_(static_cast<T>(id));
+  }
+
 private:
   boost::signals2::signal<void(T)> signal_;
 };

@@ -4,16 +4,13 @@
 #include <functional>
 #include <memory>
 #include <vector>
-
 #include <boost/noncopyable.hpp>
 
 #include "vulkan.h"
 #include "utility/auto_destructor.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 struct VulkanExtensions
 {
@@ -34,10 +31,11 @@ public:
     uint32_t surface;
     uint32_t compute;
     uint32_t transfer;
-    //uint32_t sparceMemory;
-    //uint32_t protectedMemory;
+    // uint32_t sparceMemory;
+    // uint32_t protectedMemory;
   };
   typedef std::function<void(VkCommandBuffer cmd)> CommandHandler;
+
 public:
   explicit Device(VkInstance instance, VkSurfaceKHR surface, const VulkanExtensions& extensions);
   virtual ~Device();
@@ -47,20 +45,22 @@ public:
   const VkPhysicalDeviceProperties& properties() const { return properties_; }
   const QueueFamilyIndices& queueFamilies() const { return queueFamilies_; }
   VkQueue graphicsQueue() const { return queues_[0]; }
-  VkQueue presentQueue()  const { return queues_[1]; }
+  VkQueue presentQueue() const { return queues_[1]; }
   VkQueue transferQueue() const { return queues_[2]; }
-  VkQueue computeQueue()  const { return queues_[3]; }
+  VkQueue computeQueue() const { return queues_[3]; }
   uint32_t getMemoryType(uint32_t filter, VkMemoryPropertyFlags props) const;
   VkCommandPool commandPool() const { return *commandPool_; }
   void submitCommand(const CommandHandler& command) const;
+
 private:
   void createDevice(std::vector<const char*>& extensions);
   void createCommandPool();
   void createImmediateCommand();
+
 private:
   VkPhysicalDevice physicalDevice_;
   VkPhysicalDeviceProperties properties_;
-  VkPhysicalDeviceMemoryProperties memoryProperties_;  
+  VkPhysicalDeviceMemoryProperties memoryProperties_;
   AutoDestructor<VkDevice> logicalDevice_;
   QueueFamilyIndices queueFamilies_;
   VkQueue queues_[4];

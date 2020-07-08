@@ -3,11 +3,10 @@
 
 #include <memory>
 
-#include "component.h"
 #include "assets/material.h"
+#include "engine/component.h"
 
-namespace yaga
-{
+namespace yaga {
 
 class Material : public Component
 {
@@ -15,6 +14,7 @@ public:
   explicit Material(Object* object, assets::Material* asset);
   virtual ~Material() {}
   assets::Material* asset() const { return asset_; }
+
 protected:
   assets::Material* asset_;
 };

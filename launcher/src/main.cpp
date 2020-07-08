@@ -8,10 +8,8 @@
 
 namespace fs = boost::filesystem;
 
-namespace yaga
-{
-namespace
-{
+namespace yaga {
+namespace {
 
 struct AppDef
 {
@@ -65,13 +63,13 @@ void runApplication(fs::path assetPath, const Options& options)
   auto appAsset = serializer->deserialize<assets::Application>("application", storage.get());
   //
   auto gameLibPath = makeAbsolutePath(appAsset->gameLibPath(), assetPath);
-  auto createGameFunc = boost::dll::import_alias<CreateGameFunc>(gameLibPath, createGameFuncName,
-    boost::dll::load_mode::append_decorations);
+  auto createGameFunc =
+    boost::dll::import_alias<CreateGameFunc>(gameLibPath, createGameFuncName, boost::dll::load_mode::append_decorations);
   auto game = createGameFunc(std::move(serializer), std::move(storage));
   //
   auto rendererLibPath = makeAbsolutePath(appAsset->rendererLibPath(), assetPath);
-  auto createApplication = boost::dll::import_alias<CreateApplicationFunc>(rendererLibPath, createApplicationFuncName,
-    boost::dll::load_mode::append_decorations);
+  auto createApplication = boost::dll::import_alias<CreateApplicationFunc>(
+    rendererLibPath, createApplicationFuncName, boost::dll::load_mode::append_decorations);
   auto app = createApplication(std::move(game), appAsset);
   app->run();
 }
@@ -102,7 +100,7 @@ size_t displayAppList(const AppList& apps)
   size_t appIndex = 0;
   std::cin >> appIndex;
   if (appIndex <= 0 || appIndex > apps.size()) return BAD_INDEX;
-  return appIndex - 1;   
+  return appIndex - 1;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -114,14 +112,12 @@ void main(const Options& options)
     auto apps = readAppList(appPath.string());
     if (apps.size() == 1) {
       runApplication(apps[0].path, options);
-    }
-    else if (apps.size() > 1) {
+    } else if (apps.size() > 1) {
       auto appIndex = displayAppList(apps);
       if (appIndex == BAD_INDEX) return;
       runApplication(apps[appIndex].path, options);
     }
-  }
-  else {
+  } else {
     runApplication(appPath, options);
   }
 }
@@ -141,14 +137,12 @@ int main(int argc, char* argv[])
   }
 #ifdef NDEBUG
   catch (const yaga::Exception& exp) {
-    LOG_E(fatal, exp); 
+    LOG_E(fatal, exp);
     return EXIT_FAILURE
-  }
-  catch (const std::exception& exp) {
+  } catch (const std::exception& exp) {
     LOG(fatal) << exp.what();
     return EXIT_FAILURE
-  }
-  catch (...) {
+  } catch (...) {
     LOG(fatal) << "Unknown exception";
     return EXIT_FAILURE
   }

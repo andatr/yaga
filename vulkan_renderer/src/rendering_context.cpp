@@ -6,21 +6,19 @@
 #include "shader.h"
 #include "assets/vertex.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 // -------------------------------------------------------------------------------------------------------------------------
-RenderingContext::RenderingContext(Device* device, VmaAllocator allocator, Swapchain* swapchain,
-  const assets::Application* limits) :
-    vkDevice_(**device), allocator_(allocator),
-    frames_(static_cast<uint32_t>(swapchain->frameBuffers().size()))
+RenderingContext::RenderingContext(
+  Device* device, VmaAllocator allocator, Swapchain* swapchain, const assets::Application* limits) :
+  vkDevice_(**device),
+  allocator_(allocator), frames_(static_cast<uint32_t>(swapchain->frameBuffers().size()))
 {
   resolution_ = { swapchain->resolution().width, swapchain->resolution().height };
   createDescriptorPool(limits->maxTextureCount());
   cameraPool_ = std::make_unique<CameraPool>(device, allocator, swapchain, *descriptorPool_);
-  imagePool_ = std::make_unique <ImagePool>(device, allocator, limits->maxImageSize());
+  imagePool_ = std::make_unique<ImagePool>(device, allocator, limits->maxImageSize());
   materialPool_ = std::make_unique<MaterialPool>(device, swapchain, imagePool_.get(), *descriptorPool_, cameraPool_->layout());
   meshPool_ = std::make_unique<MeshPool>(device, allocator, limits->maxVertexCount(), limits->maxIndexCount());
 }
@@ -77,13 +75,13 @@ void RenderingContext::clear()
 // ------------------------------------------------------------------------------------------------------------------------
 void RenderingContext::createDescriptorPool(uint32_t maxTextures)
 {
-  std::array<VkDescriptorPoolSize, 2> poolSizes {};
+  std::array<VkDescriptorPoolSize, 2> poolSizes{};
   poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
   poolSizes[0].descriptorCount = frames_;
   poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
   poolSizes[1].descriptorCount = maxTextures * frames_;
 
-  VkDescriptorPoolCreateInfo poolInfo {};
+  VkDescriptorPoolCreateInfo poolInfo{};
   poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
   poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
   poolInfo.pPoolSizes = poolSizes.data();

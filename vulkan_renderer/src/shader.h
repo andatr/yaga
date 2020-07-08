@@ -2,7 +2,6 @@
 #define YAGA_VULKAN_RENDERER_SRC_SHADER
 
 #include <memory>
-
 #include <boost/noncopyable.hpp>
 
 #include "device.h"
@@ -10,16 +9,15 @@
 #include "assets/shader.h"
 #include "utility/auto_destructor.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 class Shader : private boost::noncopyable
 {
 public:
   Shader(Device* device, assets::Shader* asset);
   VkShaderModule operator*() const { return *shader_; }
+
 private:
   AutoDestructor<VkShaderModule> shader_;
 };

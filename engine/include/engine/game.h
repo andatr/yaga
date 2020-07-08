@@ -6,14 +6,14 @@
 #include "assets/serializer.h"
 #include "assets/storage.h"
 
-namespace yaga
-{
+namespace yaga {
 
 class Application;
 
 class Game
 {
-friend class Application;
+  friend class Application;
+
 public:
   virtual ~Game() {}
   virtual void init(Application* app) = 0;

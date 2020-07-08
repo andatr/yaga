@@ -2,19 +2,18 @@
 #define YAGA_UTILITY_AUTO_DESTROYER
 
 #include <functional>
-
 #include <boost/noncopyable.hpp>
 
 #include "exception.h"
 
-namespace yaga
-{
+namespace yaga {
 
-template<typename T>
+template <typename T>
 class AutoDestructor : private boost::noncopyable
 {
 public:
   typedef std::function<void(T)> DestructorT;
+
 public:
   AutoDestructor();
   AutoDestructor(T& obj, const DestructorT& dtor);
@@ -25,6 +24,7 @@ public:
   void set();
   const T& operator*() const;
   bool destoyed() const { return destoyed_; }
+
 private:
   bool destoyed_;
   T object_;
@@ -32,22 +32,19 @@ private:
 };
 
 // -------------------------------------------------------------------------------------------------------------------------
-template<typename T>
-AutoDestructor<T>::AutoDestructor() :
-  destoyed_(true)
-{
-}
+template <typename T>
+AutoDestructor<T>::AutoDestructor() : destoyed_(true)
+{}
 
 // -------------------------------------------------------------------------------------------------------------------------
-template<typename T>
-AutoDestructor<T>::AutoDestructor(T& obj, const DestructorT& dtor) :
-  destoyed_(true)
+template <typename T>
+AutoDestructor<T>::AutoDestructor(T& obj, const DestructorT& dtor) : destoyed_(true)
 {
   set(obj, dtor);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 AutoDestructor<T>::AutoDestructor(AutoDestructor<T>&& other) noexcept
 {
   destoyed_ = other.destoyed_;
@@ -57,7 +54,7 @@ AutoDestructor<T>::AutoDestructor(AutoDestructor<T>&& other) noexcept
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 AutoDestructor<T>& AutoDestructor<T>::operator=(AutoDestructor<T>&& other) noexcept
 {
   set();
@@ -69,7 +66,7 @@ AutoDestructor<T>& AutoDestructor<T>::operator=(AutoDestructor<T>&& other) noexc
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 void AutoDestructor<T>::set(T& obj, const DestructorT& dtor)
 {
   set();
@@ -79,7 +76,7 @@ void AutoDestructor<T>::set(T& obj, const DestructorT& dtor)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 void AutoDestructor<T>::set()
 {
   if (destoyed_) return;
@@ -88,17 +85,17 @@ void AutoDestructor<T>::set()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 AutoDestructor<T>::~AutoDestructor()
 {
   set();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 const T& AutoDestructor<T>::operator*() const
 {
-#ifndef NDEBUG 
+#ifndef NDEBUG
   if (destoyed_) {
     THROW("AutoDestructor: attempt to access destoyed object");
   }

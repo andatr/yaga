@@ -1,10 +1,8 @@
 #include "precompiled.h"
 #include "assets/shader.h"
 
-namespace yaga
-{
-namespace assets
-{
+namespace yaga {
+namespace assets {
 
 const SerializationInfo Shader::serializationInfo = {
   (uint32_t)StandardAssetId::shader,
@@ -14,11 +12,10 @@ const SerializationInfo Shader::serializationInfo = {
 };
 
 // -------------------------------------------------------------------------------------------------------------------------
-Shader::Shader(const std::string& name) :
-  Asset(name)
+Shader::Shader(const std::string& name) : Asset(name) 
 {
 }
-  
+
 // -------------------------------------------------------------------------------------------------------------------------
 Shader::~Shader()
 {

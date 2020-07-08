@@ -1,15 +1,12 @@
 #include "precompiled.h"
 #include "assets/friendly_serializer.h"
 
-namespace yaga
-{
-namespace assets
-{
+namespace yaga {
+namespace assets {
 
 namespace fs = boost::filesystem;
 
-namespace
-{
+namespace {
 
 // -------------------------------------------------------------------------------------------------------------------------
 std::string typeFromPath(const fs::path& path)
@@ -82,4 +79,3 @@ AssetPtr FriendlySerializer::deserialize(const std::string& name, RefResolver& r
 
 } // !namespace assets
 } // !namespace yaga
-

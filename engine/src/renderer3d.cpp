@@ -2,14 +2,11 @@
 #include "renderer3d.h"
 #include "object.h"
 
-namespace yaga
-{
+namespace yaga {
 
 // -------------------------------------------------------------------------------------------------------------------------
-Renderer3D::Renderer3D(Object* obj) :
-  Component(obj)
+Renderer3D::Renderer3D(Object* obj) : Component(obj)
 {
 }
 
 } // !namespace yaga
-

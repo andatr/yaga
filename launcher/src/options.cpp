@@ -1,28 +1,24 @@
 #include "precompiled.h"
 #include "options.h"
 
-namespace yaga
-{
+namespace yaga {
 
 namespace po = boost::program_options;
 namespace fs = boost::filesystem;
 
-namespace
-{
+namespace {
 
 // --------------------------------------------------------------------------------------------
 po::options_description makeOptions()
 {
   po::options_description desc("allowed arguments");
-  desc.add_options()
-    ("app,a", po::value<std::string>(), "path to app directory")
-    ("log,l", po::value<std::string>(), "log level: trace, debug, info, warning, error, fatal")
-  ;
+  desc.add_options()("app,a", po::value<std::string>(), "path to app directory")(
+    "log,l", po::value<std::string>(), "log level: trace, debug, info, warning, error, fatal");
   return desc;
 }
 
 // --------------------------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 const T& getOption(const po::variables_map& options, const std::string& name, const T& defaultVal)
 {
   if (options.count(name)) {
@@ -34,7 +30,7 @@ const T& getOption(const po::variables_map& options, const std::string& name, co
 } // !namespace
 
 // --------------------------------------------------------------------------------------------
-Options::Options(int argc, char *argv[])
+Options::Options(int argc, char* argv[])
 {
   po::variables_map options;
   po::store(po::command_line_parser(argc, argv).options(makeOptions()).run(), options);

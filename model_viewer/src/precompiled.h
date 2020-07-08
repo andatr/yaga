@@ -14,4 +14,3 @@
 #include "utility/log.h"
 
 #endif // !YAGA_MODEL_VIEWER_SRC_PRECOMPILED
-

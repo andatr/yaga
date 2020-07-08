@@ -4,18 +4,17 @@
 #include <memory>
 #include <typeindex>
 #include <unordered_map>
-
 #include <boost/noncopyable.hpp>
 
 #include "engine/component.h"
 
-namespace yaga
-{
+namespace yaga {
 
 class Object : private boost::noncopyable
 {
 public:
   typedef std::unordered_map<std::type_index, ComponentPtr> ComponentMap;
+
 public:
   explicit Object();
   virtual ~Object();
@@ -24,8 +23,9 @@ public:
   void addComponent(ComponentPtr component);
   void removeComponent(Component* component);
   const ComponentMap& components() const { return components_; }
-  template<typename T>
+  template <typename T>
   T* getComponent() const;
+
 protected:
   bool active_;
   ComponentMap components_;
@@ -34,7 +34,7 @@ protected:
 typedef std::unique_ptr<Object> ObjectPtr;
 
 // -------------------------------------------------------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 T* Object::getComponent() const
 {
   auto it = components_.find(typeid(T));

@@ -1,11 +1,10 @@
 #include "precompiled.h"
 #include "basic_game.h"
 
-#include "engine/application.h"
 #include "assets/scene.h"
+#include "engine/application.h"
 
-namespace yaga
-{
+namespace yaga {
 
 // -------------------------------------------------------------------------------------------------------------------------
 BasicGame::BasicGame(assets::SerializerPtr serializer, assets::StoragePtr storage) :
@@ -40,4 +39,3 @@ void BasicGame::shutdown()
 }
 
 } // !namespace yaga
-

@@ -1,10 +1,8 @@
 #include "precompiled.h"
 #include "assets/application.h"
 
-namespace yaga
-{
-namespace assets
-{
+namespace yaga {
+namespace assets {
 
 const SerializationInfo Application::serializationInfo = {
   (uint32_t)StandardAssetId::application,
@@ -14,9 +12,9 @@ const SerializationInfo Application::serializationInfo = {
 };
 
 // -------------------------------------------------------------------------------------------------------------------------
-Application::Application(const std::string& name) : 
-  Asset(name), fullscreen_(false), width_(0), height_(0),
-  maxTextureCount_(0), maxImageSize_(0), maxIndexCount_(0), maxVertexCount_(0)
+Application::Application(const std::string& name) :
+  Asset(name), fullscreen_(false), width_(0), height_(0), maxTextureCount_(0), maxImageSize_(0), maxIndexCount_(0),
+  maxVertexCount_(0)
 {
 }
 
@@ -55,4 +53,3 @@ ApplicationPtr Application::deserializeFriendly(const std::string& name, const s
 
 } // !namespace assets
 } // !namespace yaga
-

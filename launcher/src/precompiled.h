@@ -2,8 +2,8 @@
 #define YAGA_LAUNCHER_SRC_PRECOMPILED
 
 #include <iostream>
-#include <stdexcept>
 #include <sstream>
+#include <stdexcept>
 
 #include <boost/dll.hpp>
 #include <boost/filesystem.hpp>

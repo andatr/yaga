@@ -1,10 +1,8 @@
 #include "precompiled.h"
 #include "assets/material.h"
 
-namespace yaga
-{
-namespace assets
-{
+namespace yaga {
+namespace assets {
 
 const SerializationInfo Material::serializationInfo = {
   (uint32_t)StandardAssetId::material,
@@ -14,11 +12,10 @@ const SerializationInfo Material::serializationInfo = {
 };
 
 // -------------------------------------------------------------------------------------------------------------------------
-Material::Material(const std::string& name) :
-  Asset(name), vertShader_(nullptr), fragShader_(nullptr)
+Material::Material(const std::string& name) : Asset(name), vertShader_(nullptr), fragShader_(nullptr)
 {
 }
-  
+
 // -------------------------------------------------------------------------------------------------------------------------
 Material::~Material()
 {
@@ -79,4 +76,3 @@ MaterialPtr Material::deserializeFriendly(const std::string& name, const std::st
 
 } // !namespace assets
 } // !namespace yaga
-

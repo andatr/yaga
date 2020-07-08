@@ -3,17 +3,17 @@
 
 #include <memory>
 
-#include "component.h"
 #include "assets/mesh.h"
+#include "engine/component.h"
 
-namespace yaga
-{
+namespace yaga {
 
 class Mesh : public Component
 {
 public:
   explicit Mesh(Object* object, assets::Mesh* asset);
   virtual ~Mesh() {}
+
 protected:
   assets::Mesh* asset_;
 };

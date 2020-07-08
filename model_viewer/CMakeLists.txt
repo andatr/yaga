@@ -1,23 +1,23 @@
-file( GLOB_RECURSE source_list
+file(GLOB_RECURSE source_list
   "include/*.h"
   "src/*.h"
   "src/*.cpp"
 )
 
-if( MSVC )
-  assign_source_group( ${source_list} )
-  set_source_files_properties( src/precompiled.cpp PROPERTIES COMPILE_FLAGS "/Ycprecompiled.h" )
-endif( MSVC )
+if(MSVC)
+  assign_source_group(${source_list})
+  set_source_files_properties("src/precompiled.cpp" PROPERTIES COMPILE_FLAGS "/Ycprecompiled.h")
+endif(MSVC)
 
-add_library( model_viewer MODULE ${source_list} )
-set_target_properties( model_viewer PROPERTIES FOLDER app )
+add_library(model_viewer MODULE ${source_list})
+set_target_properties(model_viewer PROPERTIES FOLDER app)
 
-target_include_directories( model_viewer
+target_include_directories(model_viewer
   PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/include
 )
 
-target_link_libraries( model_viewer
+target_link_libraries(model_viewer
   PRIVATE
     engine
     utility

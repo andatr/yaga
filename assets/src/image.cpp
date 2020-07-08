@@ -4,10 +4,8 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-namespace yaga
-{
-namespace assets
-{
+namespace yaga {
+namespace assets {
 
 const SerializationInfo Image::serializationInfo = {
   (uint32_t)StandardAssetId::image,
@@ -17,8 +15,7 @@ const SerializationInfo Image::serializationInfo = {
 };
 
 // -------------------------------------------------------------------------------------------------------------------------
-Image::Image(const std::string& name) :
-  Asset(name), bytes_(nullptr), width_(0), height_(0), channels_(0), size_(0)
+Image::Image(const std::string& name) : Asset(name), bytes_(nullptr), width_(0), height_(0), channels_(0), size_(0)
 {
 }
 
@@ -31,7 +28,7 @@ Image::~Image()
 // -------------------------------------------------------------------------------------------------------------------------
 ImagePtr Image::deserializeBinary(const std::string&, std::istream&, size_t, RefResolver&)
 {
-  THROW_NOT_IMPLEMENTED; 
+  THROW_NOT_IMPLEMENTED;
 }
 
 // -------------------------------------------------------------------------------------------------------------------------

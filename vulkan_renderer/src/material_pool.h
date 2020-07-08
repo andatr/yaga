@@ -15,33 +15,34 @@
 #include "assets/shader.h"
 #include "utility/auto_destructor.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 class MaterialPool
 {
 public:
-  explicit MaterialPool(Device* device, Swapchain* swapchain, ImagePool* imagePool,
+  explicit MaterialPool(Device* device, Swapchain* swapchain, ImagePool* imagePool, 
     VkDescriptorPool descriptorPool, VkDescriptorSetLayout uniformLayout);
   void swapchain(Swapchain* swapchain);
   MaterialPtr createMaterial(Object* object, assets::Material* asset);
   void removeMaterial(Material* material);
   void clear();
-private:  
+
+private:
   void createDescriptorLayout();
   void createPipelineLayout();
   AutoDestructor<VkPipeline> createPipeline(assets::Shader* vertexShader, assets::Shader* fragmentShader);
   VkShaderModule createShader(assets::Shader* asset);
   std::vector<VkDescriptorSet> createDescriptorSets() const;
   void updateDescriptorSets(const std::vector<VkDescriptorSet>& descriptorSets, const std::vector<Image*>& images) const;
+
 private:
   struct MaterialCache
   {
     AutoDestructor<VkPipeline> pipeline;
     std::vector<VkDescriptorSet> descriptorSets;
   };
+
 private:
   VkDevice vkDevice_;
   Swapchain* swapchain_;

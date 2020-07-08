@@ -11,12 +11,9 @@
 #include <vk_mem_alloc.h>
 #pragma warning(pop)
 
-namespace yaga
-{
-namespace vk
-{
-namespace
-{
+namespace yaga {
+namespace vk {
+namespace {
 
 // const char* for compatibility with Valukan API
 // -------------------------------------------------------------------------------------------------------------------------
@@ -45,16 +42,13 @@ std::vector<const char*> getInstanceExtensions(VulkanExtensions& result)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VKAPI_ATTR VkBool32 VKAPI_CALL vulkanLog(
-  VkDebugUtilsMessageSeverityFlagBitsEXT severity,
-  VkDebugUtilsMessageTypeFlagsEXT /*type*/,
-  const VkDebugUtilsMessengerCallbackDataEXT* callbackData,
-  void* /*userData*/)
+VKAPI_ATTR VkBool32 VKAPI_CALL vulkanLog(VkDebugUtilsMessageSeverityFlagBitsEXT severity,
+  VkDebugUtilsMessageTypeFlagsEXT /*type*/, const VkDebugUtilsMessengerCallbackDataEXT* callbackData, void* /*userData*/)
 {
   if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT) {
     LOG(error) << "validation: " << callbackData->pMessage;
     return VK_FALSE;
-  } 
+  }
   if (severity & VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT) {
     LOG(warning) << "validation: " << callbackData->pMessage;
     return VK_FALSE;
@@ -74,15 +68,15 @@ VKAPI_ATTR VkBool32 VKAPI_CALL vulkanLog(
 // -------------------------------------------------------------------------------------------------------------------------
 VkDebugUtilsMessengerCreateInfoEXT getDebugMessengerCreateInfo()
 {
-  VkDebugUtilsMessengerCreateInfoEXT info {};
+  VkDebugUtilsMessengerCreateInfoEXT info{};
   info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
   info.messageSeverity =
-    VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT | 
-    VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT | 
+    VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
+    VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
     VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
   info.messageType =
-    VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT    |
-    VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+    VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT     |
+    VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT  |
     VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
   info.pfnUserCallback = vulkanLog;
   return info;
@@ -132,7 +126,7 @@ void Application::run()
   createSurface();
   device_ = std::make_unique<Device>(*instance_, *surface_, extensions);
   createAllocator();
-  VkExtent2D resolution { asset_->width(), asset_->height() };
+  VkExtent2D resolution{ asset_->width(), asset_->height() };
   swapchain_ = std::make_unique<Swapchain>(device_.get(), *allocator_, *surface_, resolution);
   renderingContext_ = std::make_unique<RenderingContext>(device_.get(), *allocator_, swapchain_.get(), asset_);
   renderer_ = std::make_unique<Renderer>(swapchain_.get(), renderingContext_.get());
@@ -163,7 +157,7 @@ void Application::createWindow()
 // -------------------------------------------------------------------------------------------------------------------------
 VulkanExtensions Application::createInstance(const std::string& appName)
 {
-  VkApplicationInfo appInfo {};
+  VkApplicationInfo appInfo{};
   appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
   appInfo.pApplicationName = appName.c_str();
   appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
@@ -171,7 +165,7 @@ VulkanExtensions Application::createInstance(const std::string& appName)
   appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
   appInfo.apiVersion = GetVulkanApiVersion();
 
-  VkInstanceCreateInfo createInfo {};
+  VkInstanceCreateInfo createInfo{};
   createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
   createInfo.pApplicationInfo = &appInfo;
   if (validationLayers.empty()) {
@@ -184,12 +178,12 @@ VulkanExtensions Application::createInstance(const std::string& appName)
     createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
   }
 
-  VulkanExtensions extensions {};
+  VulkanExtensions extensions{};
   auto extensionNames = getInstanceExtensions(extensions);
   createInfo.enabledExtensionCount = static_cast<uint32_t>(extensionNames.size());
   createInfo.ppEnabledExtensionNames = extensionNames.data();
-    
-  auto deleteInstance = [](auto inst){
+
+  auto deleteInstance = [](auto inst) {
     vkDestroyInstance(inst, nullptr);
     LOG(trace) << "Vulkan instance destroyed";
   };
@@ -217,7 +211,7 @@ void Application::createSurface()
 void Application::createAllocator()
 {
   const auto& extensions = device_->extensions();
-  VmaAllocatorCreateInfo info {};
+  VmaAllocatorCreateInfo info{};
   info.physicalDevice = device_->physical();
   info.device = **device_;
   info.instance = *instance_;
@@ -231,8 +225,8 @@ void Application::createAllocator()
   if (extensions.EXT_memoryBudget && extensions.KHR_getPhysicalDeviceProperties2) {
     info.flags |= VMA_ALLOCATOR_CREATE_EXT_MEMORY_BUDGET_BIT;
   }
-  //TODO: check
-  //if (extensions.AMD_deviceCoherentMemory ) {
+  // TODO: check
+  // if (extensions.AMD_deviceCoherentMemory) {
   //  info.flags |= VMA_ALLOCATOR_CREATE_AMD_DEVICE_COHERENT_MEMORY_BIT;
   //}
   auto destroyAllocator = [](VmaAllocator allocator) {
@@ -284,7 +278,7 @@ void Application::checkValidationLayers() const
 
   // check that available layers contain requiered validationLayers
   for (const auto& layer : validationLayers) {
-    VkLayerProperties props {};
+    VkLayerProperties props{};
     strncpy(props.layerName, layer, VK_MAX_EXTENSION_NAME_SIZE);
     if (!std::binary_search(availableLayers.begin(), availableLayers.end(), props, compareLayers)) {
       THROW("Requested validation layer is not available");

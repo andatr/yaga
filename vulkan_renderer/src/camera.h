@@ -8,14 +8,13 @@
 #include "uniform.h"
 #include "engine/camera.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 class Camera : public yaga::Camera
 {
-friend class CameraPool;
+  friend class CameraPool;
+
 public:
   struct Frame
   {
@@ -25,13 +24,16 @@ public:
     bool dirty;
   };
   typedef yaga::Camera Parent;
+
 public:
   explicit Camera(Object* obj, assets::Camera* asset, CameraPool* pool, uint32_t frames);
   virtual ~Camera();
   Frame& frame(uint32_t index) { return frames_[index]; }
+
 private:
   void updateView() override;
   void onAssetUpdated(assets::CameraProperty prop) override;
+
 private:
   CameraPool* pool_;
   UniformObject uniform_;

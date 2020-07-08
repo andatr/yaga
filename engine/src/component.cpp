@@ -1,14 +1,11 @@
 #include "precompiled.h"
 #include "component.h"
 
-namespace yaga
-{
+namespace yaga {
 
 // -------------------------------------------------------------------------------------------------------------------------
-Component::Component(Object* obj) :
-  object_(obj)
+Component::Component(Object* obj) : object_(obj)
 {
 }
 
 } // !namespace yaga
-

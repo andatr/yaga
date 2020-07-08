@@ -3,8 +3,7 @@
 
 #include "assets/glm.h"
 
-namespace yaga
-{
+namespace yaga {
 
 struct Vertex
 {

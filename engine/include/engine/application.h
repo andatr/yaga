@@ -4,15 +4,13 @@
 #include <map>
 #include <memory>
 #include <string>
-
 #include <boost/noncopyable.hpp>
 
 #include "assets/application.h"
 #include "engine/game.h"
 #include "engine/rendering_context.h"
 
-namespace yaga
-{
+namespace yaga {
 
 class Application : private boost::noncopyable
 {
@@ -21,6 +19,7 @@ public:
   virtual ~Application();
   virtual void run() = 0;
   virtual RenderingContext* renderingContext() = 0;
+
 protected:
   GamePtr game_;
 };

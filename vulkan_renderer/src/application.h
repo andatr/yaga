@@ -6,7 +6,6 @@
 #include <string>
 #include <thread>
 #include <vector>
-
 #include <boost/dll/alias.hpp>
 
 #include "device.h"
@@ -15,14 +14,12 @@
 #include "rendering_context.h"
 #include "swapchain.h"
 #include "vulkan.h"
-#include "engine/application.h"
 #include "assets/application.h"
+#include "engine/application.h"
 #include "utility/auto_destructor.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 class Application : public yaga::Application
 {
@@ -33,11 +30,13 @@ public:
     InitGLFW();
     ~InitGLFW();
   };
+
 public:
   explicit Application(GamePtr game, const assets::Application* asset);
   virtual ~Application();
   void run() override;
   RenderingContext* renderingContext() override { return renderingContext_.get(); }
+
 private:
   static void resizeCallback(GLFWwindow* window, int width, int height);
   void createWindow();
@@ -51,6 +50,7 @@ private:
   void gameLoop();
   void drawFrame();
   VkExtent2D getWindowSize() const;
+
 private:
   static InitGLFW initGLFW_;
   const assets::Application* asset_;

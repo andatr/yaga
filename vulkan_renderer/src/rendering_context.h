@@ -17,10 +17,8 @@
 #include "engine/rendering_context.h"
 #include "utility/auto_destructor.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 class RenderingContext : public yaga::RenderingContext
 {
@@ -39,8 +37,10 @@ public:
   void mainCamera(Camera* camera) { cameraPool_->mainCamera(camera); }
   glm::uvec2 resolution() override { return resolution_; }
   void update(uint32_t frame);
+
 private:
   void createDescriptorPool(uint32_t maxTextures);
+
 private:
   VkDevice vkDevice_;
   VmaAllocator allocator_;

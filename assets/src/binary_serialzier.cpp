@@ -1,10 +1,8 @@
 #include "precompiled.h"
 #include "assets/binary_serializer.h"
 
-namespace yaga
-{
-namespace assets
-{
+namespace yaga {
+namespace assets {
 
 namespace endian = boost::endian;
 
@@ -31,4 +29,3 @@ AssetPtr BinarySerializer::deserialize(const std::string&, RefResolver&)
 
 } // !namespace assets
 } // !namespace yaga
-

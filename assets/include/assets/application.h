@@ -1,18 +1,16 @@
 #ifndef YAGA_ASSETS_APPLICATION
 #define YAGA_ASSETS_APPLICATION
 
-#include <memory>
 #include <istream>
+#include <memory>
 #include <string>
 
 #include "assets/asset.h"
 #include "assets/serializer.h"
 #include "utility/array.h"
 
-namespace yaga
-{
-namespace assets
-{
+namespace yaga {
+namespace assets {
 
 class Application;
 typedef std::unique_ptr<Application> ApplicationPtr;
@@ -32,11 +30,12 @@ public:
   uint64_t maxImageSize() const { return maxImageSize_; }
   uint32_t maxIndexCount() const { return maxIndexCount_; }
   uint32_t maxVertexCount() const { return maxVertexCount_; }
+
 public:
   static const SerializationInfo serializationInfo;
-  static ApplicationPtr deserializeBinary(const std::string& name, std::istream& stream,
-    size_t size, RefResolver& resolver);
+  static ApplicationPtr deserializeBinary(const std::string& name, std::istream& stream, size_t size, RefResolver& resolver);
   static ApplicationPtr deserializeFriendly(const std::string& name, const std::string& path, RefResolver& resolver);
+
 private:
   std::string rendererLibPath_;
   std::string gameLibPath_;

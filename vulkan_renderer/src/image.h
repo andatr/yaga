@@ -2,16 +2,13 @@
 #define YAGA_VULKAN_RENDERER_SRC_IMAGE
 
 #include <memory>
-
 #include <boost/noncopyable.hpp>
 
 #include "device.h"
 #include "vulkan.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 class Image : private boost::noncopyable
 {
@@ -24,6 +21,7 @@ public:
   VkImage operator*() const { return image_; }
   VkImageView view() const { return imageView_; }
   const VmaAllocationInfo& memory() const { return memory_; }
+
 private:
   VkDevice vkDevice_;
   VmaAllocator allocator_;

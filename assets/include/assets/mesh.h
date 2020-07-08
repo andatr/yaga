@@ -2,21 +2,19 @@
 #define YAGA_ASSETS_MESH
 
 #include <functional>
-#include <memory>
 #include <istream>
+#include <memory>
 #include <ostream>
 #include <vector>
 
-#include "assets/vertex.h"
 #include "assets/asset.h"
 #include "assets/serializer.h"
+#include "assets/vertex.h"
 #include "utility/array.h"
 #include "utility/update_notifier.h"
 
-namespace yaga
-{
-namespace assets
-{
+namespace yaga {
+namespace assets {
 
 class Mesh;
 typedef std::unique_ptr<Mesh> MeshPtr;
@@ -27,13 +25,16 @@ enum class MeshProperty
   indices
 };
 
-class Mesh : public Asset, public UpdateNotifier<MeshProperty>
+class Mesh
+  : public Asset
+  , public UpdateNotifier<MeshProperty>
 {
 public:
   typedef std::vector<Vertex> Vertices;
   typedef std::vector<uint32_t> Indices;
   typedef std::function<void(Vertices&)> VertexUpdater;
   typedef std::function<void(Indices&)> IndexUpdater;
+
 public:
   explicit Mesh(const std::string& name);
   virtual ~Mesh();
@@ -43,11 +44,12 @@ public:
   const Indices& indices() const { return indices_; }
   void indices(const Indices& indices);
   void indices(IndexUpdater handler);
+
 public:
   static const SerializationInfo serializationInfo;
-  static MeshPtr deserializeBinary(const std::string& name, std::istream& stream,
-    size_t size, RefResolver& resolver);
+  static MeshPtr deserializeBinary(const std::string& name, std::istream& stream, size_t size, RefResolver& resolver);
   static MeshPtr deserializeFriendly(const std::string& name, const std::string& path, RefResolver& resolver);
+
 private:
   Vertices vertices_;
   Indices indices_;

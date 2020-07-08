@@ -2,22 +2,21 @@
 #define YAGA_LAUNCHER_SRC_OPTIONS
 
 #include <string>
-
 #include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
 
 #include "utility/log.h"
 
-namespace yaga
-{
+namespace yaga {
 
 class Options
 {
 public:
-  explicit Options(int argc, char *argv[]);
+  explicit Options(int argc, char* argv[]);
   const boost::filesystem::path& workingDir() const { return workingDir_; }
   const boost::filesystem::path& appPath() const { return appPath_; }
   boost::optional<log::Severity> logSeverity() const { return severity_; }
+
 private:
   boost::filesystem::path workingDir_;
   boost::filesystem::path appPath_;

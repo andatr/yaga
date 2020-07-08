@@ -1,10 +1,8 @@
 #include "precompiled.h"
 #include "log.h"
 
-namespace yaga
-{
-namespace log
-{
+namespace yaga {
+namespace log {
 
 namespace attrs = boost::log::attributes;
 namespace logging = boost::log;
@@ -28,14 +26,10 @@ void yagaFormatter(logging::record_view const& rec, logging::formatting_ostream&
   const auto& severity = rec.attribute_values()[a_severity].extract<Severity>().get();
   const auto& file = rec.attribute_values()[a_file];
   const auto& line = rec.attribute_values()[a_line];
-  if (format & format::time)
-    strm << time << " ";
-  if (format & format::severity)
-    strm << severity << " ";
-  if (format & format::file)
-    strm << file << " ";
-  if (format & format::line)
-    strm << line << " ";
+  if (format & format::time) strm << time << " ";
+  if (format & format::severity) strm << severity << " ";
+  if (format & format::file) strm << file << " ";
+  if (format & format::line) strm << line << " ";
   strm << rec[logging::expressions::smessage];
 }
 
@@ -58,13 +52,14 @@ Severity severityFromString(std::string str)
   using namespace logging::trivial;
 
   boost::algorithm::to_lower(str);
-#define SEVERITY_FROM_STR(str, severity) if (str == #severity) return severity; 
-    SEVERITY_FROM_STR(str, trace)
-    SEVERITY_FROM_STR(str, debug)
-    SEVERITY_FROM_STR(str, info)
-    SEVERITY_FROM_STR(str, warning)
-    SEVERITY_FROM_STR(str, error)
-    SEVERITY_FROM_STR(str, fatal)
+#define SEVERITY_FROM_STR(str, severity)                                                                                       \
+  if (str == #severity) return severity;
+  SEVERITY_FROM_STR(str, trace)
+  SEVERITY_FROM_STR(str, debug)
+  SEVERITY_FROM_STR(str, info)
+  SEVERITY_FROM_STR(str, warning)
+  SEVERITY_FROM_STR(str, error)
+  SEVERITY_FROM_STR(str, fatal)
 #undef SEVERITY_FROM_STR
   THROW("unknown log severity level");
 }

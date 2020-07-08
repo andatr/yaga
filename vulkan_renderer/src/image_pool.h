@@ -11,10 +11,8 @@
 #include "assets/texture.h"
 #include "utility/auto_destructor.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 class ImagePool
 {
@@ -22,9 +20,11 @@ public:
   explicit ImagePool(Device* device, VmaAllocator allocator, VkDeviceSize maxImageSize);
   Image* createImage(assets::Texture* asset);
   void clear() { images_.clear(); }
+
 private:
   void createStageBuffer(VkDeviceSize size);
   void createSampler();
+
 private:
   Device* device_;
   VkDevice vkDevice_;

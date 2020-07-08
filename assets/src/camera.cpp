@@ -1,10 +1,8 @@
 #include "precompiled.h"
 #include "assets/camera.h"
 
-namespace yaga
-{
-namespace assets
-{
+namespace yaga {
+namespace assets {
 
 const SerializationInfo Camera::serializationInfo = {
   (uint32_t)StandardAssetId::camera,
@@ -14,13 +12,12 @@ const SerializationInfo Camera::serializationInfo = {
 };
 
 // -------------------------------------------------------------------------------------------------------------------------
-Camera::Camera(const std::string& name) :
-  Asset(name), projection_{}, lookAt_(1.0f, 0.0f, 0.0f)
+Camera::Camera(const std::string& name) : Asset(name), projection_{}, lookAt_(1.0f, 0.0f, 0.0f)
 {
   projection_ = glm::perspective(glm::radians(45.0f), 4.0f / 3.0f, 0.1f, 100.0f);
   projection_[1][1] *= -1;
 }
-  
+
 // -------------------------------------------------------------------------------------------------------------------------
 Camera::~Camera()
 {

@@ -2,7 +2,6 @@
 #define YAGA_MODEL_VIEWER_SRC_MODEL_VIEWER
 
 #include <memory>
-
 #include <boost/dll/alias.hpp>
 
 #include "engine/basic_game.h"
@@ -10,21 +9,23 @@
 #include "engine/game.h"
 #include "engine/object.h"
 
-namespace yaga
-{
+namespace yaga {
 
 class ModelViewer : public BasicGame
 {
 public:
   ModelViewer(assets::SerializerPtr serializer, assets::StoragePtr storage);
   virtual ~ModelViewer();
+
 protected:
   void init(Application* app) override;
   void resize() override;
-  void loop(float delta) override;  
+  void loop(float delta) override;
   void shutdown() override;
+
 private:
   typedef BasicGame base;
+
 private:
   std::vector<ObjectPtr> objects_;
   Camera* camera_;

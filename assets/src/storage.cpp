@@ -1,10 +1,8 @@
 #include "precompiled.h"
 #include "assets/storage.h"
 
-namespace yaga
-{
-namespace assets
-{
+namespace yaga {
+namespace assets {
 
 // -------------------------------------------------------------------------------------------------------------------------
 Asset* Storage::get(const std::string& name) const
@@ -30,8 +28,9 @@ Asset* Storage::tryGet(const std::string& name) const
 void Storage::put(AssetPtr asset)
 {
   auto it = assets_.find(asset->name());
-  if (it != assets_.end())
+  if (it != assets_.end()) {
     THROW("Asset with name \"%1%\" already exists", asset->name());
+  }
   assets_[asset->name()] = std::move(asset);
 }
 
@@ -49,4 +48,3 @@ void Storage::remove(const std::string& name)
 
 } // !namespace assets
 } // !namespace yaga
-

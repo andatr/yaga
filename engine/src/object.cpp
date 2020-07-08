@@ -1,13 +1,11 @@
 #include "precompiled.h"
 #include "object.h"
 
-namespace yaga
-{
+namespace yaga {
 
 // ------------------------------------------------------------------------------------------------------------------------
-Object::Object() :
-  active_(true)
-{    
+Object::Object() : active_(true)
+{
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -48,4 +46,3 @@ void Object::removeComponent(Component* component)
 }
 
 } // !namespace yaga
-

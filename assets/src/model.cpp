@@ -2,10 +2,8 @@
 #include "assets/model.h"
 #include "assets/serializer.h"
 
-namespace yaga
-{
-namespace assets
-{
+namespace yaga {
+namespace assets {
 
 const SerializationInfo Model::serializationInfo = {
   (uint32_t)StandardAssetId::model,
@@ -15,8 +13,7 @@ const SerializationInfo Model::serializationInfo = {
 };
 
 // -------------------------------------------------------------------------------------------------------------------------
-Model::Model(const std::string& name) :
-  Asset(name), material_(nullptr), mesh_(nullptr)
+Model::Model(const std::string& name) : Asset(name), material_(nullptr), mesh_(nullptr)
 {
 }
 

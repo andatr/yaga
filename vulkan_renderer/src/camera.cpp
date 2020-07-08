@@ -2,10 +2,8 @@
 #include "camera.h"
 #include "camera_pool.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 // -------------------------------------------------------------------------------------------------------------------------
 Camera::Camera(Object* obj, assets::Camera* asset, CameraPool* pool, uint32_t frames) :

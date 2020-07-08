@@ -7,22 +7,24 @@
 
 #pragma warning(push, 0)
 
-#include <GLFW/glfw3.h>
 #include <vk_mem_alloc.h>
+#include <GLFW/glfw3.h>
 
 #pragma warning(pop)
 
-#define GET_EXT_PROC_ADDRESS(instance, proc) [](auto inst) { \
-  auto result = (PFN_##proc)vkGetInstanceProcAddr(inst, #proc); \
-  if (result == nullptr) THROW("Could not get proc address of " #proc); \
-  return result; \
-} (instance);
+#define GET_EXT_PROC_ADDRESS(instance, proc)                                                                                   \
+  [](auto inst) {                                                                                                              \
+    auto result = (PFN_##proc)vkGetInstanceProcAddr(inst, #proc);                                                              \
+    if (result == nullptr) THROW("Could not get proc address of " #proc);                                                      \
+    return result;                                                                                                             \
+  }(instance);
 
-#define VULKAN_GUARD(func, msg) { \
-  if ((func) != VK_SUCCESS) { \
-    THROW((msg)); \
-  } \
-}
+#define VULKAN_GUARD(func, msg)                                                                                                \
+  {                                                                                                                            \
+    if ((func) != VK_SUCCESS) {                                                                                                \
+      THROW((msg));                                                                                                            \
+    }                                                                                                                          \
+  }
 
 #ifndef VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME
 #define VK_KHR_GET_MEMORY_REQUIREMENTS_2_EXTENSION_NAME "VK_KHR_get_memory_requirements2"
@@ -52,10 +54,8 @@
 #define VK_KHR_GET_PHYSICAL_DEVICE_PROPERTIES_2_EXTENSION_NAME "VK_KHR_get_physical_device_properties2"
 #endif
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 constexpr uint32_t GetVulkanApiVersion()
 {
@@ -73,8 +73,7 @@ constexpr uint32_t GetVulkanApiVersion()
 
 const std::vector<const char*> validationLayers = {
 #ifndef NDEBUG
-  "VK_LAYER_KHRONOS_validation",
-  "VK_LAYER_LUNARG_standard_validation"
+  "VK_LAYER_KHRONOS_validation", "VK_LAYER_LUNARG_standard_validation"
 #endif // !NDEBUG
 };
 

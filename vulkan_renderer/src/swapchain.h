@@ -2,7 +2,6 @@
 #define YAGA_VULKAN_RENDERER_SRC_VIDEO_BUFFER
 
 #include <vector>
-
 #include <boost/noncopyable.hpp>
 
 #include "device.h"
@@ -10,10 +9,8 @@
 #include "vulkan.h"
 #include "utility/auto_destructor.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 class Swapchain : private boost::noncopyable
 {
@@ -25,11 +22,13 @@ public:
   VkSampleCountFlagBits msaa() const { return msaa_; }
   VkRenderPass renderPass() const { return *renderPass_; }
   const std::vector<VkFramebuffer>& frameBuffers() const { return frameBufferRefs_; }
+
 private:
   VkFormat createSwapchain(VkSurfaceKHR surface, VkExtent2D resolution);
   void createFrameImages(VkFormat format);
   void createRenderPass(VkFormat format);
   void createFramebuffers();
+
 private:
   Device* device_;
   VkDevice vkDevice_;

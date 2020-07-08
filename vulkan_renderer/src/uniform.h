@@ -7,10 +7,8 @@
 #include "buffer.h"
 #include "engine/camera.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 struct UniformObject
 {

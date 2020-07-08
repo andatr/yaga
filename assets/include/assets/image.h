@@ -1,16 +1,14 @@
 #ifndef YAGA_ASSETS_IMAGE
 #define YAGA_ASSETS_IMAGE
 
-#include <memory>
 #include <istream>
+#include <memory>
 
 #include "assets/asset.h"
 #include "assets/serializer.h"
 
-namespace yaga
-{
-namespace assets
-{
+namespace yaga {
+namespace assets {
 
 class Image;
 typedef std::unique_ptr<Image> ImagePtr;
@@ -25,11 +23,12 @@ public:
   int channels() const { return channels_; }
   size_t size() const { return size_; }
   const char* data() const { return bytes_; }
+
 public:
   static const SerializationInfo serializationInfo;
-  static ImagePtr deserializeBinary(const std::string& name, std::istream& stream,
-    size_t size, RefResolver& resolver);
+  static ImagePtr deserializeBinary(const std::string& name, std::istream& stream, size_t size, RefResolver& resolver);
   static ImagePtr deserializeFriendly(const std::string& name, const std::string& path, RefResolver& resolver);
+
 private:
   char* bytes_;
   int width_;

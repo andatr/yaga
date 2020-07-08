@@ -3,14 +3,14 @@
 
 #include <type_traits>
 
-namespace yaga
-{
+namespace yaga {
 
-template<typename T>
+template <typename T>
 class Array
 {
 public:
   static_assert(std::is_pod<T>::value, "yaga::Array<T>: T must be POD");
+
 public:
   explicit Array(size_t size = 0);
   void resize(size_t size);
@@ -18,8 +18,10 @@ public:
   T* data() const { return data_.get(); }
   T& operator[](size_t i) { return data_.get()[i]; }
   size_t size() const { return size_; }
+
 private:
   static void free(const T* p);
+
 private:
   size_t size_;
   std::shared_ptr<T> data_;
@@ -28,13 +30,12 @@ private:
 typedef Array<char> ByteArray;
 
 // -------------------------------------------------------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 Array<T>::Array(size_t size) : size_(size), data_(size > 0 ? new T[size] : nullptr, Array::free)
-{
-}
+{}
 
 // -------------------------------------------------------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 void Array<T>::resize(size_t size)
 {
   auto newData = std::shared_ptr<T>(size > 0 ? new T[size] : nullptr, Array::free);
@@ -46,7 +47,7 @@ void Array<T>::resize(size_t size)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 void Array<T>::free(const T* p)
 {
   delete[] p;

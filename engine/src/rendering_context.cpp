@@ -1,8 +1,7 @@
 #include "precompiled.h"
 #include "rendering_context.h"
 
-namespace yaga
-{
+namespace yaga {
 
 TransformPtr RenderingContext::createTransform(Object* object)
 {
@@ -10,4 +9,3 @@ TransformPtr RenderingContext::createTransform(Object* object)
 }
 
 } // !namespace yaga
-

@@ -11,10 +11,8 @@
 #include "vulkan.h"
 #include "utility/auto_destructor.h"
 
-namespace yaga
-{
-namespace vk
-{
+namespace yaga {
+namespace vk {
 
 class Material;
 
@@ -24,8 +22,10 @@ public:
   explicit Renderer(Swapchain* swapchain, RenderingContext* context);
   void swapchain(Swapchain* swapchain) { swapchain_ = swapchain; }
   void render(uint32_t frame) const;
-private:  
+
+private:
   static void renderObject(Camera* camera, Renderer3D* object, VkCommandBuffer command, uint32_t frame);
+
 private:
   Swapchain* swapchain_;
   RenderingContext* context_;

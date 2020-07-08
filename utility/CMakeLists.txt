@@ -1,18 +1,18 @@
-file( GLOB_RECURSE source_list
+file(GLOB_RECURSE source_list
   "include/*.h"
   "src/*.h"
   "src/*.cpp"
 )
 
-if( MSVC )
-  assign_source_group( ${source_list} )
-  set_source_files_properties( src/precompiled.cpp PROPERTIES COMPILE_FLAGS "/Ycprecompiled.h" )
-endif( MSVC )
+if(MSVC)
+  assign_source_group(${source_list})
+  set_source_files_properties("src/precompiled.cpp" PROPERTIES COMPILE_FLAGS "/Ycprecompiled.h")
+endif(MSVC)
 
-add_library( utility ${source_list} )
-set_target_properties( utility PROPERTIES FOLDER lib )
+add_library(utility ${source_list})
+set_target_properties(utility PROPERTIES FOLDER lib)
 
-target_include_directories( utility
+target_include_directories(utility
   PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/include
   PRIVATE
@@ -20,7 +20,7 @@ target_include_directories( utility
     ${CMAKE_CURRENT_LIST_DIR}/src
 )
 
-target_link_libraries( utility
+target_link_libraries(utility
   PUBLIC
     Boost::boost
     Boost::filesystem
@@ -28,4 +28,4 @@ target_link_libraries( utility
     Boost::log_setup
 )
 
-add_subdirectory( test )
+add_subdirectory(test)

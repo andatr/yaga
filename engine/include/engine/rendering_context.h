@@ -3,15 +3,14 @@
 
 #include <boost/noncopyable.hpp>
 
-#include "camera.h"
-#include "material.h"
-#include "mesh.h"
-#include "renderer3d.h"
-#include "transform.h"
+#include "engine/camera.h"
 #include "engine/glm.h"
+#include "engine/material.h"
+#include "engine/mesh.h"
+#include "engine/renderer3d.h"
+#include "engine/transform.h"
 
-namespace yaga
-{
+namespace yaga {
 
 class RenderingContext : private boost::noncopyable
 {

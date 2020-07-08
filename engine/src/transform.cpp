@@ -1,19 +1,17 @@
 #include "precompiled.h"
 #include "transform.h"
 
-namespace yaga
-{
+namespace yaga {
 
 // -------------------------------------------------------------------------------------------------------------------------
-Transform::Transform(Object* obj) :
-  Component(obj), world_(1.0f), local_(1.0f), parent_(nullptr)
+Transform::Transform(Object* obj) : Component(obj), world_(1.0f), local_(1.0f), parent_(nullptr)
 {
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
 Transform::~Transform()
 {
-  for(const auto& child : children_) {
+  for (const auto& child : children_) {
     child->parent(nullptr);
   }
   if (parent_) {
@@ -50,12 +48,10 @@ void Transform::updateWorld()
 {
   if (parent_) {
     world_ = local_ * parent_->world();
-  }
-  else {
+  } else {
     world_ = local_;
   }
   fireUpdate(worldProperty);
 }
 
 } // !namespace yaga
-

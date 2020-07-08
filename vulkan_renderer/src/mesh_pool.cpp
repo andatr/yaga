@@ -1,17 +1,14 @@
 #include "precompiled.h"
 #include "mesh_pool.h"
 
-namespace yaga
-{
-namespace vk
-{
-namespace
-{
+namespace yaga {
+namespace vk {
+namespace {
 
 // -------------------------------------------------------------------------------------------------------------------------
 void copyBuffer(VkBuffer source, VkBuffer destination, VkDeviceSize size, VkCommandBuffer command)
 {
-  VkBufferCopy copyRegion {};
+  VkBufferCopy copyRegion{};
   copyRegion.size = size;
   vkCmdCopyBuffer(command, source, destination, 1, &copyRegion);
 }
@@ -54,15 +51,15 @@ MeshPtr MeshPool::createMesh(Object* object, assets::Mesh* asset)
 {
   auto it = meshCache_.find(asset);
   if (it != meshCache_.end()) {
-    auto mesh = std::make_unique<Mesh>(object, asset, this, **it->second.vertexBuffer, **it->second.indexBuffer,
-      it->second.indexCount);
+    auto mesh =
+      std::make_unique<Mesh>(object, asset, this, **it->second.vertexBuffer, **it->second.indexBuffer, it->second.indexCount);
     meshes_.insert(mesh.get());
     return mesh;
   }
 
   auto indexCount = static_cast<uint32_t>(asset->indices().size());
   auto verticesSize = static_cast<VkDeviceSize>(sizeof(asset->vertices()[0]) * asset->vertices().size());
-  auto indicesSize = static_cast<VkDeviceSize>(sizeof(asset->indices()[0])  * indexCount);
+  auto indicesSize = static_cast<VkDeviceSize>(sizeof(asset->indices()[0]) * indexCount);
   if (indexCount > maxIndexCount_) THROW("mesh exceed max index count");
   if (asset->vertices().size() > maxVertexCount_) THROW("mesh exceed max vertex count");
 
@@ -75,13 +72,13 @@ MeshPtr MeshPool::createMesh(Object* object, assets::Mesh* asset)
   memcpy(mappedData, asset->indices().data(), indicesSize);
   vmaUnmapMemory(allocator_, stageIndexBuffer_->allocation());
 
-  VkBufferCreateInfo info {};
+  VkBufferCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   info.size = verticesSize;
   info.usage = VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
   info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  VmaAllocationCreateInfo allocInfo {};
+  VmaAllocationCreateInfo allocInfo{};
   allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
   allocInfo.flags = 0;
 
@@ -91,11 +88,10 @@ MeshPtr MeshPool::createMesh(Object* object, assets::Mesh* asset)
   auto indexBuffer = std::make_unique<Buffer>(allocator_, info, allocInfo);
 
   auto mesh = std::make_unique<Mesh>(object, asset, this, **vertexBuffer, **indexBuffer, indexCount);
-  device_->submitCommand([stageVertex = **stageVertexBuffer_, stageIndex = **stageIndexBuffer_,
-    verticesSize, indicesSize, mesh = mesh.get()](auto command)
-  {
+  device_->submitCommand([stageVertex = **stageVertexBuffer_, stageIndex = **stageIndexBuffer_, verticesSize, indicesSize,
+                           mesh = mesh.get()](auto command) {
     copyBuffer(stageVertex, mesh->vertexBuffer(), verticesSize, command);
-    copyBuffer(stageIndex,  mesh->indexBuffer(), indicesSize, command);
+    copyBuffer(stageIndex, mesh->indexBuffer(), indicesSize, command);
   });
 
   MeshCache cache;
@@ -111,13 +107,13 @@ MeshPtr MeshPool::createMesh(Object* object, assets::Mesh* asset)
 // -------------------------------------------------------------------------------------------------------------------------
 void MeshPool::createStageBuffers(uint32_t maxVertexCount, uint32_t maxIndexCount)
 {
-  VkBufferCreateInfo info {};
+  VkBufferCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
   info.size = sizeof(Vertex) * maxVertexCount;
   info.usage = VK_BUFFER_USAGE_TRANSFER_SRC_BIT;
   info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-  VmaAllocationCreateInfo allocInfo {};
+  VmaAllocationCreateInfo allocInfo{};
   allocInfo.usage = VMA_MEMORY_USAGE_CPU_ONLY;
   allocInfo.flags = VMA_ALLOCATION_CREATE_MAPPED_BIT;
 

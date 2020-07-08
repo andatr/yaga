@@ -2,8 +2,8 @@
 #define YAGA_UTILITY_SRC_PRECOMPILED
 
 #include <chrono>
-#include <iostream>
 #include <fstream>
+#include <iostream>
 #include <memory>
 
 #include <boost/algorithm/string.hpp>
@@ -12,4 +12,3 @@
 #include <boost/signals2.hpp>
 
 #endif // !YAGA_UTILITY_SRC_PRECOMPILED
-
