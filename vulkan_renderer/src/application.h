@@ -9,6 +9,8 @@
 #include <boost/dll/alias.hpp>
 
 #include "device.h"
+#include "event_dispatcher.h"
+#include "input.h"
 #include "presenter.h"
 #include "renderer.h"
 #include "rendering_context.h"
@@ -36,9 +38,10 @@ public:
   virtual ~Application();
   void run() override;
   RenderingContext* renderingContext() override { return renderingContext_.get(); }
+  Input* input() override { return input_.get(); }
 
 private:
-  static void resizeCallback(GLFWwindow* window, int width, int height);
+  
   void createWindow();
   VulkanExtensions createInstance(const std::string& appName);
   void createSurface();
@@ -50,11 +53,14 @@ private:
   void gameLoop();
   void drawFrame();
   VkExtent2D getWindowSize() const;
+  void onResize(int width, int height);
 
 private:
   static InitGLFW initGLFW_;
   const assets::Application* asset_;
   AutoDestructor<GLFWwindow*> window_;
+  EventDispatcherPtr eventDispatcher_;
+  InputPtr input_;
   AutoDestructor<VkInstance> instance_;
   AutoDestructor<VkDebugUtilsMessengerEXT> debugMessenger_;
   AutoDestructor<VkSurfaceKHR> surface_;
@@ -67,12 +73,14 @@ private:
   std::atomic_bool minimised_;
   std::atomic_bool resized_;
   std::chrono::high_resolution_clock::time_point startTime_;
+  EventDispatcher::Connection resizeConnection_;
 };
 
 ApplicationPtr createApplication(GamePtr game, const assets::Application* asset);
-BOOST_DLL_ALIAS(yaga::vk::createApplication, createApplication)
 
 } // !namespace vk
 } // !namespace yaga
+
+BOOST_DLL_ALIAS(yaga::vk::createApplication, createApplication)
 
 #endif // !YAGA_VULKAN_RENDERER_SRC_APPLICATION_IMPL

@@ -8,6 +8,7 @@
 
 #include "assets/application.h"
 #include "engine/game.h"
+#include "engine/input.h"
 #include "engine/rendering_context.h"
 
 namespace yaga {
@@ -19,6 +20,7 @@ public:
   virtual ~Application();
   virtual void run() = 0;
   virtual RenderingContext* renderingContext() = 0;
+  virtual Input* input() = 0;
 
 protected:
   GamePtr game_;

@@ -18,7 +18,10 @@
 
 #include <vk_mem_alloc.h>
 #include <GLFW/glfw3.h>
+
 #include <boost/optional.hpp>
+#include <boost/signals2.hpp>
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 

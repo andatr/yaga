@@ -26,8 +26,9 @@ private:
 typedef std::unique_ptr<TubeRace> TubeRacePtr;
 
 GamePtr createGame(assets::SerializerPtr serializer, assets::StoragePtr storage);
-BOOST_DLL_ALIAS(yaga::createGame, createGame)
 
 } // !namespace yaga
+
+BOOST_DLL_ALIAS(yaga::createGame, createGame)
 
 #endif // !YAGA_TUBE_RACE_SRC_RACE_GAME

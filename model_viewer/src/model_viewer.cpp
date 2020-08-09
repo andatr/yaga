@@ -74,7 +74,7 @@ void ModelViewer::loop(float delta)
 {
   base::loop(delta);
 
-  static auto startTime = std::chrono::high_resolution_clock::now();
+  /*static auto startTime = std::chrono::high_resolution_clock::now();
   auto currentTime = std::chrono::high_resolution_clock::now();
   float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
 
@@ -89,7 +89,27 @@ void ModelViewer::loop(float delta)
   auto cameraAsset = persistentAssets_->get<assets::Camera>("camera");
   cameraAsset->projection(projection);
 
-  objectPosition_->local(glm::rotate(glm::mat4(1.0f), glm::radians(90.0f) * time, glm::vec3(0.0f, 0.0f, 1.0f)));
+  objectPosition_->local(glm::rotate(glm::mat4(1.0f), glm::radians(90.0f) * time, glm::vec3(0.0f, 0.0f, 1.0f)));*/
+
+
+  auto pos = objectPosition_->local();
+  auto input = app_->input()->getState();
+  if (input.keys[keys::w].pressed) {
+    pos = glm::translate(pos, glm::vec3(0.001f * delta, 0.0f, 0.0f));
+  }
+  if (input.keys[keys::s].pressed) {
+    pos = glm::translate(pos, glm::vec3(-0.001f * delta, 0.0f, 0.0f));
+  }
+  if (input.keys[keys::a].pressed) {
+    pos = glm::translate(pos, glm::vec3(0.0f, 0.0f, 0.001f * delta));
+  }
+  if (input.keys[keys::d].pressed) {
+    pos = glm::translate(pos, glm::vec3(0.0f, 0.0f, -0.001f * delta));
+  }
+  if (input.keys[keys::home].pressed) {
+    pos = glm::mat4(1.0f);
+  }
+  objectPosition_->local(pos);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------

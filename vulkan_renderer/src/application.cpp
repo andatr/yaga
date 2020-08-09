@@ -114,6 +114,7 @@ Application::Application(GamePtr game, const assets::Application* asset) :
 Application::~Application()
 {
   game_.reset();
+  eventDispatcher_->onResize(resizeConnection_);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -148,8 +149,10 @@ void Application::createWindow()
   if (!window) {
     THROW("Could not create Window");
   }
-  glfwSetWindowUserPointer(window, this);
-  glfwSetFramebufferSizeCallback(window, resizeCallback);
+  eventDispatcher_ = std::make_unique<EventDispatcher>(window);
+  resizeConnection_ = eventDispatcher_->onResize(
+    std::bind(&Application::onResize, this, std::placeholders::_1, std::placeholders::_2));
+  input_ = std::make_unique<Input>(window, eventDispatcher_.get());
   window_.set(window, deleteWindow);
   LOG(trace) << "Window created";
 }
@@ -311,6 +314,7 @@ void Application::loop()
   startTime_ = std::chrono::high_resolution_clock::now();
   while (!glfwWindowShouldClose(*window_)) {
     glfwPollEvents();
+    input_->updateState();
     gameLoop();
     drawFrame();
   }
@@ -360,11 +364,10 @@ VkExtent2D Application::getWindowSize() const
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Application::resizeCallback(GLFWwindow* window, int width, int height)
+void Application::onResize(int width, int height)
 {
-  auto app = reinterpret_cast<Application*>(glfwGetWindowUserPointer(window));
-  if (app->minimised_ && width > 0 && height > 0) {
-    app->resized_ = true;
+  if (minimised_ && width > 0 && height > 0) {
+    resized_ = true;
   }
 }
 
