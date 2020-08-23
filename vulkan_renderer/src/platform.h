@@ -1,5 +1,5 @@
-#ifndef YAGA_VULKAN_RENDERER_SRC_APPLICATION
-#define YAGA_VULKAN_RENDERER_SRC_APPLICATION
+#ifndef YAGA_VULKAN_RENDERER_SRC_PLATFORM
+#define YAGA_VULKAN_RENDERER_SRC_PLATFORM
 
 #include <chrono>
 #include <memory>
@@ -17,13 +17,13 @@
 #include "swapchain.h"
 #include "vulkan.h"
 #include "assets/application.h"
-#include "engine/application.h"
+#include "engine/platform.h"
 #include "utility/auto_destructor.h"
 
 namespace yaga {
 namespace vk {
 
-class Application : public yaga::Application
+class Platform : public yaga::Platform
 {
 public:
   class InitGLFW
@@ -34,24 +34,23 @@ public:
   };
 
 public:
-  explicit Application(GamePtr game, const assets::Application* asset);
-  virtual ~Application();
-  void run() override;
+  explicit Platform(const assets::Application* asset);
+  virtual ~Platform();
+  void run(Application* app) override;
   RenderingContext* renderingContext() override { return renderingContext_.get(); }
   Input* input() override { return input_.get(); }
 
 private:
-  
   void createWindow();
   VulkanExtensions createInstance(const std::string& appName);
   void createSurface();
   void createAllocator();
-  void resize();
+  void resize(Application* app);
   void checkValidationLayers() const;
   void setupLogging();
-  void loop();
-  void gameLoop();
-  void drawFrame();
+  void loop(Application* app);
+  void gameLoop(Application* app);
+  void drawFrame(Application* app);
   VkExtent2D getWindowSize() const;
   void onResize(int width, int height);
 
@@ -76,11 +75,11 @@ private:
   EventDispatcher::Connection resizeConnection_;
 };
 
-ApplicationPtr createApplication(GamePtr game, const assets::Application* asset);
+PlatformPtr createPlatform(const assets::Application* asset);
 
 } // !namespace vk
 } // !namespace yaga
 
-BOOST_DLL_ALIAS(yaga::vk::createApplication, createApplication)
+BOOST_DLL_ALIAS(yaga::vk::createPlatform, createPlatform)
 
-#endif // !YAGA_VULKAN_RENDERER_SRC_APPLICATION_IMPL
+#endif // !YAGA_VULKAN_RENDERER_SRC_PLATFORM

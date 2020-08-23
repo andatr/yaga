@@ -25,7 +25,7 @@ private:
   const std::string message_;
 };
 
-namespace impl {
+namespace detail {
 
 // -------------------------------------------------------------------------------------------------------------------------
 inline std::string expandFormat(boost::format f)
@@ -40,24 +40,13 @@ std::string expandFormat(boost::format f, T&& t, Args&&... args)
   return expandFormat(f % std::forward<T>(t), std::forward<Args>(args)...);
 }
 
-} // !namespace impl
+} // !namespace detail
 
 // -------------------------------------------------------------------------------------------------------------------------
 template <typename... Args>
 Exception::Exception(const std::string& file, int line, const std::string& format, Args... args) :
-  file_(file), line_(line), message_(impl::expandFormat(boost::format(format), args...))
+  file_(file), line_(line), message_(detail::expandFormat(boost::format(format), args...))
 {}
-
-// -------------------------------------------------------------------------------------------------------------------------
-template <typename T1, typename T2>
-T1* dynamicCast(T2* ptr)
-{
-  auto result = dynamic_cast<T1*>(ptr);
-  if (result == nullptr) {
-    THROW("Could not cast \"%1%*\" to \"%2%*\"", typeid(T2).name(), typeid(T1).name());
-  }
-  return result;
-}
 
 } // !namespace yaga
 

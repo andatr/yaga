@@ -1,20 +1,19 @@
 #include "precompiled.h"
 #include "orbit_sim.h"
-
 #include "assets/scene.h"
-#include "engine/application.h"
+#include "engine/platform.h"
 
 namespace yaga {
 
 // -------------------------------------------------------------------------------------------------------------------------
-GamePtr createGame(assets::SerializerPtr serializer, assets::StoragePtr storage)
+ApplicationPtr createApplication(assets::Serializer* serializer)
 {
-  return std::make_unique<OrbitSim>(std::move(serializer), std::move(storage));
+  return std::make_unique<OrbitSim>(serializer);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-OrbitSim::OrbitSim(assets::SerializerPtr serializer, assets::StoragePtr storage) :
-  BasicGame(std::move(serializer), std::move(storage))
+OrbitSim::OrbitSim(assets::Serializer* serializer) :
+  BasicApplication(serializer)
 {
 }
 
@@ -24,9 +23,9 @@ OrbitSim::~OrbitSim()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void OrbitSim::init(Application* app)
+void OrbitSim::init(RenderingContext* renderer, Input* input)
 {
-  base::init(app);
+  base::init(renderer, input);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------

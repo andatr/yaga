@@ -20,7 +20,7 @@ class Application : public Asset
 public:
   explicit Application(const std::string& name);
   virtual ~Application();
-  const std::string& rendererLibPath() const { return rendererLibPath_; }
+  const std::string& platformLibPath() const { return platformLibPath_; }
   const std::string& gameLibPath() const { return gameLibPath_; }
   bool fullscreen() const { return fullscreen_; }
   uint32_t width() const { return width_; }
@@ -37,7 +37,7 @@ public:
   static ApplicationPtr deserializeFriendly(const std::string& name, const std::string& path, RefResolver& resolver);
 
 private:
-  std::string rendererLibPath_;
+  std::string platformLibPath_;
   std::string gameLibPath_;
   bool fullscreen_;
   uint32_t width_;

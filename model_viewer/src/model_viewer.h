@@ -4,27 +4,26 @@
 #include <memory>
 #include <boost/dll/alias.hpp>
 
-#include "engine/basic_game.h"
+#include "engine/basic_application.h"
 #include "engine/camera.h"
-#include "engine/game.h"
 #include "engine/object.h"
 
 namespace yaga {
 
-class ModelViewer : public BasicGame
+class ModelViewer : public BasicApplication
 {
 public:
-  ModelViewer(assets::SerializerPtr serializer, assets::StoragePtr storage);
+  ModelViewer(assets::Serializer* serializer);
   virtual ~ModelViewer();
 
 protected:
-  void init(Application* app) override;
+  void init(RenderingContext* renderer, Input* input) override;
   void resize() override;
   void loop(float delta) override;
   void shutdown() override;
 
 private:
-  typedef BasicGame base;
+  typedef BasicApplication base;
 
 private:
   std::vector<ObjectPtr> objects_;
@@ -36,10 +35,10 @@ private:
 
 typedef std::unique_ptr<ModelViewer> ModelViewerPtr;
 
-GamePtr createGame(assets::SerializerPtr serializer, assets::StoragePtr storage);
+ApplicationPtr createApplication(assets::Serializer* serializer);
 
 } // !namespace yaga
 
-BOOST_DLL_ALIAS(yaga::createGame, createGame)
+BOOST_DLL_ALIAS(yaga::createApplication, createApplication)
 
 #endif // !YAGA_MODEL_VIEWER_SRC_MODEL_VIEWER

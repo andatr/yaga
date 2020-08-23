@@ -1,33 +1,26 @@
 #ifndef YAGA_ENGINE_APPLICATION
 #define YAGA_ENGINE_APPLICATION
 
-#include <map>
 #include <memory>
-#include <string>
-#include <boost/noncopyable.hpp>
 
-#include "assets/application.h"
-#include "engine/game.h"
+#include "assets/serializer.h"
 #include "engine/input.h"
 #include "engine/rendering_context.h"
 
 namespace yaga {
 
-class Application : private boost::noncopyable
+class Application
 {
 public:
-  explicit Application(GamePtr game);
-  virtual ~Application();
-  virtual void run() = 0;
-  virtual RenderingContext* renderingContext() = 0;
-  virtual Input* input() = 0;
-
-protected:
-  GamePtr game_;
+  virtual ~Application() {}
+  virtual void init(RenderingContext* renderer, Input* input) = 0;
+  virtual void resize() = 0;
+  virtual void loop(float delta) = 0;
+  virtual void shutdown() = 0;
 };
 
 typedef std::unique_ptr<Application> ApplicationPtr;
-typedef ApplicationPtr CreateApplicationFunc(GamePtr, assets::Application*);
+typedef ApplicationPtr CreateApplicationFunc(assets::Serializer*);
 constexpr const char* createApplicationFuncName = "createApplication";
 
 } // !namespace yaga

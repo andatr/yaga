@@ -1,5 +1,5 @@
 #include "precompiled.h"
-#include "application.h"
+#include "platform.h"
 #include "device.h"
 #include "swapchain.h"
 #include "assets/material.h"
@@ -84,41 +84,40 @@ VkDebugUtilsMessengerCreateInfoEXT getDebugMessengerCreateInfo()
 
 } // !namespace
 
-Application::InitGLFW Application::initGLFW_;
+Platform::InitGLFW Platform::initGLFW_;
 
 // -------------------------------------------------------------------------------------------------------------------------
-ApplicationPtr createApplication(GamePtr game, const assets::Application* asset)
+PlatformPtr createPlatform(const assets::Application* asset)
 {
-  return std::make_unique<vk::Application>(std::move(game), asset);
+  return std::make_unique<vk::Platform>(asset);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-Application::InitGLFW::InitGLFW()
+Platform::InitGLFW::InitGLFW()
 {
   glfwInit();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-Application::InitGLFW::~InitGLFW()
+Platform::InitGLFW::~InitGLFW()
 {
   glfwTerminate();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-Application::Application(GamePtr game, const assets::Application* asset) :
-  yaga::Application(std::move(game)), asset_(asset), minimised_(false), resized_(false)
+Platform::Platform(const assets::Application* asset) :
+  asset_(asset), minimised_(false), resized_(false)
 {
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-Application::~Application()
+Platform::~Platform()
 {
-  game_.reset();
   eventDispatcher_->onResize(resizeConnection_);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Application::run()
+void Platform::run(Application* app)
 {
   createWindow();
   checkValidationLayers();
@@ -132,13 +131,15 @@ void Application::run()
   renderingContext_ = std::make_unique<RenderingContext>(device_.get(), *allocator_, swapchain_.get(), asset_);
   renderer_ = std::make_unique<Renderer>(swapchain_.get(), renderingContext_.get());
   presenter_ = std::make_unique<Presenter>(device_.get(), swapchain_.get());
-  game_->init(this);
-  loop();
+  app->init(renderingContext_.get(), input_.get());
+  loop(app);
+  app->shutdown();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Application::createWindow()
+void Platform::createWindow()
 {
+  namespace ph = std::placeholders;
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
   auto deleteWindow = [](auto window) {
@@ -150,15 +151,14 @@ void Application::createWindow()
     THROW("Could not create Window");
   }
   eventDispatcher_ = std::make_unique<EventDispatcher>(window);
-  resizeConnection_ = eventDispatcher_->onResize(
-    std::bind(&Application::onResize, this, std::placeholders::_1, std::placeholders::_2));
+  resizeConnection_ = eventDispatcher_->onResize(std::bind(&Platform::onResize, this, ph::_1, ph::_2));
   input_ = std::make_unique<Input>(window, eventDispatcher_.get());
   window_.set(window, deleteWindow);
   LOG(trace) << "Window created";
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VulkanExtensions Application::createInstance(const std::string& appName)
+VulkanExtensions Platform::createInstance(const std::string& appName)
 {
   VkApplicationInfo appInfo{};
   appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
@@ -198,7 +198,7 @@ VulkanExtensions Application::createInstance(const std::string& appName)
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Application::createSurface()
+void Platform::createSurface()
 {
   auto destroySurface = [this](auto surface) {
     vkDestroySurfaceKHR(*instance_, surface, nullptr);
@@ -211,7 +211,7 @@ void Application::createSurface()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Application::createAllocator()
+void Platform::createAllocator()
 {
   const auto& extensions = device_->extensions();
   VmaAllocatorCreateInfo info{};
@@ -245,7 +245,7 @@ void Application::createAllocator()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Application::resize()
+void Platform::resize(Application* app)
 {
   vkDeviceWaitIdle(**device_);
   auto size = getWindowSize();
@@ -259,11 +259,11 @@ void Application::resize()
   renderingContext_->swapchain(swapchain_.get());
   renderer_->swapchain(swapchain_.get());
   presenter_->swapchain(swapchain_.get());
-  game_->resize();
+  app->resize();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Application::checkValidationLayers() const
+void Platform::checkValidationLayers() const
 {
   if (validationLayers.empty()) return;
 
@@ -290,7 +290,7 @@ void Application::checkValidationLayers() const
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Application::setupLogging()
+void Platform::setupLogging()
 {
   if (validationLayers.empty()) return;
 
@@ -309,33 +309,32 @@ void Application::setupLogging()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Application::loop()
+void Platform::loop(Application* app)
 {
   startTime_ = std::chrono::high_resolution_clock::now();
   while (!glfwWindowShouldClose(*window_)) {
     glfwPollEvents();
     input_->updateState();
-    gameLoop();
-    drawFrame();
+    gameLoop(app);
+    drawFrame(app);
   }
   vkDeviceWaitIdle(**device_);
-  game_->shutdown();
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Application::gameLoop()
+void Platform::gameLoop(Application* app)
 {
   auto currentTime = std::chrono::high_resolution_clock::now();
   auto delta = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime_).count();
-  game_->loop(delta);
+  app->loop(delta);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Application::drawFrame()
+void Platform::drawFrame(Application* app)
 {
   if (resized_) {
     resized_ = false;
-    resize();
+    resize(app);
   }
   if (minimised_) return;
   presenter_->waitPrevFrame();
@@ -343,19 +342,19 @@ void Application::drawFrame()
   if (mainCamera == nullptr) return;
   uint32_t imageIndex = 0;
   if (!presenter_->acquireImage(&imageIndex)) {
-    resize();
+    resize(app);
     return;
   }
   renderingContext_->update(imageIndex);
   renderer_->render(imageIndex);
   if (!presenter_->present(mainCamera->frame(imageIndex).command, imageIndex)) {
-    resize();
+    resize(app);
     return;
   }
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-VkExtent2D Application::getWindowSize() const
+VkExtent2D Platform::getWindowSize() const
 {
   int width = 0;
   int height = 0;
@@ -364,7 +363,7 @@ VkExtent2D Application::getWindowSize() const
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void Application::onResize(int width, int height)
+void Platform::onResize(int width, int height)
 {
   if (minimised_ && width > 0 && height > 0) {
     resized_ = true;

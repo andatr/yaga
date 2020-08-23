@@ -36,7 +36,7 @@ ApplicationPtr Application::deserializeFriendly(const std::string& name, const s
   namespace pt = boost::property_tree;
   pt::ptree props;
   pt::read_json(path, props);
-  app->rendererLibPath_ = props.get<std::string>("rendererLib");
+  app->platformLibPath_ = props.get<std::string>("rendererLib");
   app->gameLibPath_ = props.get<std::string>("gameLib");
   auto winProps = props.get_child("window");
   app->fullscreen_ = winProps.get<bool>("fullscreen", false);

@@ -4,7 +4,7 @@
 #include "assets/binary_serializer.h"
 #include "assets/friendly_serializer.h"
 #include "engine/application.h"
-#include "engine/game.h"
+#include "engine/platform.h"
 
 namespace fs = boost::filesystem;
 
@@ -37,20 +37,12 @@ assets::SerializerPtr createSerializer(const fs::path& assetPath)
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-fs::path& makeAbsolutePath(fs::path& path, const fs::path& root)
+fs::path makeAbsolutePath(fs::path path, fs::path parent)
 {
   if (!path.is_absolute()) {
-    path = root / path;
+    path = parent / path;
   }
   return path;
-}
-
-// -----------------------------------------------------------------------------------------------------------------------------
-fs::path makeAbsolutePath(const std::string& path, const fs::path& root)
-{
-  auto fsPath = fs::path(path);
-  makeAbsolutePath(fsPath, root);
-  return fsPath;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -61,17 +53,21 @@ void runApplication(fs::path assetPath, const Options& options)
   auto serializer = createSerializer(assetPath);
   serializer->registerStandardAssets();
   auto appAsset = serializer->deserialize<assets::Application>("application", storage.get());
-  //
-  auto gameLibPath = makeAbsolutePath(appAsset->gameLibPath(), assetPath);
-  auto createGameFunc =
-    boost::dll::import_alias<CreateGameFunc>(gameLibPath, createGameFuncName, boost::dll::load_mode::append_decorations);
-  auto game = createGameFunc(std::move(serializer), std::move(storage));
-  //
-  auto rendererLibPath = makeAbsolutePath(appAsset->rendererLibPath(), assetPath);
-  auto createApplication = boost::dll::import_alias<CreateApplicationFunc>(
-    rendererLibPath, createApplicationFuncName, boost::dll::load_mode::append_decorations);
-  auto app = createApplication(std::move(game), appAsset);
-  app->run();
+  if (!fs::is_directory(assetPath)) {
+    assetPath = assetPath.parent_path();
+  }
+
+  auto platformLibPath = makeAbsolutePath(appAsset->platformLibPath(), assetPath);
+  auto createPlatform = boost::dll::import_alias<CreatePlatformFunc>(
+    platformLibPath, createPlatformFuncName, boost::dll::load_mode::append_decorations);
+  auto platform = createPlatform(appAsset);
+
+  auto appLibPath = makeAbsolutePath(appAsset->gameLibPath(), assetPath);
+  auto createAppFunc = boost::dll::import_alias<CreateApplicationFunc>(
+    appLibPath, createApplicationFuncName, boost::dll::load_mode::append_decorations);
+  auto app = createAppFunc(serializer.get());
+
+  platform->run(app.get());
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------

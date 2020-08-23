@@ -1,19 +1,19 @@
 #include "precompiled.h"
 #include "model_viewer.h"
 #include "assets/scene.h"
-#include "engine/application.h"
+#include "engine/platform.h"
 
 namespace yaga {
 
 // -------------------------------------------------------------------------------------------------------------------------
-GamePtr createGame(assets::SerializerPtr serializer, assets::StoragePtr storage)
+ApplicationPtr createApplication(assets::Serializer* serializer)
 {
-  return std::make_unique<ModelViewer>(std::move(serializer), std::move(storage));
+  return std::make_unique<ModelViewer>(serializer);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-ModelViewer::ModelViewer(assets::SerializerPtr serializer, assets::StoragePtr storage) :
-  BasicGame(std::move(serializer), std::move(storage))
+ModelViewer::ModelViewer(assets::Serializer* serializer) :
+  BasicApplication(serializer)
 {
 }
 
@@ -23,11 +23,10 @@ ModelViewer::~ModelViewer()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void ModelViewer::init(Application* app)
+void ModelViewer::init(RenderingContext* renderer, Input* input)
 {
-  base::init(app);
+  base::init(renderer, input);
 
-  auto context = app_->renderingContext();
   auto asset = serializer_->deserialize<assets::Scene>("scene", persistentAssets_.get())->model();
 
   auto object = std::make_unique<Object>();
@@ -36,9 +35,9 @@ void ModelViewer::init(Application* app)
   auto transform = std::make_unique<Transform>(object_ptr);
   objectPosition_ = transform.get();
   object_ptr->addComponent(std::move(transform));
-  object_ptr->addComponent(context->createMesh(object_ptr, asset->mesh()));
-  object_ptr->addComponent(context->createMaterial(object_ptr, asset->material()));
-  object_ptr->addComponent(context->createRenderer3D(object_ptr));
+  object_ptr->addComponent(renderer_->createMesh(object_ptr, asset->mesh()));
+  object_ptr->addComponent(renderer_->createMaterial(object_ptr, asset->material()));
+  object_ptr->addComponent(renderer_->createRenderer3D(object_ptr));
 
   object = std::make_unique<Object>();
   object_ptr = object.get();
@@ -48,11 +47,11 @@ void ModelViewer::init(Application* app)
   cameraAsset_ = serializer_->deserialize<assets::Camera>("camera", persistentAssets_.get());
   cameraPosition_ = transform.get();
   object_ptr->addComponent(std::move(transform));
-  auto camera = context->createCamera(object_ptr, cameraAsset_);
+  auto camera = renderer_->createCamera(object_ptr, cameraAsset_);
   camera_ = camera.get();
   object_ptr->addComponent(std::move(camera));
 
-  const auto& res = context->resolution();
+  const auto& res = renderer_->resolution();
   auto projection = glm::perspective(glm::radians(45.0f), (float)res.x / (float)res.y, 0.1f, 100.0f);
   projection[1][1] *= -1;
   cameraAsset_->projection(projection);
@@ -63,7 +62,7 @@ void ModelViewer::init(Application* app)
 // -------------------------------------------------------------------------------------------------------------------------
 void ModelViewer::resize()
 {
-  auto res = app_->renderingContext()->resolution();
+  auto res = renderer_->resolution();
   auto projection = glm::perspective(glm::radians(45.0f), (float)res.x / (float)res.y, 0.1f, 100.0f);
   projection[1][1] *= -1;
   cameraAsset_->projection(projection);
@@ -93,7 +92,7 @@ void ModelViewer::loop(float delta)
 
 
   auto pos = objectPosition_->local();
-  auto input = app_->input()->getState();
+  auto input = input_->getState();
   if (input.keys[keys::w].pressed) {
     pos = glm::translate(pos, glm::vec3(0.001f * delta, 0.0f, 0.0f));
   }

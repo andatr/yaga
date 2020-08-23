@@ -1,19 +1,19 @@
 #include "precompiled.h"
 #include "tube_race.h"
 #include "assets/scene.h"
-#include "engine/application.h"
+#include "engine/platform.h"
 
 namespace yaga {
 
 // -------------------------------------------------------------------------------------------------------------------------
-GamePtr createGame(assets::SerializerPtr serializer, assets::StoragePtr storage)
+ApplicationPtr createApplication(assets::Serializer* serializer)
 {
-  return std::make_unique<TubeRace>(std::move(serializer), std::move(storage));
+  return std::make_unique<TubeRace>(serializer);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-TubeRace::TubeRace(assets::SerializerPtr serializer, assets::StoragePtr storage) :
-  BasicGame(std::move(serializer), std::move(storage))
+TubeRace::TubeRace(assets::Serializer* serializer) :
+  BasicApplication(serializer)
 {}
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -22,9 +22,9 @@ TubeRace::~TubeRace()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-void TubeRace::init(Application* app)
+void TubeRace::init(RenderingContext* renderer, Input* input)
 {
-  base::init(app);
+  base::init(renderer, input);
 }
 
 // -------------------------------------------------------------------------------------------------------------------------

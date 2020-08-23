@@ -13,7 +13,9 @@ Object::~Object()
 {
   for (const auto& component : components_) {
     for (const auto& removed : components_) {
-      component.second->onComponentRemove(removed.second.get());
+      if (removed != component) {
+        component.second->onComponentRemove(removed.second.get());
+      }
     }
   }
 }

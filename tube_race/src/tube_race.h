@@ -4,31 +4,31 @@
 #include <memory>
 #include <boost/dll/alias.hpp>
 
-#include "engine/basic_game.h"
+#include "engine/basic_application.h"
 
 namespace yaga {
 
-class TubeRace : public BasicGame
+class TubeRace : public BasicApplication
 {
 public:
-  TubeRace(assets::SerializerPtr serializer, assets::StoragePtr storage);
+  TubeRace(assets::Serializer* serializer);
   virtual ~TubeRace();
 
 protected:
-  void init(Application* app) override;
+  void init(RenderingContext* renderer, Input* input) override;
   void loop(float delta) override;
   void shutdown() override;
 
 private:
-  typedef BasicGame base;
+  typedef BasicApplication base;
 };
 
 typedef std::unique_ptr<TubeRace> TubeRacePtr;
 
-GamePtr createGame(assets::SerializerPtr serializer, assets::StoragePtr storage);
+ApplicationPtr createApplication(assets::Serializer*);
 
 } // !namespace yaga
 
-BOOST_DLL_ALIAS(yaga::createGame, createGame)
+BOOST_DLL_ALIAS(yaga::createApplication, createApplication)
 
 #endif // !YAGA_TUBE_RACE_SRC_RACE_GAME

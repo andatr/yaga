@@ -4,31 +4,31 @@
 #include <memory>
 #include <boost/dll/alias.hpp>
 
-#include "engine/basic_game.h"
+#include "engine/basic_application.h"
 
 namespace yaga {
 
-class OrbitSim : public BasicGame
+class OrbitSim : public BasicApplication
 {
 public:
-  OrbitSim(assets::SerializerPtr serializer, assets::StoragePtr storage);
+  OrbitSim(assets::Serializer* serializer);
   virtual ~OrbitSim();
 
 private:
-  void init(Application* app) override;
+  void init(RenderingContext* renderer, Input* input) override;
   void loop(float delta) override;
   void shutdown() override;
 
 private:
-  typedef BasicGame base;
+  typedef BasicApplication base;
 };
 
 typedef std::unique_ptr<OrbitSim> OrbitSimPtr;
 
-GamePtr createGame(assets::SerializerPtr serializer, assets::StoragePtr storage);
+ApplicationPtr createApplication(assets::Serializer*);
 
 } // !namespace yaga
 
-BOOST_DLL_ALIAS(yaga::createGame, createGame)
+BOOST_DLL_ALIAS(yaga::createApplication, createApplication)
 
 #endif // !YAGA_ORBIT_SIM_SRC_ORBIT_SIM
