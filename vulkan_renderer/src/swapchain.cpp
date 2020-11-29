@@ -6,7 +6,7 @@ namespace yaga {
 namespace vk {
 namespace {
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 VkSurfaceFormatKHR pickColorFormat(VkPhysicalDevice device, VkSurfaceKHR surface)
 {
   std::vector<VkSurfaceFormatKHR> formats;
@@ -60,7 +60,7 @@ VkSurfaceFormatKHR pickColorFormat(VkPhysicalDevice device, VkSurfaceKHR surface
   return *format;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 VkPresentModeKHR pickBufferingMode(VkPhysicalDevice device, VkSurfaceKHR surface)
 {
   std::vector<VkPresentModeKHR> modes;
@@ -76,7 +76,7 @@ VkPresentModeKHR pickBufferingMode(VkPhysicalDevice device, VkSurfaceKHR surface
     : VK_PRESENT_MODE_MAILBOX_KHR;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 VkExtent2D pickResolution(const VkSurfaceCapabilitiesKHR& capabilities, VkExtent2D requested)
 {
   // if currentExtent is not MAX_UINT32 we must use values provided by Vulkan
@@ -92,7 +92,7 @@ VkExtent2D pickResolution(const VkSurfaceCapabilitiesKHR& capabilities, VkExtent
   return resolution;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 uint32_t pickBufferCount(const VkSurfaceCapabilitiesKHR& capabilities)
 {
   if (capabilities.maxImageCount == 0) {
@@ -101,7 +101,7 @@ uint32_t pickBufferCount(const VkSurfaceCapabilitiesKHR& capabilities)
   return std::min(capabilities.minImageCount + 1, capabilities.maxImageCount);
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 VkFormat getDepthImageFormat(
   VkPhysicalDevice device, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
 {
@@ -118,7 +118,7 @@ VkFormat getDepthImageFormat(
   THROW("Could not find supported depth image format");
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 VkSampleCountFlagBits getMaxMsaaLevel(Device* device)
 {
   auto msaa =
@@ -144,7 +144,7 @@ VkSampleCountFlagBits getMaxMsaaLevel(Device* device)
   return VK_SAMPLE_COUNT_1_BIT;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 ImagePtr createImage(Device* device, VmaAllocator allocator, VkExtent2D resolution, VkFormat format,
   VkSampleCountFlagBits msaa, VkImageUsageFlags usage, VkImageAspectFlagBits aspectMask)
 {
@@ -184,7 +184,7 @@ ImagePtr createImage(Device* device, VmaAllocator allocator, VkExtent2D resoluti
 
 } // !namespace
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 Swapchain::Swapchain(Device* device, VmaAllocator allocator, VkSurfaceKHR surface, VkExtent2D resolution) :
   device_(device), vkDevice_(**device), allocator_(allocator), resolution_(resolution)
 {
@@ -204,12 +204,12 @@ Swapchain::Swapchain(Device* device, VmaAllocator allocator, VkSurfaceKHR surfac
   createFramebuffers();
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 Swapchain::~Swapchain()
 {
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 VkFormat Swapchain::createSwapchain(VkSurfaceKHR surface, VkExtent2D resolution)
 {
   auto pdevice = device_->physical();
@@ -254,7 +254,7 @@ VkFormat Swapchain::createSwapchain(VkSurfaceKHR surface, VkExtent2D resolution)
   return colorFormat.format;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void Swapchain::createFrameImages(VkFormat format)
 {
   auto destroyImageView = [device = vkDevice_](auto imageView) {
@@ -289,7 +289,7 @@ void Swapchain::createFrameImages(VkFormat format)
   }
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void Swapchain::createRenderPass(VkFormat format)
 {
   VkAttachmentDescription colorAttachment{};
@@ -369,7 +369,7 @@ void Swapchain::createRenderPass(VkFormat format)
   LOG(trace) << "Render Pass created";
 }
 
-// ------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void Swapchain::createFramebuffers()
 {
   auto destroyFrameBuffer = [device = vkDevice_](auto frameBuffer) {

@@ -23,7 +23,7 @@ public:
     VkCommandBuffer command;
     bool dirty;
   };
-  typedef yaga::Camera Parent;
+  typedef yaga::Camera base;
 
 public:
   explicit Camera(Object* obj, assets::Camera* asset, CameraPool* pool, uint32_t frames);
@@ -36,7 +36,6 @@ private:
 
 private:
   CameraPool* pool_;
-  UniformObject uniform_;
   std::vector<Frame> frames_;
 };
 

@@ -9,11 +9,12 @@
 namespace yaga {
 namespace vk {
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 RenderingContext::RenderingContext(
   Device* device, VmaAllocator allocator, Swapchain* swapchain, const assets::Application* limits) :
   vkDevice_(**device),
-  allocator_(allocator), frames_(static_cast<uint32_t>(swapchain->frameBuffers().size()))
+  allocator_(allocator),
+  frames_(static_cast<uint32_t>(swapchain->frameBuffers().size()))
 {
   resolution_ = { swapchain->resolution().width, swapchain->resolution().height };
   createDescriptorPool(limits->maxTextureCount());
@@ -23,14 +24,14 @@ RenderingContext::RenderingContext(
   meshPool_ = std::make_unique<MeshPool>(device, allocator, limits->maxVertexCount(), limits->maxIndexCount());
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void RenderingContext::swapchain(Swapchain* swapchain)
 {
   materialPool_->swapchain(swapchain);
   resolution_ = { swapchain->resolution().width, swapchain->resolution().height };
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 yaga::Renderer3DPtr RenderingContext::createRenderer3D(Object* object)
 {
   auto renderer3d = std::make_unique<Renderer3D>(object, this);
@@ -38,32 +39,32 @@ yaga::Renderer3DPtr RenderingContext::createRenderer3D(Object* object)
   return renderer3d;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void RenderingContext::removeRenderer3D(Renderer3D* renderer3d)
 {
   vkDeviceWaitIdle(vkDevice_);
   renderers3D_.erase(renderer3d);
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 yaga::MaterialPtr RenderingContext::createMaterial(Object* object, assets::Material* asset)
 {
   return materialPool_->createMaterial(object, asset);
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 yaga::MeshPtr RenderingContext::createMesh(Object* object, assets::Mesh* asset)
 {
   return meshPool_->createMesh(object, asset);
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 yaga::CameraPtr RenderingContext::createCamera(Object* object, assets::Camera* asset)
 {
   return cameraPool_->createCamera(object, asset);
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void RenderingContext::clear()
 {
   vkDeviceWaitIdle(vkDevice_);
@@ -72,7 +73,7 @@ void RenderingContext::clear()
   meshPool_->clear();
 }
 
-// ------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void RenderingContext::createDescriptorPool(uint32_t maxTextures)
 {
   std::array<VkDescriptorPoolSize, 2> poolSizes{};
@@ -85,7 +86,7 @@ void RenderingContext::createDescriptorPool(uint32_t maxTextures)
   poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
   poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
   poolInfo.pPoolSizes = poolSizes.data();
-  poolInfo.maxSets = 10; // TODO: FIX !
+  poolInfo.maxSets = 50; // TODO: FIX !
 
   VkDescriptorPool pool;
   auto destroyPool = [device = vkDevice_](auto pool) {
@@ -96,7 +97,7 @@ void RenderingContext::createDescriptorPool(uint32_t maxTextures)
   descriptorPool_.set(pool, destroyPool);
 }
 
-// ------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void RenderingContext::update(uint32_t frame)
 {
   cameraPool_->update(frame);

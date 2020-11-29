@@ -4,7 +4,7 @@
 namespace yaga {
 namespace vk {
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 EventDispatcher::EventDispatcher(GLFWwindow* window) : window_(window)
 {
   glfwSetWindowUserPointer(window, this);
@@ -16,7 +16,7 @@ EventDispatcher::EventDispatcher(GLFWwindow* window) : window_(window)
   glfwSetCursorEnterCallback    (window, cursorLeaveCallback);
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void EventDispatcher::resizeCallback(GLFWwindow* window, int width, int height)
 {
   auto dispatcher = reinterpret_cast<EventDispatcher*>(glfwGetWindowUserPointer(window));
@@ -25,7 +25,7 @@ void EventDispatcher::resizeCallback(GLFWwindow* window, int width, int height)
   }
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void EventDispatcher::keyboardCallback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
   auto dispatcher = reinterpret_cast<EventDispatcher*>(glfwGetWindowUserPointer(window));
@@ -34,7 +34,7 @@ void EventDispatcher::keyboardCallback(GLFWwindow* window, int key, int scancode
   }
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void EventDispatcher::characterCallback(GLFWwindow* window, unsigned int codepoint)
 {
   auto dispatcher = reinterpret_cast<EventDispatcher*>(glfwGetWindowUserPointer(window));
@@ -43,7 +43,7 @@ void EventDispatcher::characterCallback(GLFWwindow* window, unsigned int codepoi
   }
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void EventDispatcher::cursorMoveCallback(GLFWwindow* window, double xpos, double ypos)
 {
   auto dispatcher = reinterpret_cast<EventDispatcher*>(glfwGetWindowUserPointer(window));
@@ -52,7 +52,7 @@ void EventDispatcher::cursorMoveCallback(GLFWwindow* window, double xpos, double
   }
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void EventDispatcher::mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
   auto dispatcher = reinterpret_cast<EventDispatcher*>(glfwGetWindowUserPointer(window));
@@ -61,7 +61,7 @@ void EventDispatcher::mouseButtonCallback(GLFWwindow* window, int button, int ac
   }
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void EventDispatcher::cursorLeaveCallback(GLFWwindow* window, int entered)
 {
   auto dispatcher = reinterpret_cast<EventDispatcher*>(glfwGetWindowUserPointer(window));

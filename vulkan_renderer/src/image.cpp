@@ -4,7 +4,7 @@
 namespace yaga {
 namespace vk {
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 Image::Image(Device* device, VmaAllocator allocator, const VkImageCreateInfo& info, VkImageViewCreateInfo viewInfo,
   const VmaAllocationCreateInfo& allocInfo, const VkSampler sampler) :
   vkDevice_(**device),
@@ -26,7 +26,7 @@ Image::Image(Device* device, VmaAllocator allocator, const VkImageCreateInfo& in
   LOG(trace) << "Vulkan Image View created";
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 Image::~Image()
 {
   vkDestroyImageView(vkDevice_, imageView_, nullptr);

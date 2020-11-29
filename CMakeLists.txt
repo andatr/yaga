@@ -63,6 +63,7 @@ find_package(Vulkan QUIET)
 if(NOT Vulkan_FOUND)
   message(FATAL_ERROR "Vulkan SDK not found")
 endif()
+find_package(assimp        QUIET)
 find_package(stb           QUIET) # header only, requires find_package only for conan
 find_package(tinyobjloader QUIET) # header only, requires find_package only for conan
 find_package(vma           QUIET) # header only, requires find_package only for conan

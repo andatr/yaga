@@ -14,6 +14,7 @@ struct UniformObject
 {
   alignas(16) glm::mat4 view;
   alignas(16) glm::mat4 projection;
+  alignas(4)  float     aspect;
 };
 
 struct PushConstantVertex

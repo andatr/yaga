@@ -31,7 +31,7 @@ class Mesh
 {
 public:
   typedef std::vector<Vertex> Vertices;
-  typedef std::vector<uint32_t> Indices;
+  typedef std::vector<Index> Indices;
   typedef std::function<void(Vertices&)> VertexUpdater;
   typedef std::function<void(Indices&)> IndexUpdater;
 

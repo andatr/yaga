@@ -18,7 +18,7 @@ struct DeviceFeatures
   std::vector<uint32_t> surface;
 };
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 std::vector<std::string> getDeviceExtensions(VkPhysicalDevice device)
 {
   uint32_t count;
@@ -32,7 +32,7 @@ std::vector<std::string> getDeviceExtensions(VkPhysicalDevice device)
   return result;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 DeviceFeatures getDeviceFeatures(VkPhysicalDevice device, VkSurfaceKHR surface)
 {
   uint32_t count;
@@ -68,7 +68,7 @@ DeviceFeatures getDeviceFeatures(VkPhysicalDevice device, VkSurfaceKHR surface)
   return features;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 bool checkDeviceFeatures(VkPhysicalDevice device, const DeviceFeatures& features, const std::vector<std::string>& extensions)
 {
   VkPhysicalDeviceFeatures physicalFeatures;
@@ -80,7 +80,7 @@ bool checkDeviceFeatures(VkPhysicalDevice device, const DeviceFeatures& features
   return std::includes(extensions.begin(), extensions.end(), requiredExtensions.begin(), requiredExtensions.end());
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 std::vector<const char*> filterExtensions(const std::vector<std::string>& extensions, VulkanExtensions& result)
 {
   // TODO: add support for following extensions:
@@ -112,7 +112,7 @@ std::vector<const char*> filterExtensions(const std::vector<std::string>& extens
 
 } // !namespace
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 Device::Device(VkInstance instance, VkSurfaceKHR surface, const VulkanExtensions& extensions) :
   physicalDevice_(VK_NULL_HANDLE), properties_{}, memoryProperties_{}, queueFamilies_{}, queues_{}, extensions_(extensions)
 {
@@ -145,10 +145,11 @@ Device::Device(VkInstance instance, VkSurfaceKHR surface, const VulkanExtensions
   createImmediateCommand();
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
-Device::~Device() {}
+// -----------------------------------------------------------------------------------------------------------------------------
+Device::~Device()
+{}
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void Device::createDevice(std::vector<const char*>& extensions)
 {
   std::vector<VkDeviceQueueCreateInfo> queueInfos;
@@ -163,6 +164,7 @@ void Device::createDevice(std::vector<const char*>& extensions)
     queueInfos.push_back(info);
   }
   VkPhysicalDeviceFeatures features{};
+  features.fillModeNonSolid = VK_TRUE;
   features.samplerAnisotropy = VK_TRUE;
   VkDeviceCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
@@ -196,7 +198,7 @@ void Device::createDevice(std::vector<const char*>& extensions)
   vkGetDeviceQueue(*logicalDevice_, queueFamilies_.compute, 0, queues_ + 3);
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 uint32_t Device::getMemoryType(uint32_t filter, VkMemoryPropertyFlags props) const
 {
   for (uint32_t i = 0; i < memoryProperties_.memoryTypeCount; i++) {
@@ -207,7 +209,7 @@ uint32_t Device::getMemoryType(uint32_t filter, VkMemoryPropertyFlags props) con
   THROW("Could not find suitable memory type");
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void Device::createCommandPool()
 {
   VkCommandPoolCreateInfo info{};
@@ -224,7 +226,7 @@ void Device::createCommandPool()
   commandPool_.set(commandPool, destroyCommandPool);
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void Device::createImmediateCommand()
 {
   VkCommandBufferAllocateInfo info{};
@@ -242,7 +244,7 @@ void Device::createImmediateCommand()
   immediateCommand_.set(commandBuffer, destroyCommandBuffer);
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void Device::submitCommand(const CommandHandler& handler) const
 {
   VkCommandBufferBeginInfo beginInfo{};

@@ -27,11 +27,12 @@ public:
   MaterialPtr createMaterial(Object* object, assets::Material* asset);
   void removeMaterial(Material* material);
   void clear();
+  void updatePipeline(Material* material);
 
 private:
   void createDescriptorLayout();
   void createPipelineLayout();
-  AutoDestructor<VkPipeline> createPipeline(assets::Shader* vertexShader, assets::Shader* fragmentShader);
+  AutoDestructor<VkPipeline> createPipeline(assets::Shader* vertexShader, assets::Shader* fragmentShader, bool wireframe);
   VkShaderModule createShader(assets::Shader* asset);
   std::vector<VkDescriptorSet> createDescriptorSets() const;
   void updateDescriptorSets(const std::vector<VkDescriptorSet>& descriptorSets, const std::vector<Image*>& images) const;
@@ -40,6 +41,7 @@ private:
   struct MaterialCache
   {
     AutoDestructor<VkPipeline> pipeline;
+    AutoDestructor<VkPipeline> wireframe;
     std::vector<VkDescriptorSet> descriptorSets;
   };
 

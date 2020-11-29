@@ -4,11 +4,14 @@
 #include <memory>
 #include <boost/dll/alias.hpp>
 
+#include "assets/mesh.h"
 #include "engine/basic_application.h"
 #include "engine/camera.h"
 #include "engine/object.h"
 
 namespace yaga {
+
+  struct MeshMetadata;
 
 class ModelViewer : public BasicApplication
 {
@@ -24,6 +27,11 @@ protected:
 
 private:
   typedef BasicApplication base;
+
+private:
+  assets::Mesh* importModel(const std::string& path, const std::string& path2, MeshMetadata& meta);
+  void setupCamera();
+  void createBoundingBox(assets::Mesh* modelMesh, const MeshMetadata& meta);
 
 private:
   std::vector<ObjectPtr> objects_;

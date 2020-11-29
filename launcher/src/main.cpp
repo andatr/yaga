@@ -22,7 +22,7 @@ typedef std::vector<AppDef> AppList;
 
 constexpr size_t BAD_INDEX = std::numeric_limits<size_t>::max();
 
-// -----------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------
 assets::SerializerPtr createSerializer(const fs::path& assetPath)
 {
   if (fs::exists(assetPath)) {
@@ -36,7 +36,7 @@ assets::SerializerPtr createSerializer(const fs::path& assetPath)
   THROW("Bad asset path \"%1%\"", assetPath);
 }
 
-// -----------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------
 fs::path makeAbsolutePath(fs::path path, fs::path parent)
 {
   if (!path.is_absolute()) {
@@ -45,7 +45,7 @@ fs::path makeAbsolutePath(fs::path path, fs::path parent)
   return path;
 }
 
-// -----------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------
 void runApplication(fs::path assetPath, const Options& options)
 {
   assetPath = makeAbsolutePath(assetPath, options.workingDir());
@@ -70,7 +70,7 @@ void runApplication(fs::path assetPath, const Options& options)
   platform->run(app.get());
 }
 
-// -----------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------
 AppList readAppList(const std::string& filename)
 {
   static const std::string whitespace = " \t";
@@ -86,7 +86,7 @@ AppList readAppList(const std::string& filename)
   return apps;
 }
 
-// -----------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------
 size_t displayAppList(const AppList& apps)
 {
   std::cout << "Enter index of application to run (1-" << apps.size() << "):\n";
@@ -99,7 +99,7 @@ size_t displayAppList(const AppList& apps)
   return appIndex - 1;
 }
 
-// -----------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------
 void main(const Options& options)
 {
   log::init(options.logSeverity(), log::format::severity | log::format::time);
@@ -121,7 +121,7 @@ void main(const Options& options)
 } // !namespace
 } // !namespace yaga
 
-// -----------------------------------------------------------------------------------------------------------------------------
+// ------------------------------------------------------------------------------------------------------------------------------
 int main(int argc, char* argv[])
 {
 #ifdef NDEBUG
@@ -134,13 +134,13 @@ int main(int argc, char* argv[])
 #ifdef NDEBUG
   catch (const yaga::Exception& exp) {
     LOG_E(fatal, exp);
-    return EXIT_FAILURE
+    return EXIT_FAILURE;
   } catch (const std::exception& exp) {
     LOG(fatal) << exp.what();
-    return EXIT_FAILURE
+    return EXIT_FAILURE;
   } catch (...) {
     LOG(fatal) << "Unknown exception";
-    return EXIT_FAILURE
+    return EXIT_FAILURE;
   }
 #endif // !NDEBUG
   return EXIT_SUCCESS;

@@ -5,7 +5,7 @@ namespace yaga {
 namespace vk {
 namespace {
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void copyBuffer(VkBuffer source, VkBuffer destination, VkDeviceSize size, VkCommandBuffer command)
 {
   VkBufferCopy copyRegion{};
@@ -15,14 +15,14 @@ void copyBuffer(VkBuffer source, VkBuffer destination, VkDeviceSize size, VkComm
 
 } // !namespace
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 MeshPool::MeshPool(Device* device, VmaAllocator allocator, uint32_t maxVertexCount, uint32_t maxIndexCount) :
   device_(device), vkDevice_(**device), allocator_(allocator), maxVertexCount_(maxVertexCount), maxIndexCount_(maxIndexCount)
 {
   createStageBuffers(maxVertexCount, maxIndexCount);
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 MeshPool::~MeshPool()
 {
   if (meshes_.empty()) {
@@ -30,7 +30,7 @@ MeshPool::~MeshPool()
   }
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void MeshPool::clear()
 {
   if (!meshes_.empty()) {
@@ -39,14 +39,14 @@ void MeshPool::clear()
   meshCache_.clear();
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void MeshPool::removeMesh(Mesh* mesh)
 {
   vkDeviceWaitIdle(vkDevice_);
   meshes_.erase(mesh);
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 MeshPtr MeshPool::createMesh(Object* object, assets::Mesh* asset)
 {
   auto it = meshCache_.find(asset);
@@ -88,8 +88,13 @@ MeshPtr MeshPool::createMesh(Object* object, assets::Mesh* asset)
   auto indexBuffer = std::make_unique<Buffer>(allocator_, info, allocInfo);
 
   auto mesh = std::make_unique<Mesh>(object, asset, this, **vertexBuffer, **indexBuffer, indexCount);
-  device_->submitCommand([stageVertex = **stageVertexBuffer_, stageIndex = **stageIndexBuffer_, verticesSize, indicesSize,
-                           mesh = mesh.get()](auto command) {
+  device_->submitCommand([
+    stageVertex = **stageVertexBuffer_,
+    stageIndex  = **stageIndexBuffer_,
+    verticesSize,
+    indicesSize,
+    mesh = mesh.get()
+  ](auto command) {
     copyBuffer(stageVertex, mesh->vertexBuffer(), verticesSize, command);
     copyBuffer(stageIndex, mesh->indexBuffer(), indicesSize, command);
   });
@@ -104,7 +109,7 @@ MeshPtr MeshPool::createMesh(Object* object, assets::Mesh* asset)
   return mesh;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void MeshPool::createStageBuffers(uint32_t maxVertexCount, uint32_t maxIndexCount)
 {
   VkBufferCreateInfo info{};

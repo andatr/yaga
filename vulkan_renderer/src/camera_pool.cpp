@@ -4,15 +4,16 @@
 namespace yaga {
 namespace vk {
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 CameraPool::CameraPool(Device* device, VmaAllocator allocator, Swapchain* swapchain, VkDescriptorPool descriptorPool) :
   device_(device), vkDevice_(**device), allocator_(allocator), descriptorPool_(descriptorPool),
   frames_(static_cast<uint32_t>(swapchain->frameBuffers().size())), mainCamera_(nullptr)
 {
+  swapchain_ = swapchain;
   createDescriptorLayout();
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void CameraPool::createDescriptorLayout()
 {
   VkDescriptorSetLayoutBinding uboBinding{};
@@ -37,7 +38,7 @@ void CameraPool::createDescriptorLayout()
   layout_.set(layout, destroyLayout);
 }
 
-// ------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 CameraPool::~CameraPool()
 {
   if (cameras_.empty()) {
@@ -45,7 +46,7 @@ CameraPool::~CameraPool()
   }
 }
 
-// ------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 CameraPtr CameraPool::createCamera(Object* object, assets::Camera* asset)
 {
   auto camera = std::make_unique<Camera>(object, asset, this, frames_);
@@ -61,7 +62,7 @@ CameraPtr CameraPool::createCamera(Object* object, assets::Camera* asset)
   return camera;
 }
 
-// ------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void CameraPool::removeCamera(Camera* camera)
 {
   vkDeviceWaitIdle(vkDevice_);
@@ -71,7 +72,7 @@ void CameraPool::removeCamera(Camera* camera)
   cameras_.erase(camera);
 }
 
-// ------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void CameraPool::clear() // would be strange to make it const
 {
   if (!cameras_.empty()) {
@@ -79,7 +80,7 @@ void CameraPool::clear() // would be strange to make it const
   }
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void CameraPool::createDescriptorSets(Camera* camera) const
 {
   std::vector<VkDescriptorSetLayout> layouts(frames_, *layout_);
@@ -97,7 +98,7 @@ void CameraPool::createDescriptorSets(Camera* camera) const
   }
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void CameraPool::createBuffers(Camera* camera) const
 {
   VkBufferCreateInfo info{};
@@ -114,7 +115,7 @@ void CameraPool::createBuffers(Camera* camera) const
   }
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void CameraPool::updateDescriptorSets(Camera* camera) const
 {
   std::vector<VkWriteDescriptorSet> writers(frames_);
@@ -135,7 +136,7 @@ void CameraPool::updateDescriptorSets(Camera* camera) const
   vkUpdateDescriptorSets(vkDevice_, frames_, writers.data(), 0, nullptr);
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void CameraPool::createCommandBuffers(Camera* camera) const
 {
   VkCommandBufferAllocateInfo allocInfo{};
@@ -152,7 +153,7 @@ void CameraPool::createCommandBuffers(Camera* camera) const
   }
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void CameraPool::update(uint32_t frameIndex)
 {
   for (auto& camera : cameras_) {
@@ -164,12 +165,16 @@ void CameraPool::update(uint32_t frameIndex)
   }
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void CameraPool::updateBuffers(Camera* camera, Camera::Frame& frame)
 {
   void* mappedData;
   vmaMapMemory(allocator_, frame.buffer->allocation(), &mappedData);
-  memcpy(mappedData, &camera->uniform_, sizeof(UniformObject));
+  auto uniform = (UniformObject*)mappedData;
+  uniform->aspect = static_cast<float>(swapchain_->resolution().width) / swapchain_->resolution().height;
+  uniform->view = camera->view_;
+  uniform->projection = camera->asset_->projection();
+  memcpy(mappedData, mappedData, sizeof(UniformObject));
   vmaUnmapMemory(allocator_, frame.buffer->allocation());
 }
 

@@ -16,12 +16,16 @@ class Material : public yaga::Material
   friend class MaterialPool;
 
 public:
+  typedef yaga::Material base;
+
+public:
   explicit Material(Object* object, assets::Material* asset, MaterialPool* pool, VkPipeline pipeline, VkPipelineLayout layout,
     const std::vector<VkDescriptorSet>& descriptorSets);
   virtual ~Material();
   VkPipelineLayout pipelineLayout() const { return layout_; }
   VkPipeline pipeline() const { return pipeline_; }
   const std::vector<VkDescriptorSet>& descriptorSets() const { return descriptorSets_; }
+  void wireframe(bool w) override;
 
 private:
   MaterialPool* pool_;

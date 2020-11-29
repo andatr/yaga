@@ -40,6 +40,7 @@ private:
   Device* device_;
   VkDevice vkDevice_;
   VmaAllocator allocator_;
+  Swapchain* swapchain_;
   VkDescriptorPool descriptorPool_;
   uint32_t frames_;
   AutoDestructor<VkDescriptorSetLayout> layout_;

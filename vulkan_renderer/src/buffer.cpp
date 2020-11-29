@@ -4,7 +4,7 @@
 namespace yaga {
 namespace vk {
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 Buffer::Buffer(VmaAllocator allocator, const VkBufferCreateInfo& info, const VmaAllocationCreateInfo& allocInfo) :
   allocator_(allocator), buffer_(VK_NULL_HANDLE), allocation_{}, memory_{}
 {
@@ -13,7 +13,7 @@ Buffer::Buffer(VmaAllocator allocator, const VkBufferCreateInfo& info, const Vma
   LOG(trace) << "Vulkan Buffer Object created";
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 Buffer::~Buffer()
 {
   vmaDestroyBuffer(allocator_, buffer_, allocation_);

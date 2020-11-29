@@ -19,6 +19,7 @@ target_include_directories(model_viewer
 
 target_link_libraries(model_viewer
   PRIVATE
+    assimp::assimp
     engine
     utility
 )

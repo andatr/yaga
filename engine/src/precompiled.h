@@ -3,6 +3,7 @@
 
 #include <functional>
 #include <map>
+#include <math.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -17,6 +18,7 @@
 #include <boost/property_tree/ini_parser.hpp>
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/math/constants/constants.hpp>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>

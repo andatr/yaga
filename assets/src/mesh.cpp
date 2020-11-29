@@ -16,20 +16,20 @@ struct hash<yaga::Vertex>
   size_t operator()(yaga::Vertex const& vertex) const;
 };
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 size_t hash<yaga::Vertex>::operator()(yaga::Vertex const& vertex) const
 {
-  return ((hash<glm::vec3>()(vertex.pos) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^ (hash<glm::vec2>()(vertex.uv) << 1);
+  return ((hash<glm::vec3>()(vertex.position) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) /*^ (hash<glm::vec2>()(vertex.texCoord) << 1)*/;
 }
 
 } // !namespace std
 
 namespace yaga {
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 bool operator==(const Vertex& first, const Vertex& second)
 {
-  return first.pos == second.pos && first.color == second.color && first.uv == second.uv;
+  return first.position == second.position && first.color == second.color /*&& first.texCoord == second.texCoord*/;
 }
 
 namespace assets {
@@ -37,47 +37,47 @@ namespace assets {
 const SerializationInfo Mesh::serializationInfo = { (uint32_t)StandardAssetId::mesh, { "obj" }, &Mesh::deserializeBinary,
   &Mesh::deserializeFriendly };
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 Mesh::Mesh(const std::string& name) : Asset(name) {}
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 Mesh::~Mesh() {}
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void Mesh::vertices(VertexUpdater handler)
 {
   handler(vertices_);
   fireUpdate(MeshProperty::vertices);
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void Mesh::vertices(const Vertices& vertices)
 {
   vertices_ = vertices;
   fireUpdate(MeshProperty::vertices);
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void Mesh::indices(IndexUpdater handler)
 {
   handler(indices_);
   fireUpdate(MeshProperty::indices);
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void Mesh::indices(const Indices& indices)
 {
   indices_ = indices;
   fireUpdate(MeshProperty::indices);
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 MeshPtr Mesh::deserializeBinary(const std::string&, std::istream&, size_t, RefResolver&)
 {
   THROW_NOT_IMPLEMENTED;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 MeshPtr Mesh::deserializeFriendly(const std::string& name, const std::string& path, RefResolver&)
 {
   // TODO: rework!
@@ -96,12 +96,16 @@ MeshPtr Mesh::deserializeFriendly(const std::string& name, const std::string& pa
     for (const auto& index : shape.mesh.indices) {
       Vertex vertex{};
 
-      vertex.pos = { attrib.vertices[3 * index.vertex_index + 0], attrib.vertices[3 * index.vertex_index + 1],
-        attrib.vertices[3 * index.vertex_index + 2] };
+      vertex.position = {
+        attrib.vertices[3 * index.vertex_index + 0],
+        attrib.vertices[3 * index.vertex_index + 1],
+        attrib.vertices[3 * index.vertex_index + 2],
+        1.0f
+      };
 
-      vertex.uv = { attrib.texcoords[2 * index.texcoord_index + 0], 1.0f - attrib.texcoords[2 * index.texcoord_index + 1] };
+      //vertex.texCoord = { attrib.texcoords[2 * index.texcoord_index + 0], 1.0f - attrib.texcoords[2 * index.texcoord_index + 1] };
 
-      vertex.color = { 1.0f, 1.0f, 1.0f };
+      vertex.color = { 1.0f, 1.0f, 1.0f, 1.0f };
 
       if (uniqueVertices.count(vertex) == 0) {
         uniqueVertices[vertex] = static_cast<uint32_t>(mesh->vertices_.size());

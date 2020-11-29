@@ -15,7 +15,7 @@ for root, dirs, files in os.walk(inDir):
       inFile = os.path.join(root, file)
       relPath = os.path.relpath(inFile, inDir)
       outFile = os.path.join(outDir, relPath)
-      outFile, ext = os.path.splitext(outFile)
+      #outFile, ext = os.path.splitext(outFile)
       outFile = outFile + '.spv'
       if os.path.isfile(outFile) and os.path.getmtime(outFile) >= os.path.getmtime(inFile):
         print('no changes detected in %s, skipping' % file)

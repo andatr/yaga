@@ -8,7 +8,7 @@ namespace yaga {
 namespace vk {
 namespace {
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 VkVertexInputBindingDescription getVertexBindingDescription()
 {
   VkVertexInputBindingDescription bindingDescription{};
@@ -18,26 +18,43 @@ VkVertexInputBindingDescription getVertexBindingDescription()
   return bindingDescription;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
-std::array<VkVertexInputAttributeDescription, 3> getVertexAttributeDescriptions()
+// -----------------------------------------------------------------------------------------------------------------------------
+std::array<VkVertexInputAttributeDescription, 5> getVertexAttributeDescriptions()
 {
-  std::array<VkVertexInputAttributeDescription, 3> desc{};
-  desc[0].binding = 0;
+  std::array<VkVertexInputAttributeDescription, 5> desc{};
+  desc[0].binding  = 0;
   desc[0].location = 0;
-  desc[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-  desc[0].offset = offsetof(Vertex, pos);
-  desc[1].binding = 0;
+  desc[0].format   = VK_FORMAT_R32G32B32A32_SFLOAT;
+  desc[0].offset   = offsetof(Vertex, position);
+
+  desc[1].binding  = 0;
   desc[1].location = 1;
-  desc[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-  desc[1].offset = offsetof(Vertex, color);
-  desc[2].binding = 0;
+  desc[1].format   = VK_FORMAT_R32G32B32A32_SFLOAT;
+  desc[1].offset   = offsetof(Vertex, normal);
+
+  desc[2].binding  = 0;
   desc[2].location = 2;
-  desc[2].format = VK_FORMAT_R32G32_SFLOAT;
-  desc[2].offset = offsetof(Vertex, uv);
+  desc[2].format   = VK_FORMAT_R32G32B32A32_SFLOAT;
+  desc[2].offset   = offsetof(Vertex, tangent);
+
+  desc[3].binding  = 0;
+  desc[3].location = 3;
+  desc[3].format   = VK_FORMAT_R32G32_SFLOAT;
+  desc[3].offset   = offsetof(Vertex, texture);
+
+  desc[4].binding  = 0;
+  desc[4].location = 4;
+  desc[4].format   = VK_FORMAT_R32G32B32A32_SFLOAT;
+  desc[4].offset   = offsetof(Vertex, color);
+
+  /*desc[4].binding  = 0;
+  desc[4].location = 4;
+  desc[4].format   = VK_FORMAT_R32G32_SFLOAT;
+  desc[4].offset   = offsetof(Vertex, texCoord);*/
   return desc;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 VkPipelineInputAssemblyStateCreateInfo getPrimitives()
 {
   VkPipelineInputAssemblyStateCreateInfo info{};
@@ -47,7 +64,7 @@ VkPipelineInputAssemblyStateCreateInfo getPrimitives()
   return info;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 VkViewport getViewport(const VkExtent2D& size)
 {
   VkViewport viewport{};
@@ -60,7 +77,7 @@ VkViewport getViewport(const VkExtent2D& size)
   return viewport;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 VkRect2D getScissors(const VkExtent2D& size)
 {
   VkRect2D scissors{};
@@ -69,7 +86,7 @@ VkRect2D getScissors(const VkExtent2D& size)
   return scissors;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 VkPipelineViewportStateCreateInfo getViewportState(const VkViewport& viewport, const VkRect2D& scissors)
 {
   VkPipelineViewportStateCreateInfo info{};
@@ -81,23 +98,22 @@ VkPipelineViewportStateCreateInfo getViewportState(const VkViewport& viewport, c
   return info;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
-VkPipelineRasterizationStateCreateInfo getRasterizer()
+// -----------------------------------------------------------------------------------------------------------------------------
+VkPipelineRasterizationStateCreateInfo getRasterizer(bool wireframe)
 {
   VkPipelineRasterizationStateCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
   info.depthClampEnable = VK_FALSE;
   info.rasterizerDiscardEnable = VK_FALSE;
-  info.polygonMode = VK_POLYGON_MODE_FILL;
+  info.polygonMode = wireframe ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL;
   info.lineWidth = 1.0f;
   info.cullMode = VK_CULL_MODE_BACK_BIT;
   info.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-  // info.frontFace = VK_FRONT_FACE_CLOCKWISE;
   info.depthBiasEnable = VK_FALSE;
   return info;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 VkPipelineMultisampleStateCreateInfo getSampler(VkSampleCountFlagBits msaa)
 {
   VkPipelineMultisampleStateCreateInfo info{};
@@ -108,7 +124,7 @@ VkPipelineMultisampleStateCreateInfo getSampler(VkSampleCountFlagBits msaa)
   return info;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 VkPipelineColorBlendAttachmentState getColorBlender()
 {
   VkPipelineColorBlendAttachmentState info{};
@@ -118,7 +134,7 @@ VkPipelineColorBlendAttachmentState getColorBlender()
   return info;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 VkPipelineColorBlendStateCreateInfo getColorBlendState(const VkPipelineColorBlendAttachmentState& blender)
 {
   VkPipelineColorBlendStateCreateInfo info{};
@@ -134,7 +150,7 @@ VkPipelineColorBlendStateCreateInfo getColorBlendState(const VkPipelineColorBlen
   return info;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 VkPipelineDepthStencilStateCreateInfo getDepthStencilState()
 {
   VkPipelineDepthStencilStateCreateInfo info{};
@@ -147,7 +163,7 @@ VkPipelineDepthStencilStateCreateInfo getDepthStencilState()
   return info;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 VkPipelineShaderStageCreateInfo getShaderStage(VkShaderModule module, VkShaderStageFlagBits shaderType)
 {
   VkPipelineShaderStageCreateInfo info{};
@@ -160,7 +176,7 @@ VkPipelineShaderStageCreateInfo getShaderStage(VkShaderModule module, VkShaderSt
 
 } // !namespace
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 MaterialPool::MaterialPool(Device* device, Swapchain* swapchain, ImagePool* imagePool, VkDescriptorPool descriptorPool,
   VkDescriptorSetLayout uniformLayout) :
   vkDevice_(**device),
@@ -171,19 +187,22 @@ MaterialPool::MaterialPool(Device* device, Swapchain* swapchain, ImagePool* imag
   createPipelineLayout();
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void MaterialPool::swapchain(Swapchain* swapchain)
 {
   swapchain_ = swapchain;
   for (const auto& material : materials_) {
     const auto& asset = material->asset();
-    auto pipeline = createPipeline(asset->vertexShader(), asset->fragmentShader());
-    material->pipeline_ = *pipeline;
-    materialCache_[asset].pipeline = std::move(pipeline);
+    auto pipeline  = createPipeline(asset->vertexShader(), asset->fragmentShader(), false);
+    auto wireframe = createPipeline(asset->vertexShader(), asset->fragmentShader(), true);
+    material->pipeline_ = material->wireframe_ ? *wireframe : *pipeline;
+    auto it = materialCache_.find(asset);
+    it->second.pipeline  = std::move(pipeline);
+    it->second.wireframe = std::move(wireframe);
   }
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void MaterialPool::createDescriptorLayout()
 {
   VkDescriptorSetLayoutBinding samplerBinding{};
@@ -209,7 +228,7 @@ void MaterialPool::createDescriptorLayout()
   descriptorLayout_.set(layout, destroyLayout);
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void MaterialPool::createPipelineLayout()
 {
   std::array<VkPushConstantRange, 1> pushConstants;
@@ -235,7 +254,7 @@ void MaterialPool::createPipelineLayout()
   LOG(trace) << "Pipeline Layout created";
 }
 
-// ------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void MaterialPool::clear()
 {
   if (!materials_.empty()) {
@@ -245,14 +264,14 @@ void MaterialPool::clear()
   shaderCache_.clear();
 }
 
-// ------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void MaterialPool::removeMaterial(Material* material)
 {
   vkDeviceWaitIdle(vkDevice_);
   materials_.erase(material);
 }
 
-// ------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 MaterialPtr MaterialPool::createMaterial(Object* object, assets::Material* asset)
 {
   auto it = materialCache_.find(asset);
@@ -265,7 +284,8 @@ MaterialPtr MaterialPool::createMaterial(Object* object, assets::Material* asset
 
   MaterialCache cache;
   cache.descriptorSets = createDescriptorSets();
-  cache.pipeline = createPipeline(asset->vertexShader(), asset->fragmentShader());
+  cache.pipeline  = createPipeline(asset->vertexShader(), asset->fragmentShader(), false);
+  cache.wireframe = createPipeline(asset->vertexShader(), asset->fragmentShader(), true);
   auto material = std::make_unique<Material>(object, asset, this, *cache.pipeline, *pipelineLayout_, cache.descriptorSets);
   materials_.insert(material.get());
   materialCache_[asset] = std::move(cache);
@@ -279,7 +299,15 @@ MaterialPtr MaterialPool::createMaterial(Object* object, assets::Material* asset
   return material;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
+void MaterialPool::updatePipeline(Material* material)
+{
+  vkDeviceWaitIdle(vkDevice_);
+  const auto& cache = materialCache_[material->asset_];
+  material->pipeline_ = material->wireframe_ ? *cache.wireframe : *cache.pipeline;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
 VkShaderModule MaterialPool::createShader(assets::Shader* asset)
 {
   auto it = shaderCache_.find(asset);
@@ -302,8 +330,9 @@ VkShaderModule MaterialPool::createShader(assets::Shader* asset)
   return shader;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
-AutoDestructor<VkPipeline> MaterialPool::createPipeline(assets::Shader* vertexShader, assets::Shader* fragmentShader)
+// -----------------------------------------------------------------------------------------------------------------------------
+AutoDestructor<VkPipeline> MaterialPool::createPipeline(assets::Shader* vertexShader, assets::Shader* fragmentShader,
+  bool wireframe)
 {
   VkPipelineShaderStageCreateInfo shaderStages[] = {
     getShaderStage(createShader(vertexShader), VK_SHADER_STAGE_VERTEX_BIT),
@@ -323,7 +352,7 @@ AutoDestructor<VkPipeline> MaterialPool::createPipeline(assets::Shader* vertexSh
   auto viewport = getViewport(swapchain_->resolution());
   auto scissors = getScissors(swapchain_->resolution());
   auto viewportState = getViewportState(viewport, scissors);
-  auto rasterizer = getRasterizer();
+  auto rasterizer = getRasterizer(wireframe);
   auto sampler = getSampler(swapchain_->msaa());
   auto colorBlender = getColorBlender();
   auto colorBlendState = getColorBlendState(colorBlender);
@@ -356,7 +385,7 @@ AutoDestructor<VkPipeline> MaterialPool::createPipeline(assets::Shader* vertexSh
   return AutoDestructor<VkPipeline>(pipeline, destroyPipeline);
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 std::vector<VkDescriptorSet> MaterialPool::createDescriptorSets() const
 {
   std::vector<VkDescriptorSetLayout> layouts(frames_, *descriptorLayout_);
@@ -372,7 +401,7 @@ std::vector<VkDescriptorSet> MaterialPool::createDescriptorSets() const
   return descriptorSets;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void MaterialPool::updateDescriptorSets(
   const std::vector<VkDescriptorSet>& descriptorSets, const std::vector<Image*>& images) const
 {

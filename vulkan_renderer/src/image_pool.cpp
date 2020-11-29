@@ -5,7 +5,7 @@ namespace yaga {
 namespace vk {
 namespace {
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void changeImageLayout(Image* image, VkCommandBuffer command, VkImageLayout oldLayout, VkImageLayout newLayout)
 {
   VkImageMemoryBarrier barrier{};
@@ -38,7 +38,7 @@ void changeImageLayout(Image* image, VkCommandBuffer command, VkImageLayout oldL
   vkCmdPipelineBarrier(command, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void setImageData(Image* image, VkBuffer buffer, VkCommandBuffer command)
 {
   VkBufferImageCopy region{};
@@ -54,7 +54,7 @@ void setImageData(Image* image, VkBuffer buffer, VkCommandBuffer command)
   vkCmdCopyBufferToImage(command, buffer, **image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void generateMipMaps(Image* image, VkCommandBuffer command)
 {
   if (image->info().mipLevels < 2) {
@@ -126,7 +126,7 @@ void generateMipMaps(Image* image, VkCommandBuffer command)
 
 } // !namespace
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 ImagePool::ImagePool(Device* device, VmaAllocator allocator, VkDeviceSize maxImageSize) :
   device_(device), vkDevice_(**device), allocator_(allocator), maxImageSize_(maxImageSize)
 {
@@ -134,7 +134,7 @@ ImagePool::ImagePool(Device* device, VmaAllocator allocator, VkDeviceSize maxIma
   createSampler();
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 Image* ImagePool::createImage(assets::Texture* asset)
 {
   auto it = images_.find(asset);
@@ -185,7 +185,7 @@ Image* ImagePool::createImage(assets::Texture* asset)
   return imagePtr;
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void ImagePool::createStageBuffer(VkDeviceSize size)
 {
   VkBufferCreateInfo info{};
@@ -200,7 +200,7 @@ void ImagePool::createStageBuffer(VkDeviceSize size)
   stageBuffer_ = std::make_unique<Buffer>(allocator_, info, allocInfo);
 }
 
-// -------------------------------------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void ImagePool::createSampler()
 {
   VkSamplerCreateInfo info{};

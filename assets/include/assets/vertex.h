@@ -7,10 +7,14 @@ namespace yaga {
 
 struct Vertex
 {
-  glm::vec3 pos;
-  glm::vec3 color;
-  glm::vec2 uv;
+  glm::vec4 position;
+  glm::vec4 normal;
+  glm::vec4 tangent;
+  glm::vec2 texture;
+  glm::vec4 color;
 };
+
+typedef uint32_t Index;
 
 } // !namespace yaga
 
