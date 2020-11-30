@@ -48,6 +48,7 @@ private:
   void resize(Application* app);
   void checkValidationLayers() const;
   void setupLogging();
+  void setupGUI();
   void loop(Application* app);
   void gameLoop(Application* app);
   void drawFrame(Application* app);

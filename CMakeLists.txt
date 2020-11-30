@@ -1,9 +1,9 @@
-cmake_minimum_required(VERSION 3.15)
-cmake_policy(VERSION 3.15)
+cmake_minimum_required(VERSION 3.16)
+cmake_policy(VERSION 3.16)
 enable_testing()
 project(yaga VERSION 0.0.1 LANGUAGES CXX)
 
-include(${PROJECT_SOURCE_DIR}/CMake/assign_source_group.cmake)
+include(${PROJECT_SOURCE_DIR}/CMake/set_precompiled_headers.cmake)
 include(${PROJECT_SOURCE_DIR}/CMake/target_link_libraries_alt.cmake)
 
 set_property(GLOBAL PROPERTY CXX_STANDARD 14)
@@ -11,8 +11,9 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 set_property(GLOBAL PROPERTY PREDEFINED_TARGETS_FOLDER "cmake")
 if(MSVC)
   add_compile_options(/Yuprecompiled.h -W4)
-  add_compile_options(/wd4714) # marked as __forceinline not inlined
-  add_compile_options(/wd4503) # decorated name length exceeded, name was truncated
+  add_compile_options(/wd4714)   # marked as __forceinline not inlined
+  add_compile_options(/wd4503)   # decorated name length exceeded, name was truncated
+  add_link_options(/ignore:4099) # missing pdb files
   add_definitions(-D_CRT_SECURE_NO_WARNINGS)
   add_definitions(-D_SCL_SECURE_NO_WARNINGS)
 else(MSVC)
@@ -64,6 +65,7 @@ if(NOT Vulkan_FOUND)
   message(FATAL_ERROR "Vulkan SDK not found")
 endif()
 find_package(assimp        QUIET)
+find_package(imgui         QUIET)
 find_package(stb           QUIET) # header only, requires find_package only for conan
 find_package(tinyobjloader QUIET) # header only, requires find_package only for conan
 find_package(vma           QUIET) # header only, requires find_package only for conan
@@ -73,6 +75,8 @@ file(GLOB_RECURSE source_list
   "CMake/*.cmake"
   "conanfile.txt"
   ".clang-format"
+  "readme.txt"
+  "LICENSE"
 )
 add_custom_target(cmake SOURCES ${source_list})
 set_target_properties(cmake PROPERTIES

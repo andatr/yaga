@@ -6,6 +6,10 @@
 #include "assets/mesh.h"
 #include "assets/texture.h"
 
+#include "imgui.h"
+#include "imgui_impl_glfw.h"
+#include "imgui_impl_vulkan.h"
+
 #pragma warning(push, 0)
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>
@@ -131,6 +135,7 @@ void Platform::run(Application* app)
   renderingContext_ = std::make_unique<RenderingContext>(device_.get(), *allocator_, swapchain_.get(), asset_);
   renderer_ = std::make_unique<Renderer>(swapchain_.get(), renderingContext_.get());
   presenter_ = std::make_unique<Presenter>(device_.get(), swapchain_.get());
+  setupGUI();
   app->init(renderingContext_.get(), input_.get());
   loop(app);
   app->shutdown();
@@ -242,6 +247,16 @@ void Platform::createAllocator()
   }
   allocator_.set(allocator, destroyAllocator);
   LOG(trace) << "Video Memory Allocator created";
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+void Platform::setupGUI()
+{
+  IMGUI_CHECKVERSION();
+  ImGui::CreateContext();
+  ImGuiIO& io = ImGui::GetIO(); (void)io; // wtf is that?
+  ImGui::StyleColorsDark();
+  ImGui_ImplGlfw_InitForVulkan(*window_, true);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------

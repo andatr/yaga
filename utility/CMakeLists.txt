@@ -3,15 +3,10 @@ file(GLOB_RECURSE source_list
   "src/*.h"
   "src/*.cpp"
 )
-
-if(MSVC)
-  assign_source_group(${source_list})
-  set_source_files_properties("src/precompiled.cpp" PROPERTIES COMPILE_FLAGS "/Ycprecompiled.h")
-endif(MSVC)
-
+source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${source_list})
 add_library(utility ${source_list})
 set_target_properties(utility PROPERTIES FOLDER lib)
-
+set_precompiled_headers(utility)
 target_include_directories(utility
   PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/include
@@ -19,7 +14,6 @@ target_include_directories(utility
     ${CMAKE_CURRENT_LIST_DIR}/include/utility
     ${CMAKE_CURRENT_LIST_DIR}/src
 )
-
 target_link_libraries(utility
   PUBLIC
     Boost::boost
@@ -27,5 +21,4 @@ target_link_libraries(utility
     Boost::log
     Boost::log_setup
 )
-
 add_subdirectory(test)
