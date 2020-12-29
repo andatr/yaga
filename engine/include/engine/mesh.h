@@ -13,6 +13,7 @@ class Mesh : public Component
 public:
   explicit Mesh(Object* object, assets::Mesh* asset);
   virtual ~Mesh() {}
+  assets::Mesh* asset() const { return asset_; }
 
 protected:
   assets::Mesh* asset_;

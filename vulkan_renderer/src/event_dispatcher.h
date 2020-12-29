@@ -28,7 +28,7 @@ public:
   Connection onMouseButton  (const SignalMouseButton::slot_type& handler) { return sigMouseButton_.connect(handler); }
   Connection onCursorMove   (const SignalCursorMove::slot_type&  handler) { return sigCursorMove_.connect(handler);  }
   Connection onCursorLeave  (const SignalCursorLeave::slot_type& handler) { return sigCursorLeave_.connect(handler); }
-  void onResize     (const Connection& handler) { return sigResize_.disconnect(handler);      }
+   
   void onKeyboard   (const Connection& handler) { return sigKeyboard_.disconnect(handler);    }
   void onCharacter  (const Connection& handler) { return sigCharacter_.disconnect(handler);   }
   void onMouseButton(const Connection& handler) { return sigMouseButton_.disconnect(handler); }

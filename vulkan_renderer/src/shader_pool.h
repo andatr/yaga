@@ -2,7 +2,7 @@
 #define YAGA_VULKAN_RENDERER_SRC_SHADER
 
 #include <memory>
-#include <boost/noncopyable.hpp>
+#include <unordered_map>
 
 #include "device.h"
 #include "vulkan.h"
@@ -12,17 +12,20 @@
 namespace yaga {
 namespace vk {
 
-class Shader : private boost::noncopyable
+class ShaderPool
 {
 public:
-  Shader(Device* device, assets::Shader* asset);
-  VkShaderModule operator*() const { return *shader_; }
+  explicit ShaderPool(Device* device);
+  ~ShaderPool();
+  VkShaderModule get(assets::Shader* asset);
+  void clear();
 
 private:
-  AutoDestructor<VkShaderModule> shader_;
+  Device* device_;
+  std::unordered_map<assets::Shader*, AutoDestructor<VkShaderModule>> shaders_;
 };
 
-typedef std::unique_ptr<Shader> ShaderPtr;
+typedef std::unique_ptr<ShaderPool> ShaderPoolPtr;
 
 } // !namespace vk
 } // !namespace yaga

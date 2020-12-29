@@ -13,7 +13,7 @@ target_include_directories(orbit_sim
 )
 target_link_libraries(orbit_sim
   PRIVATE
-    ngine
+    engine
     utility
 )
 add_custom_command(TARGET orbit_sim

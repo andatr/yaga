@@ -22,15 +22,16 @@ TubeRace::~TubeRace()
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void TubeRace::init(RenderingContext* renderer, Input* input)
+void TubeRace::init(Context* renderer, Input* input)
 {
   base::init(renderer, input);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void TubeRace::loop(float delta)
+bool TubeRace::loop()
 {
-  base::loop(delta);
+  if (!base::loop()) return false;
+  return false;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------

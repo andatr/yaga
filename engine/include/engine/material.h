@@ -14,12 +14,11 @@ public:
   explicit Material(Object* object, assets::Material* asset);
   virtual ~Material() {}
   assets::Material* asset() const { return asset_; }
-  bool wireframe() const { return wireframe_; }
-  virtual void wireframe(bool w) { wireframe_ = w; }
+  virtual bool wireframe() = 0;
+  virtual void wireframe(bool value) = 0;
 
 protected:
   assets::Material* asset_;
-  bool wireframe_;
 };
 
 typedef std::unique_ptr<Material> MaterialPtr;

@@ -4,7 +4,7 @@
 layout(set = 0, binding = 0) uniform UniformObject {
   mat4 view;
   mat4 proj;
-  float aspect;
+  vec3 screen;
 } uo;
 
 layout(push_constant) uniform PushConsts {
@@ -22,7 +22,7 @@ layout(location = 1) out vec2 outTexture;
 
 void main()
 {
-  const vec2 aspectVec = vec2(uo.aspect, 1.0);
+  const vec2 aspectVec = vec2(uo.screen.z, 1.0);
   const vec2 thickness = vec2(inPrev.w, inNext.w);
   mat4 projViewModel = uo.proj * uo.view * pc.model;
 

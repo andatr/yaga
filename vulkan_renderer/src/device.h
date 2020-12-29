@@ -7,6 +7,7 @@
 #include <boost/noncopyable.hpp>
 
 #include "vulkan.h"
+#include "assets/application.h"
 #include "utility/auto_destructor.h"
 
 namespace yaga {
@@ -39,18 +40,21 @@ public:
 public:
   explicit Device(VkInstance instance, VkSurfaceKHR surface, const VulkanExtensions& extensions);
   virtual ~Device();
-  VkDevice operator*() const { return *logicalDevice_; }
-  VkPhysicalDevice physical() const { return physicalDevice_; }
-  const VulkanExtensions& extensions() const { return extensions_; }
-  const VkPhysicalDeviceProperties& properties() const { return properties_; }
-  const QueueFamilyIndices& queueFamilies() const { return queueFamilies_; }
+  VkDevice                           operator*() const { return *logicalDevice_;  }
+  VkPhysicalDevice                    physical() const { return physicalDevice_;  }
+  const VulkanExtensions&           extensions() const { return extensions_;      }
+  const VkPhysicalDeviceProperties& properties() const { return properties_;      }
+  const QueueFamilyIndices&      queueFamilies() const { return queueFamilies_;   }
+  VkCommandPool                    commandPool() const { return *commandPool_;    }
+  VkDescriptorPool              descriptorPool() const { return *descriptorPool_; }
   VkQueue graphicsQueue() const { return queues_[0]; }
-  VkQueue presentQueue() const { return queues_[1]; }
+  VkQueue presentQueue()  const { return queues_[1]; }
   VkQueue transferQueue() const { return queues_[2]; }
-  VkQueue computeQueue() const { return queues_[3]; }
+  VkQueue computeQueue()  const { return queues_[3]; }
+  void createDescriptorPool(uint32_t frames, const assets::Application* limits);
   uint32_t getMemoryType(uint32_t filter, VkMemoryPropertyFlags props) const;
-  VkCommandPool commandPool() const { return *commandPool_; }
   void submitCommand(const CommandHandler& command) const;
+  void waitIdle() const;
 
 private:
   void createDevice(std::vector<const char*>& extensions);
@@ -67,6 +71,7 @@ private:
   AutoDestructor<VkCommandPool> commandPool_;
   AutoDestructor<VkCommandBuffer> immediateCommand_;
   VulkanExtensions extensions_;
+  AutoDestructor<VkDescriptorPool> descriptorPool_;
 };
 
 typedef std::unique_ptr<Device> DevicePtr;

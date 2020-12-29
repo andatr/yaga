@@ -32,7 +32,6 @@ Input::Input(GLFWwindow* window, EventDispatcher* dispatcher) :
 Input::~Input()
 {
   glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-  dispatcher_->onResize     (keyboardConnection_   );
   dispatcher_->onCharacter  (characterConnection_  );
   dispatcher_->onMouseButton(mouseButtonConnection_);
   dispatcher_->onCursorMove (cursorMoveConnection_ ); 

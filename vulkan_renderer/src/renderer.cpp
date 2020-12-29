@@ -1,68 +1,51 @@
 #include "precompiled.h"
 #include "renderer.h"
-#include "material.h"
-#include "mesh.h"
-#include "uniform.h"
-#include "assets/vertex.h"
+#include "render_stage_3d.h"
+#include "render_stage_gui.h"
 
 namespace yaga {
 namespace vk {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Renderer::Renderer(Swapchain* swapchain, RenderingContext* context) :
-  swapchain_(swapchain), context_(context), frames_(static_cast<uint32_t>(swapchain->frameBuffers().size()))
+Renderer::Renderer(Swapchain* swapchain, std::vector<RenderStagePtr>& stages) :
+  swapchain_(swapchain),
+  stages_(std::move(stages))
+{
+  createSemaphore();
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+Renderer::~Renderer()
 {
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Renderer::render(uint32_t frame) const
+void Renderer::createSemaphore()
 {
-  std::array<VkClearValue, 2> clearValues{};
-  clearValues[0].color = { 0.0f, 0.0f, 0.0f, 1.0f };
-  clearValues[1].depthStencil = { 1.0f, 0 };
+  auto deleteSemaphore = [device = **swapchain_->device()](auto semaphore) {
+    vkDestroySemaphore(device, semaphore, nullptr);
+    LOG(trace) << "Vulkan Semaphore destroyed";
+  };
+  VkSemaphore semaphore;
+  VkSemaphoreCreateInfo info{};
+  info.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+  VULKAN_GUARD(vkCreateSemaphore(**swapchain_->device(), &info, nullptr, &semaphore), "Could not create Vulkan Semaphore");
+  imageSync_.set(semaphore, deleteSemaphore);
+  LOG(trace) << "Vulkan Semaphore created";
+}
 
-  VkRenderPassBeginInfo info{};
-  info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-  info.renderPass = swapchain_->renderPass();
-  info.renderArea.offset = { 0, 0 };
-  info.renderArea.extent = swapchain_->resolution();
-  info.clearValueCount = static_cast<uint32_t>(clearValues.size());
-  info.pClearValues = clearValues.data();
-  info.framebuffer = swapchain_->frameBuffers()[frame];
-
-  for (const auto& camera : context_->cameras()) {
-    auto& command = camera->frame(frame).command;
-    VkCommandBufferBeginInfo beginInfo{};
-    beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    VULKAN_GUARD(vkBeginCommandBuffer(command, &beginInfo), "Failed to begin recording Command Buffer");
-    // TODO: add culling and sorting by material / buffers
-    vkCmdBeginRenderPass(command, &info, VK_SUBPASS_CONTENTS_INLINE);
-    for (const auto& object : context_->renderers3D()) {
-      if (object->canRender()) {
-        renderObject(camera, object, command, frame);
-      }
-    }
-    vkCmdEndRenderPass(command);
-    VULKAN_GUARD(vkEndCommandBuffer(command), "Failed to record Command Buffer");
+// -----------------------------------------------------------------------------------------------------------------------------
+bool Renderer::render(Context* context)
+{
+  auto image = swapchain_->acquireImage(*imageSync_);
+  if (image == Swapchain::BAD_IMAGE) {
+    return false;
   }
-}
-
-// -----------------------------------------------------------------------------------------------------------------------------
-void Renderer::renderObject(Camera* camera, Renderer3D* object, VkCommandBuffer command, uint32_t frame)
-{
-  const auto& mesh = object->mesh();
-  const auto& material = object->material();
-  VkBuffer vertexBuffers[] = { mesh->vertexBuffer() };
-  VkDeviceSize offsets[] = { 0 };
-  std::array<VkDescriptorSet, 2> descriptors{ camera->frame(frame).descriptor, material->descriptorSets()[frame] };
-  const auto& pconst = object->pushConstant();
-  vkCmdBindPipeline(command, VK_PIPELINE_BIND_POINT_GRAPHICS, material->pipeline());
-  vkCmdBindDescriptorSets(
-    command, VK_PIPELINE_BIND_POINT_GRAPHICS, material->pipelineLayout(), 0, 2, descriptors.data(), 0, nullptr);
-  vkCmdPushConstants(command, material->pipelineLayout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(PushConstantVertex), &pconst);
-  vkCmdBindVertexBuffers(command, 0, 1, vertexBuffers, offsets);
-  vkCmdBindIndexBuffer(command, mesh->indexBuffer(), 0, VK_INDEX_TYPE_UINT32);
-  vkCmdDrawIndexed(command, mesh->indexCount(), 1, 0, 0, 0);
+  VkSemaphore sync = *imageSync_;
+  for (auto& stage : stages_) {
+    sync = stage->render(context, image, sync);
+  }
+  return swapchain_->presentImage(sync, image);
 }
 
 } // !namespace vk

@@ -1,6 +1,10 @@
 #include "precompiled.h"
 #include "platform.h"
 #include "device.h"
+#include "renderer.h"
+#include "render_pass_3d.h"
+#include "render_stage_3d.h"
+#include "render_stage_gui.h"
 #include "swapchain.h"
 #include "assets/material.h"
 #include "assets/mesh.h"
@@ -86,6 +90,14 @@ VkDebugUtilsMessengerCreateInfoEXT getDebugMessengerCreateInfo()
   return info;
 }
 
+// -----------------------------------------------------------------------------------------------------------------------------
+void checkVkResult(VkResult err)
+{
+  if (err == 0)
+    return;
+  THROW("imgui error %1%", err);
+}
+
 } // !namespace
 
 Platform::InitGLFW Platform::initGLFW_;
@@ -110,56 +122,14 @@ Platform::InitGLFW::~InitGLFW()
 
 // -----------------------------------------------------------------------------------------------------------------------------
 Platform::Platform(const assets::Application* asset) :
-  asset_(asset), minimised_(false), resized_(false)
+  asset_(asset),
+  running_(false)
 {
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 Platform::~Platform()
 {
-  eventDispatcher_->onResize(resizeConnection_);
-}
-
-// -----------------------------------------------------------------------------------------------------------------------------
-void Platform::run(Application* app)
-{
-  createWindow();
-  checkValidationLayers();
-  auto extensions = createInstance(asset_->title());
-  setupLogging();
-  createSurface();
-  device_ = std::make_unique<Device>(*instance_, *surface_, extensions);
-  createAllocator();
-  VkExtent2D resolution{ asset_->width(), asset_->height() };
-  swapchain_ = std::make_unique<Swapchain>(device_.get(), *allocator_, *surface_, resolution);
-  renderingContext_ = std::make_unique<RenderingContext>(device_.get(), *allocator_, swapchain_.get(), asset_);
-  renderer_ = std::make_unique<Renderer>(swapchain_.get(), renderingContext_.get());
-  presenter_ = std::make_unique<Presenter>(device_.get(), swapchain_.get());
-  setupGUI();
-  app->init(renderingContext_.get(), input_.get());
-  loop(app);
-  app->shutdown();
-}
-
-// -----------------------------------------------------------------------------------------------------------------------------
-void Platform::createWindow()
-{
-  namespace ph = std::placeholders;
-  glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-  glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
-  auto deleteWindow = [](auto window) {
-    glfwDestroyWindow(window);
-    LOG(trace) << "Window destroyed";
-  };
-  auto window = glfwCreateWindow(asset_->width(), asset_->height(), asset_->title().c_str(), nullptr, nullptr);
-  if (!window) {
-    THROW("Could not create Window");
-  }
-  eventDispatcher_ = std::make_unique<EventDispatcher>(window);
-  resizeConnection_ = eventDispatcher_->onResize(std::bind(&Platform::onResize, this, ph::_1, ph::_2));
-  input_ = std::make_unique<Input>(window, eventDispatcher_.get());
-  window_.set(window, deleteWindow);
-  LOG(trace) << "Window created";
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -203,19 +173,6 @@ VulkanExtensions Platform::createInstance(const std::string& appName)
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Platform::createSurface()
-{
-  auto destroySurface = [this](auto surface) {
-    vkDestroySurfaceKHR(*instance_, surface, nullptr);
-    LOG(trace) << "Surface destroyed";
-  };
-  VkSurfaceKHR surface;
-  VULKAN_GUARD(glfwCreateWindowSurface(*instance_, *window_, nullptr, &surface), "Could not create Window Surface");
-  surface_.set(surface, destroySurface);
-  LOG(trace) << "Surface created";
-}
-
-// -----------------------------------------------------------------------------------------------------------------------------
 void Platform::createAllocator()
 {
   const auto& extensions = device_->extensions();
@@ -247,34 +204,6 @@ void Platform::createAllocator()
   }
   allocator_.set(allocator, destroyAllocator);
   LOG(trace) << "Video Memory Allocator created";
-}
-
-// -----------------------------------------------------------------------------------------------------------------------------
-void Platform::setupGUI()
-{
-  IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImGuiIO& io = ImGui::GetIO(); (void)io; // wtf is that?
-  ImGui::StyleColorsDark();
-  ImGui_ImplGlfw_InitForVulkan(*window_, true);
-}
-
-// -----------------------------------------------------------------------------------------------------------------------------
-void Platform::resize(Application* app)
-{
-  vkDeviceWaitIdle(**device_);
-  auto size = getWindowSize();
-  if (size.width == 0 || size.height == 0) {
-    minimised_ = true;
-    return;
-  }
-  minimised_ = false;
-  swapchain_.reset();
-  swapchain_ = std::make_unique<Swapchain>(device_.get(), *allocator_, *surface_, size);
-  renderingContext_->swapchain(swapchain_.get());
-  renderer_->swapchain(swapchain_.get());
-  presenter_->swapchain(swapchain_.get());
-  app->resize();
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -324,64 +253,47 @@ void Platform::setupLogging()
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Platform::loop(Application* app)
+void Platform::run(Application* app)
 {
-  startTime_ = std::chrono::high_resolution_clock::now();
-  while (!glfwWindowShouldClose(*window_)) {
-    glfwPollEvents();
-    input_->updateState();
-    gameLoop(app);
-    drawFrame(app);
-  }
-  vkDeviceWaitIdle(**device_);
+  if (running_) return;
+  running_ = true;
+  app_ = app;
+  checkValidationLayers();
+  auto extensions = createInstance(asset_->title());
+  setupLogging();
+  window_ = std::make_unique<Window>(*instance_, asset_);
+  device_ = std::make_unique<Device>(*instance_, window_->surface(), extensions);
+  createAllocator();
+  VkExtent2D resolution{ asset_->width(), asset_->height() };
+  swapchain_ = std::make_unique<Swapchain>(device_.get(), *allocator_, window_->surface(), resolution);
+  device_->createDescriptorPool(swapchain_->imageCount(), asset_);
+  auto renderPass3D  = std::make_unique<RenderPass3D>(swapchain_.get());
+  context_ = std::make_unique<Context>(swapchain_.get(), *allocator_, renderPass3D.get(), asset_);
+  std::vector<RenderStagePtr> stages(2);
+  stages[0] = std::make_unique<RenderStage3D>(swapchain_.get(), *allocator_, std::move(renderPass3D));
+  stages[1] = std::make_unique<RenderStageGui>(swapchain_.get(), window_.get());
+  renderer_ = std::make_unique<Renderer>(swapchain_.get(), stages);
+  app->init(context_.get(), window_->input());
+  loop();
+  app->shutdown();
+  context_->clear();
+  device_->waitIdle();
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Platform::gameLoop(Application* app)
+void Platform::loop()
 {
-  auto currentTime = std::chrono::high_resolution_clock::now();
-  auto delta = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime_).count();
-  app->loop(delta);
-}
-
-// -----------------------------------------------------------------------------------------------------------------------------
-void Platform::drawFrame(Application* app)
-{
-  if (resized_) {
-    resized_ = false;
-    resize(app);
-  }
-  if (minimised_) return;
-  presenter_->waitPrevFrame();
-  const auto mainCamera = renderingContext_->mainCamera();
-  if (mainCamera == nullptr) return;
-  uint32_t imageIndex = 0;
-  if (!presenter_->acquireImage(&imageIndex)) {
-    resize(app);
-    return;
-  }
-  renderingContext_->update(imageIndex);
-  renderer_->render(imageIndex);
-  if (!presenter_->present(mainCamera->frame(imageIndex).command, imageIndex)) {
-    resize(app);
-    return;
-  }
-}
-
-// -----------------------------------------------------------------------------------------------------------------------------
-VkExtent2D Platform::getWindowSize() const
-{
-  int width = 0;
-  int height = 0;
-  glfwGetFramebufferSize(*window_, &width, &height);
-  return { static_cast<uint32_t>(width), static_cast<uint32_t>(height) };
-}
-
-// -----------------------------------------------------------------------------------------------------------------------------
-void Platform::onResize(int width, int height)
-{
-  if (minimised_ && width > 0 && height > 0) {
-    resized_ = true;
+  while (!glfwWindowShouldClose(**window_)) {
+    window_->update();
+    context_->update();
+    if (!app_->loop()) break;
+    if (window_->minimised()) continue;
+    if (window_->resized() || !renderer_->render(context_.get())) {
+      device_->waitIdle();
+      window_->resized(false);
+      swapchain_->resize(window_->size());
+      app_->resize();
+    }
   }
 }
 

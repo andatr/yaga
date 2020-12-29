@@ -1,7 +1,5 @@
 #include "precompiled.h"
 #include "material_pool.h"
-#include "shader.h"
-#include "uniform.h"
 #include "assets/vertex.h"
 
 namespace yaga {
@@ -12,8 +10,8 @@ namespace {
 VkVertexInputBindingDescription getVertexBindingDescription()
 {
   VkVertexInputBindingDescription bindingDescription{};
-  bindingDescription.binding = 0;
-  bindingDescription.stride = sizeof(Vertex);
+  bindingDescription.binding   = 0;
+  bindingDescription.stride    = sizeof(Vertex);
   bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
   return bindingDescription;
 }
@@ -70,7 +68,7 @@ VkViewport getViewport(const VkExtent2D& size)
   VkViewport viewport{};
   viewport.x = 0.0f;
   viewport.y = 0.0f;
-  viewport.width = (float)size.width;
+  viewport.width  = (float)size.width;
   viewport.height = (float)size.height;
   viewport.minDepth = 0.0f;
   viewport.maxDepth = 1.0f;
@@ -92,9 +90,9 @@ VkPipelineViewportStateCreateInfo getViewportState(const VkViewport& viewport, c
   VkPipelineViewportStateCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
   info.viewportCount = 1;
-  info.pViewports = &viewport;
-  info.scissorCount = 1;
-  info.pScissors = &scissors;
+  info.pViewports    = &viewport;
+  info.scissorCount  = 1;
+  info.pScissors     = &scissors;
   return info;
 }
 
@@ -103,13 +101,13 @@ VkPipelineRasterizationStateCreateInfo getRasterizer(bool wireframe)
 {
   VkPipelineRasterizationStateCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
-  info.depthClampEnable = VK_FALSE;
   info.rasterizerDiscardEnable = VK_FALSE;
+  info.depthClampEnable = VK_FALSE;
+  info.depthBiasEnable  = VK_FALSE;
   info.polygonMode = wireframe ? VK_POLYGON_MODE_LINE : VK_POLYGON_MODE_FILL;
-  info.lineWidth = 1.0f;
-  info.cullMode = VK_CULL_MODE_BACK_BIT;
-  info.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
-  info.depthBiasEnable = VK_FALSE;
+  info.lineWidth   = 1.0f;
+  info.cullMode    = VK_CULL_MODE_NONE; // VK_CULL_MODE_BACK_BIT;
+  info.frontFace   = VK_FRONT_FACE_COUNTER_CLOCKWISE;
   return info;
 }
 
@@ -118,8 +116,8 @@ VkPipelineMultisampleStateCreateInfo getSampler(VkSampleCountFlagBits msaa)
 {
   VkPipelineMultisampleStateCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
-  info.sampleShadingEnable = VK_FALSE;
-  info.minSampleShading = 1.0f;
+  info.sampleShadingEnable  = VK_FALSE;
+  info.minSampleShading     = 1.0f;
   info.rasterizationSamples = msaa;
   return info;
 }
@@ -129,7 +127,10 @@ VkPipelineColorBlendAttachmentState getColorBlender()
 {
   VkPipelineColorBlendAttachmentState info{};
   info.colorWriteMask =
-    VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
+    VK_COLOR_COMPONENT_R_BIT | 
+    VK_COLOR_COMPONENT_G_BIT |
+    VK_COLOR_COMPONENT_B_BIT | 
+    VK_COLOR_COMPONENT_A_BIT;
   info.blendEnable = VK_FALSE;
   return info;
 }
@@ -155,7 +156,7 @@ VkPipelineDepthStencilStateCreateInfo getDepthStencilState()
 {
   VkPipelineDepthStencilStateCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-  info.depthTestEnable = VK_TRUE;
+  info.depthTestEnable  = VK_TRUE;
   info.depthWriteEnable = VK_TRUE;
   info.depthCompareOp = VK_COMPARE_OP_LESS;
   info.depthBoundsTestEnable = VK_FALSE;
@@ -177,252 +178,186 @@ VkPipelineShaderStageCreateInfo getShaderStage(VkShaderModule module, VkShaderSt
 } // !namespace
 
 // -----------------------------------------------------------------------------------------------------------------------------
-MaterialPool::MaterialPool(Device* device, Swapchain* swapchain, ImagePool* imagePool, VkDescriptorPool descriptorPool,
-  VkDescriptorSetLayout uniformLayout) :
-  vkDevice_(**device),
-  swapchain_(swapchain), imagePool_(imagePool), descriptorPool_(descriptorPool), uniformLayout_(uniformLayout),
-  frames_(static_cast<uint32_t>(swapchain->frameBuffers().size()))
+MaterialPool::MaterialPool(Swapchain* swapchain,
+  VmaAllocator allocator,
+  RenderPass* renderPass,
+  const assets::Application* limits) :
+    counter_(0),
+    swapchain_(swapchain),
+    renderPass_(renderPass)
 {
-  createDescriptorLayout();
-  createPipelineLayout();
+  shaderPool_  = std::make_unique<ShaderPool> (swapchain->device());
+  texturePool_ = std::make_unique<TexturePool>(swapchain->device(), allocator, limits->maxImageSize());
+  //resizeConnection_ = swapchain_->onResize(std::bind(&MaterialPool::onResize, this));
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void MaterialPool::swapchain(Swapchain* swapchain)
+MaterialPool::~MaterialPool()
 {
-  swapchain_ = swapchain;
-  for (const auto& material : materials_) {
-    const auto& asset = material->asset();
-    auto pipeline  = createPipeline(asset->vertexShader(), asset->fragmentShader(), false);
-    auto wireframe = createPipeline(asset->vertexShader(), asset->fragmentShader(), true);
-    material->pipeline_ = material->wireframe_ ? *wireframe : *pipeline;
-    auto it = materialCache_.find(asset);
-    it->second.pipeline  = std::move(pipeline);
-    it->second.wireframe = std::move(wireframe);
+  //swapchain_->onResize(resizeConnection_);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+//void MaterialPool::onResize()
+//{
+//}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+MaterialPtr MaterialPool::get(Object* object, assets::Material* asset)
+{
+  ++counter_;
+  auto it = materials_.find(asset);
+  if (it != materials_.end()) {
+    return std::make_unique<Material>(this, object, asset, it->second.get());
   }
+
+  auto pipeline = createPipeline(asset);
+  auto pipelinePtr = pipeline.get();
+  materials_[asset] = std::move(pipeline);
+
+  std::vector<Image*> textures;
+  textures.reserve(asset->textures().size());
+  for (const auto& textureAsset : asset->textures()) {
+    textures.push_back(texturePool_->get(textureAsset));
+  }
+  createDescriptors(pipelinePtr);
+  updateDescriptors(pipelinePtr, textures);
+
+  return std::make_unique<Material>(this, object, asset, pipelinePtr);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void MaterialPool::createDescriptorLayout()
+void MaterialPool::onRemove(Material*)
 {
-  VkDescriptorSetLayoutBinding samplerBinding{};
-  samplerBinding.binding = 0;
-  samplerBinding.descriptorCount = 1;
-  samplerBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  samplerBinding.pImmutableSamplers = nullptr;
-  samplerBinding.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
-
-  auto destroyLayout = [device = vkDevice_](auto layout) {
-    vkDestroyDescriptorSetLayout(device, layout, nullptr);
-    LOG(trace) << "Descriptor Set Layout destroyed";
-  };
-
-  VkDescriptorSetLayoutCreateInfo info{};
-  info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-  info.bindingCount = 1;
-  info.pBindings = &samplerBinding;
-
-  VkDescriptorSetLayout layout;
-  VULKAN_GUARD(vkCreateDescriptorSetLayout(vkDevice_, &info, nullptr, &layout),
-    "Could not create material Descriptor Set Layout");
-  descriptorLayout_.set(layout, destroyLayout);
-}
-
-// -----------------------------------------------------------------------------------------------------------------------------
-void MaterialPool::createPipelineLayout()
-{
-  std::array<VkPushConstantRange, 1> pushConstants;
-  pushConstants[0].offset = 0;
-  pushConstants[0].size = sizeof(PushConstantVertex);
-  pushConstants[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-
-  std::array<VkDescriptorSetLayout, 2> setLayouts = { uniformLayout_, *descriptorLayout_ };
-  VkPipelineLayoutCreateInfo info{};
-  info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  info.pushConstantRangeCount = static_cast<uint32_t>(pushConstants.size());
-  info.pPushConstantRanges = pushConstants.data();
-  info.setLayoutCount = static_cast<uint32_t>(setLayouts.size());
-  info.pSetLayouts = setLayouts.data();
-
-  auto destroyLayout = [device = vkDevice_](auto layout) {
-    vkDestroyPipelineLayout(device, layout, nullptr);
-    LOG(trace) << "Pipeline Layout destroyed";
-  };
-  VkPipelineLayout layout;
-  VULKAN_GUARD(vkCreatePipelineLayout(vkDevice_, &info, nullptr, &layout), "Could not create Pipeline Layout");
-  pipelineLayout_.set(layout, destroyLayout);
-  LOG(trace) << "Pipeline Layout created";
+  if (counter_ > 0) {
+    --counter_;
+  }
+  else {
+    THROW("MaterialPool::onRemove something went wrong");
+  }
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 void MaterialPool::clear()
 {
-  if (!materials_.empty()) {
-    THROW("Can not clear Material Pool while its components are still in use");
+  if (counter_ != 0) {
+    THROW("Not all materials were returned to the pool");
   }
-  materialCache_.clear();
-  shaderCache_.clear();
+  materials_.clear();
+  texturePool_->clear();
+  shaderPool_->clear();
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void MaterialPool::removeMaterial(Material* material)
+PipelinePtr MaterialPool::createPipeline(assets::Material* asset) const
 {
-  vkDeviceWaitIdle(vkDevice_);
-  materials_.erase(material);
-}
-
-// -----------------------------------------------------------------------------------------------------------------------------
-MaterialPtr MaterialPool::createMaterial(Object* object, assets::Material* asset)
-{
-  auto it = materialCache_.find(asset);
-  if (it != materialCache_.end()) {
-    auto material =
-      std::make_unique<Material>(object, asset, this, *it->second.pipeline, *pipelineLayout_, it->second.descriptorSets);
-    materials_.insert(material.get());
-    return material;
-  }
-
-  MaterialCache cache;
-  cache.descriptorSets = createDescriptorSets();
-  cache.pipeline  = createPipeline(asset->vertexShader(), asset->fragmentShader(), false);
-  cache.wireframe = createPipeline(asset->vertexShader(), asset->fragmentShader(), true);
-  auto material = std::make_unique<Material>(object, asset, this, *cache.pipeline, *pipelineLayout_, cache.descriptorSets);
-  materials_.insert(material.get());
-  materialCache_[asset] = std::move(cache);
-
-  std::vector<Image*> images;
-  images.reserve(asset->textures().size());
-  for (const auto& textureAsset : asset->textures()) {
-    images.push_back(imagePool_->createImage(textureAsset));
-  }
-  updateDescriptorSets(material->descriptorSets_, images);
-  return material;
-}
-
-// -----------------------------------------------------------------------------------------------------------------------------
-void MaterialPool::updatePipeline(Material* material)
-{
-  vkDeviceWaitIdle(vkDevice_);
-  const auto& cache = materialCache_[material->asset_];
-  material->pipeline_ = material->wireframe_ ? *cache.wireframe : *cache.pipeline;
-}
-
-// -----------------------------------------------------------------------------------------------------------------------------
-VkShaderModule MaterialPool::createShader(assets::Shader* asset)
-{
-  auto it = shaderCache_.find(asset);
-  if (it != shaderCache_.end()) return *it->second;
-
-  VkShaderModuleCreateInfo createInfo{};
-  createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-  createInfo.codeSize = asset->code().size();
-  createInfo.pCode = reinterpret_cast<const uint32_t*>(asset->code().data());
-
-  auto destroyShader = [device = vkDevice_](auto shader) {
-    vkDestroyShaderModule(device, shader, nullptr);
-    LOG(trace) << "Shader destroyed";
+  std::array<VkPipelineShaderStageCreateInfo, 2> shaders = {
+    getShaderStage(shaderPool_->get(asset->vertexShader()),   VK_SHADER_STAGE_VERTEX_BIT),
+    getShaderStage(shaderPool_->get(asset->fragmentShader()), VK_SHADER_STAGE_FRAGMENT_BIT)
   };
 
-  VkShaderModule shader;
-  VULKAN_GUARD(vkCreateShaderModule(vkDevice_, &createInfo, nullptr, &shader), "Could not create Shader");
-  shaderCache_[asset] = AutoDestructor<VkShaderModule>(shader, destroyShader);
-  LOG(trace) << "Shader created";
-  return shader;
-}
-
-// -----------------------------------------------------------------------------------------------------------------------------
-AutoDestructor<VkPipeline> MaterialPool::createPipeline(assets::Shader* vertexShader, assets::Shader* fragmentShader,
-  bool wireframe)
-{
-  VkPipelineShaderStageCreateInfo shaderStages[] = {
-    getShaderStage(createShader(vertexShader), VK_SHADER_STAGE_VERTEX_BIT),
-    getShaderStage(createShader(fragmentShader), VK_SHADER_STAGE_FRAGMENT_BIT)
-  };
-  auto bindingDescription = getVertexBindingDescription();
-  auto attributeDescriptions = getVertexAttributeDescriptions();
+  const auto bindingDescription    = getVertexBindingDescription();
+  const auto attributeDescriptions = getVertexAttributeDescriptions();
 
   VkPipelineVertexInputStateCreateInfo vertexAttributes{};
   vertexAttributes.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-  vertexAttributes.vertexBindingDescriptionCount = 1;
-  vertexAttributes.pVertexBindingDescriptions = &bindingDescription;
+  vertexAttributes.vertexBindingDescriptionCount   = 1;
+  vertexAttributes.pVertexBindingDescriptions      = &bindingDescription;
   vertexAttributes.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
-  vertexAttributes.pVertexAttributeDescriptions = attributeDescriptions.data();
+  vertexAttributes.pVertexAttributeDescriptions    = attributeDescriptions.data();
 
-  auto primitives = getPrimitives();
-  auto viewport = getViewport(swapchain_->resolution());
-  auto scissors = getScissors(swapchain_->resolution());
-  auto viewportState = getViewportState(viewport, scissors);
-  auto rasterizer = getRasterizer(wireframe);
-  auto sampler = getSampler(swapchain_->msaa());
-  auto colorBlender = getColorBlender();
-  auto colorBlendState = getColorBlendState(colorBlender);
-  auto depthStencilState = getDepthStencilState();
+  std::array<VkDynamicState, 2> dynamicStates = {
+    VK_DYNAMIC_STATE_VIEWPORT,
+    VK_DYNAMIC_STATE_SCISSOR
+  };
+  VkPipelineDynamicStateCreateInfo dynamicStatesInfo{};
+  dynamicStatesInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
+  dynamicStatesInfo.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
+  dynamicStatesInfo.pDynamicStates    = dynamicStates.data();
+
+  const auto primitives        = getPrimitives();
+  const auto viewport          = getViewport(swapchain_->resolution());
+  const auto scissors          = getScissors(swapchain_->resolution());
+  const auto viewportState     = getViewportState(viewport, scissors);
+        auto rasterizer        = getRasterizer(false);
+  const auto sampler           = getSampler(swapchain_->msaa());
+  const auto colorBlender      = getColorBlender();
+  const auto colorBlendState   = getColorBlendState(colorBlender);
+  const auto depthStencilState = getDepthStencilState();
 
   VkGraphicsPipelineCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
-  info.pVertexInputState = &vertexAttributes;
+  info.pVertexInputState   = &vertexAttributes;
   info.pInputAssemblyState = &primitives;
-  info.pViewportState = &viewportState;
+  info.pViewportState      = &viewportState;
   info.pRasterizationState = &rasterizer;
-  info.pMultisampleState = &sampler;
-  info.pColorBlendState = &colorBlendState;
-  info.pDepthStencilState = &depthStencilState;
-  info.layout = *pipelineLayout_;
-  info.renderPass = swapchain_->renderPass();
-  info.subpass = 0;
-  info.basePipelineHandle = VK_NULL_HANDLE;
-  info.stageCount = 2;
-  info.pStages = shaderStages;
+  info.pMultisampleState   = &sampler;
+  info.pColorBlendState    = &colorBlendState;
+  info.pDepthStencilState  = &depthStencilState;
+  info.pDynamicState       = &dynamicStatesInfo;
+  info.layout              = renderPass_->pipelineLayout(),
+  info.renderPass          = **renderPass_;
+  info.subpass             = 0;
+  info.basePipelineHandle  = VK_NULL_HANDLE;
+  info.stageCount          = static_cast<uint32_t>(shaders.size());
+  info.pStages             = shaders.data();
 
-  auto destroyPipeline = [device = vkDevice_](auto pipeline) {
+  auto destroyPipeline = [device = **swapchain_->device()](auto pipeline) {
     vkDestroyPipeline(device, pipeline, nullptr);
     LOG(trace) << "Pipeline destroyed";
   };
 
-  VkPipeline pipeline;
-  VULKAN_GUARD(vkCreateGraphicsPipelines(vkDevice_, VK_NULL_HANDLE, 1, &info, nullptr, &pipeline),
+  VkPipeline pipeline_, wireframe;
+  VULKAN_GUARD(vkCreateGraphicsPipelines(**swapchain_->device(), VK_NULL_HANDLE, 1, &info, nullptr, &pipeline_),
     "Could not create Pipeline");
-  return AutoDestructor<VkPipeline>(pipeline, destroyPipeline);
+  rasterizer = getRasterizer(true);
+  VULKAN_GUARD(vkCreateGraphicsPipelines(**swapchain_->device(), VK_NULL_HANDLE, 1, &info, nullptr, &wireframe),
+    "Could not create wireframe Pipeline");
+
+  auto pipeline = std::make_unique<Pipeline>();
+  pipeline->main      = AutoDestructor<VkPipeline>(pipeline_, destroyPipeline);
+  pipeline->wireframe = AutoDestructor<VkPipeline>(wireframe, destroyPipeline);
+  return std::move(pipeline);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-std::vector<VkDescriptorSet> MaterialPool::createDescriptorSets() const
+void MaterialPool::createDescriptors(Pipeline* pipeline) const
 {
-  std::vector<VkDescriptorSetLayout> layouts(frames_, *descriptorLayout_);
+  const auto frames = swapchain_->imageCount();
+  std::vector<VkDescriptorSetLayout> layouts(frames, renderPass_->textureLayout());
   VkDescriptorSetAllocateInfo allocInfo{};
   allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-  allocInfo.descriptorPool = descriptorPool_;
-  allocInfo.descriptorSetCount = frames_;
+  allocInfo.descriptorPool = swapchain_->device()->descriptorPool();
+  allocInfo.descriptorSetCount = frames;
   allocInfo.pSetLayouts = layouts.data();
 
-  std::vector<VkDescriptorSet> descriptorSets(frames_);
-  VULKAN_GUARD(vkAllocateDescriptorSets(vkDevice_, &allocInfo, descriptorSets.data()),
+  pipeline->descriptors.resize(frames);
+  VULKAN_GUARD(vkAllocateDescriptorSets(**swapchain_->device(), &allocInfo, pipeline->descriptors.data()),
     "Could not allocate Descriptor Sets");
-  return descriptorSets;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void MaterialPool::updateDescriptorSets(
-  const std::vector<VkDescriptorSet>& descriptorSets, const std::vector<Image*>& images) const
+void MaterialPool::updateDescriptors(Pipeline* pipeline, const std::vector<Image*>& textures) const
 {
-  std::vector<VkWriteDescriptorSet> writers(images.size() * frames_);
-  for (size_t i = 0; i < frames_; ++i) {
+  const auto frames = swapchain_->imageCount();
+  std::vector<VkWriteDescriptorSet> writers(textures.size() * frames);
+  for (size_t i = 0; i < frames; ++i) {
     VkDescriptorImageInfo imageInfo{};
     imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-    for (size_t j = 0; j < images.size(); ++j) {
-      auto index = i * images.size() + j;
-      imageInfo.imageView = images[j]->view();
-      imageInfo.sampler = images[j]->sampler();
-      writers[index].sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-      writers[index].dstSet = descriptorSets[i];
-      writers[index].dstBinding = static_cast<uint32_t>(j);
+    for (size_t j = 0; j < textures.size(); ++j) {
+      auto index = i * textures.size() + j;
+      imageInfo.sampler              = renderPass_->sampler();
+      imageInfo.imageView            = textures[j]->view();
+      writers[index].sType           = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+      writers[index].dstSet          = pipeline->descriptors[i];
+      writers[index].dstBinding      = static_cast<uint32_t>(j);
       writers[index].dstArrayElement = 0;
-      writers[index].descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+      writers[index].descriptorType  = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
       writers[index].descriptorCount = 1;
-      writers[index].pImageInfo = &imageInfo;
+      writers[index].pImageInfo      = &imageInfo;
     }
   }
-  vkUpdateDescriptorSets(vkDevice_, static_cast<uint32_t>(writers.size()), writers.data(), 0, nullptr);
+  vkUpdateDescriptorSets(**swapchain_->device(), static_cast<uint32_t>(writers.size()), writers.data(), 0, nullptr);
 }
 
 } // !namespace vk

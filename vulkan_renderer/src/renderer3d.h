@@ -11,12 +11,12 @@
 namespace yaga {
 namespace vk {
 
-class RenderingContext;
+class Renderer3DPool;
 
 class Renderer3D : public yaga::Renderer3D
 {
 public:
-  explicit Renderer3D(Object* obj, RenderingContext* pool);
+  explicit Renderer3D(Renderer3DPool* pool, Object* obj);
   virtual ~Renderer3D();
   bool canRender() const;
   Mesh* mesh() const { return mesh_; }
@@ -29,7 +29,7 @@ private:
   void onComponentRemove(Component* component) override;
 
 protected:
-  RenderingContext* pool_;
+  Renderer3DPool* pool_;
   Material* material_;
   Mesh* mesh_;
   Transform* transform_;

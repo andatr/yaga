@@ -2,7 +2,6 @@
 #define YAGA_VULKAN_RENDERER_SRC_MATERIAL
 
 #include <memory>
-#include <vector>
 
 #include "vulkan.h"
 #include "engine/material.h"
@@ -11,27 +10,30 @@
 namespace yaga {
 namespace vk {
 
+class MaterialPool;
+
+struct Pipeline
+{
+  AutoDestructor<VkPipeline> main;
+  AutoDestructor<VkPipeline> wireframe;
+  std::vector<VkDescriptorSet> descriptors;
+};
+
+typedef std::unique_ptr<Pipeline> PipelinePtr;
+
 class Material : public yaga::Material
 {
-  friend class MaterialPool;
-
 public:
-  typedef yaga::Material base;
-
-public:
-  explicit Material(Object* object, assets::Material* asset, MaterialPool* pool, VkPipeline pipeline, VkPipelineLayout layout,
-    const std::vector<VkDescriptorSet>& descriptorSets);
+  explicit Material(MaterialPool* pool, Object* object, assets::Material* asset, Pipeline* pipeline);
   virtual ~Material();
-  VkPipelineLayout pipelineLayout() const { return layout_; }
-  VkPipeline pipeline() const { return pipeline_; }
-  const std::vector<VkDescriptorSet>& descriptorSets() const { return descriptorSets_; }
-  void wireframe(bool w) override;
+  bool wireframe() override { return wireframe_; }
+  void wireframe(bool value) override { wireframe_ = value; }
+  const Pipeline& pipeline() { return *pipeline_; }
 
 private:
   MaterialPool* pool_;
-  VkPipeline pipeline_;
-  VkPipelineLayout layout_;
-  std::vector<VkDescriptorSet> descriptorSets_;
+  Pipeline* pipeline_;
+  bool wireframe_;
 };
 
 typedef std::unique_ptr<Material> MaterialPtr;

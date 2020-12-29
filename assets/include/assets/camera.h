@@ -31,7 +31,6 @@ public:
   virtual ~Camera();
   const glm::mat4& projection() const { return projection_; }
   virtual void projection(const glm::mat4& p);
-  const glm::vec3& lookAt() const { return lookAt_; }
   void lookAt(const glm::vec3& lookAt);
 
 public:

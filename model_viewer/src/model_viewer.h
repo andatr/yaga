@@ -20,9 +20,9 @@ public:
   virtual ~ModelViewer();
 
 protected:
-  void init(RenderingContext* renderer, Input* input) override;
+  void init(Context* context, Input* input) override;
   void resize() override;
-  void loop(float delta) override;
+  bool loop() override;
   void shutdown() override;
 
 private:
@@ -36,7 +36,6 @@ private:
 private:
   std::vector<ObjectPtr> objects_;
   Camera* camera_;
-  assets::Camera* cameraAsset_;
   Transform* cameraPosition_;
   Transform* objectPosition_;
 };

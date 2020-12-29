@@ -3,17 +3,15 @@
 
 #include <memory>
 #include <unordered_map>
-#include <unordered_set>
-#include <vector>
 
-#include "device.h"
-#include "image_pool.h"
 #include "material.h"
+#include "render_pass.h"
+#include "shader_pool.h"
 #include "swapchain.h"
+#include "texture_pool.h"
 #include "vulkan.h"
+#include "assets/application.h"
 #include "assets/material.h"
-#include "assets/shader.h"
-#include "utility/auto_destructor.h"
 
 namespace yaga {
 namespace vk {
@@ -21,42 +19,29 @@ namespace vk {
 class MaterialPool
 {
 public:
-  explicit MaterialPool(Device* device, Swapchain* swapchain, ImagePool* imagePool, 
-    VkDescriptorPool descriptorPool, VkDescriptorSetLayout uniformLayout);
-  void swapchain(Swapchain* swapchain);
-  MaterialPtr createMaterial(Object* object, assets::Material* asset);
-  void removeMaterial(Material* material);
+  explicit MaterialPool(Swapchain* swapchain, 
+    VmaAllocator allocator,
+    RenderPass* renderPass,
+    const assets::Application* limits);
+  ~MaterialPool();
+  MaterialPtr get(Object* object, assets::Material* asset);
   void clear();
-  void updatePipeline(Material* material);
+  void onRemove(Material* mesh);
 
 private:
-  void createDescriptorLayout();
-  void createPipelineLayout();
-  AutoDestructor<VkPipeline> createPipeline(assets::Shader* vertexShader, assets::Shader* fragmentShader, bool wireframe);
-  VkShaderModule createShader(assets::Shader* asset);
-  std::vector<VkDescriptorSet> createDescriptorSets() const;
-  void updateDescriptorSets(const std::vector<VkDescriptorSet>& descriptorSets, const std::vector<Image*>& images) const;
+  PipelinePtr createPipeline(assets::Material* asset) const;
+  void createDescriptors(Pipeline* pipeline) const;
+  void updateDescriptors(Pipeline* pipeline, const std::vector<Image*>& textures) const;
+  //void onResize();
 
 private:
-  struct MaterialCache
-  {
-    AutoDestructor<VkPipeline> pipeline;
-    AutoDestructor<VkPipeline> wireframe;
-    std::vector<VkDescriptorSet> descriptorSets;
-  };
-
-private:
-  VkDevice vkDevice_;
+  size_t counter_;
   Swapchain* swapchain_;
-  ImagePool* imagePool_;
-  VkDescriptorPool descriptorPool_;
-  VkDescriptorSetLayout uniformLayout_;
-  uint32_t frames_;
-  AutoDestructor<VkDescriptorSetLayout> descriptorLayout_;
-  AutoDestructor<VkPipelineLayout> pipelineLayout_;
-  std::unordered_map<assets::Shader*, AutoDestructor<VkShaderModule>> shaderCache_;
-  std::unordered_map<assets::Material*, MaterialCache> materialCache_;
-  std::unordered_set<Material*> materials_;
+  RenderPass* renderPass_;
+  ShaderPoolPtr shaderPool_;
+  TexturePoolPtr texturePool_;
+  std::unordered_map<assets::Material*, PipelinePtr> materials_;
+  //Swapchain::Connection resizeConnection_;
 };
 
 typedef std::unique_ptr<MaterialPool> MaterialPoolPtr;

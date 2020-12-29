@@ -5,34 +5,38 @@ namespace yaga {
 namespace vk {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Image::Image(Device* device, VmaAllocator allocator, const VkImageCreateInfo& info, VkImageViewCreateInfo viewInfo,
-  const VmaAllocationCreateInfo& allocInfo, const VkSampler sampler) :
-  vkDevice_(**device),
-  allocator_(allocator), image_(VK_NULL_HANDLE), allocation_{}, memory_{}, imageView_(VK_NULL_HANDLE), sampler_(sampler),
+Image::Image(Device* device, VmaAllocator allocator, VkImageCreateInfo& info, VkImageViewCreateInfo& viewInfo) :
+  allocator_(allocator),
   info_(info)
 {
-  VULKAN_GUARD(vmaCreateImage(allocator_, &info, &allocInfo, &image_, &allocation_, nullptr),
-    "Could not create Vulkan Image");
-  LOG(trace) << "Vulkan Image created";
-  viewInfo.image = image_;
-  viewInfo.format = info.format;
-  viewInfo.subresourceRange.levelCount = info.mipLevels;
-  if (vkCreateImageView(vkDevice_, &viewInfo, nullptr, &imageView_) != VK_SUCCESS) {
-    vmaDestroyImage(allocator_, image_, allocation_);
-    image_ = VK_NULL_HANDLE;
+  auto destroyImage = [this](auto image) {
+    vmaDestroyImage(allocator_, image, allocation_);
     LOG(trace) << "Vulkan Image destroyed";
-    THROW("Could not create Vulkan Image View");
-  }
-  LOG(trace) << "Vulkan Image View created";
+  };
+
+  auto destroyView = [device = **device](auto view) {
+    vkDestroyImageView(device, view, nullptr);
+    LOG(trace) << "Image View destroyed";
+  };
+
+  VmaAllocationCreateInfo allocInfo{};
+  allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
+
+  VkImage image;
+  VULKAN_GUARD(vmaCreateImage(allocator_, &info, &allocInfo, &image, &allocation_, nullptr), "Could not create Image");
+  LOG(trace) << "Vulkan Image created";
+  image_.set(image, destroyImage);
+  
+  VkImageView view;
+  viewInfo.image = *image_;
+  VULKAN_GUARD(vkCreateImageView(**device, &viewInfo, nullptr, &view), "Could not create Image View");
+  LOG(trace) << "Image View created";
+  view_.set(view, destroyView);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 Image::~Image()
 {
-  vkDestroyImageView(vkDevice_, imageView_, nullptr);
-  LOG(trace) << "Vulkan Image View destroyed";
-  vmaDestroyImage(allocator_, image_, allocation_);
-  LOG(trace) << "Vulkan Image destroyed";
 }
 
 } // !namespace vk

@@ -5,7 +5,7 @@
 
 #include "assets/serializer.h"
 #include "engine/input.h"
-#include "engine/rendering_context.h"
+#include "engine/context.h"
 
 namespace yaga {
 
@@ -13,9 +13,9 @@ class Application
 {
 public:
   virtual ~Application() {}
-  virtual void init(RenderingContext* renderer, Input* input) = 0;
-  virtual void resize() = 0;
-  virtual void loop(float delta) = 0;
+  virtual void init(Context* context, Input* input) = 0;
+  virtual void resize()   = 0;
+  virtual bool loop()     = 0;
   virtual void shutdown() = 0;
 };
 

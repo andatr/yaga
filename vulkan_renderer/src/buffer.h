@@ -12,11 +12,11 @@ namespace vk {
 class Buffer : private boost::noncopyable
 {
 public:
-  Buffer(VmaAllocator allocator, const VkBufferCreateInfo& info, const VmaAllocationCreateInfo& allocInfo);
+  explicit Buffer(VmaAllocator allocator, const VkBufferCreateInfo& info, const VmaAllocationCreateInfo& allocInfo);
   ~Buffer();
   VkBuffer operator*() const { return buffer_; }
   const VmaAllocation& allocation() const { return allocation_; }
-  const VmaAllocationInfo& memory() const { return memory_; }
+  const VmaAllocationInfo& memory() const { return memory_;     }
 
 private:
   VmaAllocator allocator_;

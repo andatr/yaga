@@ -3,7 +3,6 @@
 
 #include <memory>
 
-#include "assets/camera.h"
 #include "engine/component.h"
 #include "engine/transform.h"
 
@@ -15,8 +14,13 @@ public:
   static const uint32_t viewProperty = 1;
 
 public:
-  explicit Camera(Object* obj, assets::Camera* asset);
+  explicit Camera(Object* obj);
   virtual ~Camera();
+  const glm::mat4& view() const { return view_; }
+  const glm::mat4& projection() const { return projection_; }
+  virtual void projection(const glm::mat4& value);
+  const glm::vec3& lookAt() const { return lookAt_; }
+  virtual void lookAt(const glm::vec3& lookAt);
 
 protected:
   virtual void updateView();
@@ -25,15 +29,14 @@ private:
   void onComponentAdd(Component* component) override;
   void onComponentRemove(Component* component) override;
   virtual void onTransformUpdated(uint32_t prop);
-  virtual void onAssetUpdated(assets::CameraProperty prop);
 
 protected:
-  assets::Camera* asset_;
-  glm::mat4 view_;
   Transform* transform_;
+  glm::mat4  projection_;
+  glm::vec3  lookAt_;
+  glm::mat4  view_;
 
 private:
-  Connection assetConnection_;
   Connection transformConnection_;
 };
 

@@ -6,6 +6,7 @@
 
 #include "device.h"
 #include "vulkan.h"
+#include "utility/auto_destructor.h"
 
 namespace yaga {
 namespace vk {
@@ -13,24 +14,18 @@ namespace vk {
 class Image : private boost::noncopyable
 {
 public:
-  Image(Device* device, VmaAllocator allocator, const VkImageCreateInfo& info, VkImageViewCreateInfo viewInfo,
-    const VmaAllocationCreateInfo& allocInfo, VkSampler sampler = VK_NULL_HANDLE);
-  ~Image();
+  explicit Image(Device* device, VmaAllocator allocator, VkImageCreateInfo& info, VkImageViewCreateInfo& viewInfo);
+  virtual ~Image();
+  VkImage operator*() const { return *image_; }
+  VkImageView  view() const { return *view_;  }
   const VkImageCreateInfo& info() const { return info_; }
-  VkSampler sampler() const { return sampler_; }
-  VkImage operator*() const { return image_; }
-  VkImageView view() const { return imageView_; }
-  const VmaAllocationInfo& memory() const { return memory_; }
 
 private:
-  VkDevice vkDevice_;
   VmaAllocator allocator_;
-  VkImage image_;
-  VmaAllocation allocation_;
-  VmaAllocationInfo memory_;
-  VkImageView imageView_;
-  VkSampler sampler_;
   VkImageCreateInfo info_;
+  AutoDestructor<VkImage> image_;
+  AutoDestructor<VkImageView> view_;
+  VmaAllocation allocation_;
 };
 
 typedef std::unique_ptr<Image> ImagePtr;

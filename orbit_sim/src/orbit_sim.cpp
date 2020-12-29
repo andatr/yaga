@@ -23,15 +23,16 @@ OrbitSim::~OrbitSim()
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void OrbitSim::init(RenderingContext* renderer, Input* input)
+void OrbitSim::init(Context* renderer, Input* input)
 {
   base::init(renderer, input);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void OrbitSim::loop(float delta)
+bool OrbitSim::loop()
 {
-  base::loop(delta);
+  if (!base::loop()) return false;
+  return false;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------

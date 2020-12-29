@@ -6,23 +6,18 @@ namespace yaga {
 namespace vk {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Material::Material(Object* object, assets::Material* asset, MaterialPool* pool, VkPipeline pipeline, 
-  VkPipelineLayout layout, const std::vector<VkDescriptorSet>& descriptorSets) :
-    yaga::Material(object, asset), pool_(pool), pipeline_(pipeline), layout_(layout), descriptorSets_(descriptorSets)
+Material::Material(MaterialPool* pool, Object* object, assets::Material* asset, Pipeline* pipeline) :
+  yaga::Material(object, asset),
+  pool_(pool),
+  pipeline_(std::move(pipeline)),
+  wireframe_(false)
 {
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 Material::~Material()
 {
-  pool_->removeMaterial(this);
-}
-
-// -----------------------------------------------------------------------------------------------------------------------------
-void Material::wireframe(bool w)
-{
-  base::wireframe(w);
-  pool_->updatePipeline(this);
+  pool_->onRemove(this);
 }
 
 } // !namespace vk

@@ -4,7 +4,7 @@
 layout(set = 0, binding = 0) uniform UniformObject {
   mat4 view;
   mat4 proj;
-  float aspect;
+  vec3 screen;
 } uo;
 
 layout(push_constant) uniform PushConsts {

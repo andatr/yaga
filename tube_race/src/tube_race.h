@@ -15,8 +15,8 @@ public:
   virtual ~TubeRace();
 
 protected:
-  void init(RenderingContext* renderer, Input* input) override;
-  void loop(float delta) override;
+  void init(Context* renderer, Input* input) override;
+  bool loop() override;
   void shutdown() override;
 
 private:

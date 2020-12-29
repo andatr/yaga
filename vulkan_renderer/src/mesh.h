@@ -10,23 +10,31 @@
 namespace yaga {
 namespace vk {
 
+class MeshPool;
+
 // -----------------------------------------------------------------------------------------------------------------------------
 class Mesh : public yaga::Mesh
 {
-  friend class MeshPool;
-
 public:
-  explicit Mesh(Object* object, assets::Mesh* asset, MeshPool* pool, VkBuffer vertices, VkBuffer indices, uint32_t indexCount);
+  explicit Mesh(MeshPool* pool,
+    Object* object,
+    assets::Mesh* asset,
+    Buffer* vertices,
+    Buffer* indices,
+    uint32_t vertexCount,
+    uint32_t indexCount);
   virtual ~Mesh();
-  VkBuffer vertexBuffer() const { return vertexBuffer_; }
-  VkBuffer indexBuffer() const { return indexBuffer_; }
-  uint32_t indexCount() const { return indexCount_; }
+  Buffer*  vertexBuffer() const { return vertexBuffer_; }
+  Buffer*   indexBuffer() const { return indexBuffer_;  }
+  uint32_t  vertexCount() const { return vertexCount_;  }
+  uint32_t   indexCount() const { return indexCount_;   }
 
 private:
   MeshPool* pool_;
-  VkBuffer vertexBuffer_;
-  VkBuffer indexBuffer_;
-  uint32_t indexCount_;
+  Buffer*   vertexBuffer_;
+  Buffer*   indexBuffer_;
+  uint32_t  vertexCount_;
+  uint32_t  indexCount_;
 };
 
 typedef std::unique_ptr<Mesh> MeshPtr;

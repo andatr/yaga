@@ -1,12 +1,11 @@
-#ifndef YAGA_VULKAN_RENDERER_SRC_RENDERER
-#define YAGA_VULKAN_RENDERER_SRC_RENDERER
+#ifndef YAGA_VULKAN_RENDERER_RENDERER
+#define YAGA_VULKAN_RENDERER_RENDERER
 
 #include <memory>
 #include <vector>
 
-#include "device.h"
-#include "renderer3d.h"
-#include "rendering_context.h"
+#include "context.h"
+#include "render_stage.h"
 #include "swapchain.h"
 #include "vulkan.h"
 #include "utility/auto_destructor.h"
@@ -14,22 +13,20 @@
 namespace yaga {
 namespace vk {
 
-class Material;
-
 class Renderer
 {
 public:
-  explicit Renderer(Swapchain* swapchain, RenderingContext* context);
-  void swapchain(Swapchain* swapchain) { swapchain_ = swapchain; }
-  void render(uint32_t frame) const;
+  Renderer(Swapchain* swapchain, std::vector<RenderStagePtr>& stages);
+  ~Renderer();
+  bool render(Context* context);
 
 private:
-  static void renderObject(Camera* camera, Renderer3D* object, VkCommandBuffer command, uint32_t frame);
-
+  void createSemaphore();
+  
 private:
+  AutoDestructor<VkSemaphore> imageSync_;
   Swapchain* swapchain_;
-  RenderingContext* context_;
-  uint32_t frames_;
+  std::vector<RenderStagePtr> stages_;
 };
 
 typedef std::unique_ptr<Renderer> RendererPtr;
@@ -37,4 +34,4 @@ typedef std::unique_ptr<Renderer> RendererPtr;
 } // !namespace vk
 } // !namespace yaga
 
-#endif // !YAGA_VULKAN_RENDERER_SRC_RENDERER
+#endif // !YAGA_VULKAN_RENDERER_RENDERER

@@ -5,10 +5,11 @@
 namespace yaga {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Camera::Camera(Object* obj, assets::Camera* asset) :
-  Component(obj), asset_(asset), transform_(obj->getComponent<Transform>()), view_{}
+Camera::Camera(Object* obj) :
+  Component(obj),
+  transform_(obj->getComponent<Transform>()),
+  view_{}
 {
-  assetConnection_ = asset_->onUpdate(std::bind(&Camera::onAssetUpdated, this, std::placeholders::_1));
   if (transform_) {
     transformConnection_ = transform_->onUpdate(std::bind(&Camera::onTransformUpdated, this, std::placeholders::_1));
     updateView();
@@ -18,17 +19,8 @@ Camera::Camera(Object* obj, assets::Camera* asset) :
 // -----------------------------------------------------------------------------------------------------------------------------
 Camera::~Camera()
 {
-  asset_->onUpdate(assetConnection_);
   if (transform_) {
     transform_->onUpdate(transformConnection_);
-  }
-}
-
-// -----------------------------------------------------------------------------------------------------------------------------
-void Camera::onAssetUpdated(assets::CameraProperty prop)
-{
-  if (prop == assets::CameraProperty::lookAt) {
-    updateView();
   }
 }
 
@@ -41,12 +33,25 @@ void Camera::onTransformUpdated(uint32_t prop)
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
+void Camera::lookAt(const glm::vec3& lookAt)
+{
+  lookAt_ = lookAt;
+  updateView();
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+void Camera::projection(const glm::mat4& value)
+{
+  projection_ = value;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
 void Camera::updateView()
 {
-  const auto& matrix = transform_->world();
+  const auto& matrix  = transform_->world();
   const auto position = glm::vec3(matrix[3]);
-  const auto up = glm::vec3(0.0f, 1.0f, 0.0f);
-  view_ = glm::lookAt(position, asset_->lookAt(), up);
+  const auto up       = glm::vec3(0.0f, 1.0f, 0.0f);
+  view_ = glm::lookAt(position, lookAt_, up);
   fireUpdate(viewProperty);
 }
 

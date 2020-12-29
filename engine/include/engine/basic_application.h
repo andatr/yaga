@@ -18,15 +18,15 @@ public:
   virtual ~BasicApplication();
 
 protected:
-  void init(RenderingContext* renderer, Input* input) override;
-  void resize() override;
-  void loop(float delta) override;
+  void init(Context* context, Input* input) override;
+  void resize()   override;
+  bool loop()     override;
   void shutdown() override;
 
 protected:
   assets::StoragePtr persistentAssets_;
   assets::Serializer* serializer_;
-  RenderingContext* renderer_;
+  Context* context_;
   Input* input_;
 };
 

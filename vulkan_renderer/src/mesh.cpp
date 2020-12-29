@@ -6,15 +6,26 @@ namespace yaga {
 namespace vk {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Mesh::Mesh(Object* object, assets::Mesh* asset, MeshPool* pool, VkBuffer vertices, VkBuffer indices, uint32_t indexCount) :
-  yaga::Mesh(object, asset), pool_(pool), vertexBuffer_(vertices), indexBuffer_(indices), indexCount_(indexCount)
+Mesh::Mesh(MeshPool* pool, 
+  Object* object,
+  assets::Mesh* asset,
+  Buffer* vertices,
+  Buffer* indices,
+  uint32_t vertexCount,
+  uint32_t indexCount) :
+    pool_(pool),
+    yaga::Mesh(object, asset),
+    vertexBuffer_(vertices),
+    indexBuffer_(indices),
+    vertexCount_(vertexCount),
+    indexCount_(indexCount)
 {
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 Mesh::~Mesh()
 {
-  pool_->removeMesh(this);
+  pool_->onRemove(this);
 }
 
 } // !namespace vk

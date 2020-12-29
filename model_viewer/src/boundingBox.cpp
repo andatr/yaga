@@ -107,10 +107,10 @@ assets::MeshPtr makeBoundingBox(assets::Mesh* mesh, const MeshMetadata& meta)
 {
   auto points = getPoints(meta);
   auto frameMesh = std::make_unique<assets::Mesh>(mesh->name() + "::frame");
-  const auto axisVertices  = triangulate::getVertexCount(4);
-  const auto axisIndices   = triangulate::getIndexCount (4);
-  const auto frameVertices = triangulate::getVertexCount(4, triangulate::EdgeType::Cycle);
-  const auto frameIndices  = triangulate::getIndexCount (4, triangulate::EdgeType::Cycle);
+  const auto axisVertices  = static_cast<Index>(triangulate::getVertexCount(4));
+  const auto axisIndices   = static_cast<Index>(triangulate::getIndexCount (4));
+  const auto frameVertices = static_cast<Index>(triangulate::getVertexCount(4, triangulate::EdgeType::Cycle));
+  const auto frameIndices  = static_cast<Index>(triangulate::getIndexCount (4, triangulate::EdgeType::Cycle));
   frameMesh->vertices([&points, axisVertices, frameVertices](auto& vertices) {
     vertices.resize(axisVertices * 3 + frameVertices * 6);
     for (size_t i = 0; i < 3; ++i) {
@@ -134,7 +134,7 @@ assets::MeshPtr makeBoundingBox(assets::Mesh* mesh, const MeshMetadata& meta)
   });
   frameMesh->indices([&points, axisVertices, frameVertices, axisIndices, frameIndices](auto& indices) {
     indices.resize(axisIndices * 3 + frameIndices * 6);
-    for (size_t i = 0; i < 3; ++i) {
+    for (Index i = 0; i < 3; ++i) {
       triangulate::updateIndices(
         points.data() + 4 * i,
         4,
@@ -142,7 +142,7 @@ assets::MeshPtr makeBoundingBox(assets::Mesh* mesh, const MeshMetadata& meta)
         triangulate::EdgeType::Blunt,
         axisVertices * i);
     }
-    for (size_t i = 3; i < 9; ++i) {
+    for (Index i = 3; i < 9; ++i) {
       triangulate::updateIndices(
         points.data() + 4 * i,
         4,

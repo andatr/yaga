@@ -2,6 +2,7 @@
 #include "model_viewer.h"
 #include "boundingBox.h"
 #include "importer.h"
+#include "assets/camera.h"
 #include "assets/scene.h"
 #include "engine/debug.h"
 #include "engine/platform.h"
@@ -29,9 +30,9 @@ ModelViewer::~ModelViewer()
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void ModelViewer::init(RenderingContext* renderer, Input* input)
+void ModelViewer::init(Context* context, Input* input)
 {
-  base::init(renderer, input);
+  base::init(context, input);
 
   MeshMetadata meta {};
   auto m = importModel(R"(C:\Projects\Cpp\VulkanGame2\data\models\37-rp_eric_rigged_001_fbx\rp_eric_rigged_001_yup_a.fbx)", "material", meta);
@@ -53,7 +54,7 @@ void ModelViewer::init(RenderingContext* renderer, Input* input)
   auto m = mesh.get();
   persistentAssets_->put(std::move(mesh));
 
-  object->addComponent(renderer_->createMesh(object, m));
+  object->addComponent(context_->createMesh(object, m));
   glm::vec3 bounds = meta.max - meta.min;
   auto max = 10.0f / std::max(std::max(bounds.x, bounds.y), bounds.z);
   glm::vec3 mid = (meta.max + meta.min) / 2.0f;
@@ -65,8 +66,10 @@ void ModelViewer::init(RenderingContext* renderer, Input* input)
   object->addComponent(std::move(transform));
 
   auto material = serializer_->deserialize<assets::Material>(mname, persistentAssets_.get());
-  object->addComponent(renderer_->createMaterial(object, material));
-  object->addComponent(renderer_->createRenderer3D(object));
+  auto mm = context_->createMaterial(object, material);
+  mm->wireframe(true);
+  object->addComponent(std::move(mm));
+  object->addComponent(context_->createRenderer3D(object));
 
   return m;
 }
@@ -79,7 +82,7 @@ void ModelViewer::createBoundingBox(assets::Mesh* modelMesh, const MeshMetadata&
   objects_.emplace_back(std::move(objectUnique));
 
   auto mesh = makeBoundingBox(modelMesh, meta);
-  object->addComponent(renderer_->createMesh(object, mesh.get()));
+  object->addComponent(context_->createMesh(object, mesh.get()));
  
   glm::vec3 bounds = meta.max - meta.min;
   float max =  10.0f / std::max(std::max(bounds.x, bounds.y), bounds.z);
@@ -92,8 +95,8 @@ void ModelViewer::createBoundingBox(assets::Mesh* modelMesh, const MeshMetadata&
   object->addComponent(std::move(transform));
 
   auto material = serializer_->deserialize<assets::Material>("ui_3d_mat", persistentAssets_.get());
-  object->addComponent(renderer_->createMaterial(object, material));
-  object->addComponent(renderer_->createRenderer3D(object));
+  object->addComponent(context_->createMaterial(object, material));
+  object->addComponent(context_->createRenderer3D(object));
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -107,33 +110,32 @@ void ModelViewer::setupCamera()
   cameraPosition_ = transform.get();
   object->addComponent(std::move(transform));
 
-  cameraAsset_ = serializer_->deserialize<assets::Camera>("camera", persistentAssets_.get());
-  auto camera = renderer_->createCamera(object, cameraAsset_);
+  //auto cameraAsset = serializer_->deserialize<assets::Camera>("camera", persistentAssets_.get());
+  auto camera = context_->createCamera(object);
   camera_ = camera.get();
   object->addComponent(std::move(camera));
+  context_->mainCamera(camera_);
 
-  const auto& res = renderer_->resolution();
+  const auto& res = context_->resolution();
   auto projection = glm::perspective(glm::radians(45.0f), (float)res.x / (float)res.y, 0.1f, 100.0f);
   projection[1][1] *= -1;
-  cameraAsset_->projection(projection);
+  camera_->projection(projection);
   cameraPosition_->local(glm::translate(glm::mat4(5.0f), { 0.0f, 0.0f, 6.0f }));
-  cameraAsset_->lookAt(glm::vec3(0.0f, 0.0f, 0.0f));
+  camera_->lookAt(glm::vec3(0.0f, 0.0f, 0.0f));
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 void ModelViewer::resize()
 {
-  auto res = renderer_->resolution();
+  auto res = context_->resolution();
   auto projection = glm::perspective(glm::radians(45.0f), (float)res.x / (float)res.y, 0.1f, 100.0f);
   projection[1][1] *= -1;
-  cameraAsset_->projection(projection);
+  camera_->projection(projection);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void ModelViewer::loop(float delta)
+bool ModelViewer::loop()
 {
-  base::loop(delta);
-
   static auto startTime = std::chrono::high_resolution_clock::now();
   auto currentTime = std::chrono::high_resolution_clock::now();
   float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
@@ -168,12 +170,15 @@ void ModelViewer::loop(float delta)
     pos = glm::mat4(1.0f);
   }
   objectPosition_->local(pos);*/
+  
+  return true;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 void ModelViewer::shutdown()
 {
   base::shutdown();
+  objects_.clear();
 }
 
 } // !namespace yaga

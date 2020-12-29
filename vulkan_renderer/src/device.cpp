@@ -150,6 +150,12 @@ Device::~Device()
 {}
 
 // -----------------------------------------------------------------------------------------------------------------------------
+void Device::waitIdle() const
+{
+  vkDeviceWaitIdle(*logicalDevice_);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
 void Device::createDevice(std::vector<const char*>& extensions)
 {
   std::vector<VkDeviceQueueCreateInfo> queueInfos;
@@ -193,9 +199,9 @@ void Device::createDevice(std::vector<const char*>& extensions)
   LOG(trace) << "Logical Device created";
 
   vkGetDeviceQueue(*logicalDevice_, queueFamilies_.graphics, 0, queues_ + 0);
-  vkGetDeviceQueue(*logicalDevice_, queueFamilies_.surface, 0, queues_ + 1);
+  vkGetDeviceQueue(*logicalDevice_, queueFamilies_.surface,  0, queues_ + 1);
   vkGetDeviceQueue(*logicalDevice_, queueFamilies_.transfer, 0, queues_ + 2);
-  vkGetDeviceQueue(*logicalDevice_, queueFamilies_.compute, 0, queues_ + 3);
+  vkGetDeviceQueue(*logicalDevice_, queueFamilies_.compute,  0, queues_ + 3);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -224,6 +230,33 @@ void Device::createCommandPool()
   };
   VULKAN_GUARD(vkCreateCommandPool(*logicalDevice_, &info, nullptr, &commandPool), "Could not create Command Pool");
   commandPool_.set(commandPool, destroyCommandPool);
+  LOG(trace) << "Command Pool created";
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+void Device::createDescriptorPool(uint32_t frames, const assets::Application* limits)
+{
+  std::array<VkDescriptorPoolSize, 2> poolSizes{};
+  poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+  poolSizes[0].descriptorCount = frames;
+  poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+  poolSizes[1].descriptorCount = limits->maxTextureCount() * frames;
+
+  VkDescriptorPoolCreateInfo poolInfo{};
+  poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+  poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
+  poolInfo.pPoolSizes = poolSizes.data();
+  poolInfo.maxSets = 50; // TODO: FIX !
+
+  VkDescriptorPool pool;
+  auto destroyPool = [device = *logicalDevice_](auto pool) {
+    vkDestroyDescriptorPool(device, pool, nullptr);
+    LOG(trace) << "Descriptor Pool destroyed";
+  };
+
+  VULKAN_GUARD(vkCreateDescriptorPool(*logicalDevice_, &poolInfo, nullptr, &pool), "Could not create descriptor pool");
+  descriptorPool_.set(pool, destroyPool);
+  LOG(trace) << "Descriptor Pool created";
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -238,10 +271,11 @@ void Device::createImmediateCommand()
   VkCommandBuffer commandBuffer;
   auto destroyCommandBuffer = [this](auto commandBuffer) {
     vkFreeCommandBuffers(*logicalDevice_, *commandPool_, 1, &commandBuffer);
-    LOG(trace) << "Command Buffer destroyed";
+    LOG(trace) << "Immediate Command Buffer destroyed";
   };
   VULKAN_GUARD(vkAllocateCommandBuffers(*logicalDevice_, &info, &commandBuffer), "Could not create Command Buffer");
   immediateCommand_.set(commandBuffer, destroyCommandBuffer);
+  LOG(trace) << "Immediate Command Buffer created";
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
