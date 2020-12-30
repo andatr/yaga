@@ -234,6 +234,7 @@ Swapchain::~Swapchain()
 // -----------------------------------------------------------------------------------------------------------------------------
 void Swapchain::resize(VkExtent2D resolution)
 {
+  if (resolution.height == 0 || resolution.width == 0) return;
   VkSurfaceCapabilitiesKHR capabilitues{};
   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device_->physical(), surface_, &capabilitues);
   info_.imageExtent = pickResolution(capabilitues, resolution);

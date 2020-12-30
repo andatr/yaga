@@ -27,10 +27,15 @@ set(CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR} ${CMAKE_MODULE_PATH})
 include_directories("external")
 
 # conan packages generate some warnings, QUIET is used to suppress them
-# REQUIRED doesnt work with all packages
+# REQUIRED doesnt work with all packages.
 # Vulkan and OpenGl fail when REQUIRED is specified, regardless they were actually found and _FOUND variable is set
-# that is why I check _FOUND variable manually instead of using REQUIRED
-set(Boost_USE_STATIC_LIBS ON)
+# so I check _FOUND variable manually instead of using REQUIRED
+set(Boost_USE_STATIC_LIBS OFF)
+# from Boost.Log documentation:
+# if your application consists of more than one module (e.g. an exe and one or several dll's) that use Boost.Log,
+# the library must be built as a shared object
+add_definitions(-DBOOST_ALL_NO_LIB)
+add_definitions(-DBOOST_ALL_DYN_LINK)
 find_package(Boost COMPONENTS
   filesystem
   log

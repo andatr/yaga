@@ -30,11 +30,11 @@ namespace format {
 
 enum Attributes : int
 {
-  time,
-  severity,
-  file,
-  line,
-  all = std::numeric_limits<int>::max()
+  time     = 1,
+  severity = 2,
+  file     = 4,
+  line     = 8,
+  all      = std::numeric_limits<int>::max()
 };
 
 } // !namespace format
