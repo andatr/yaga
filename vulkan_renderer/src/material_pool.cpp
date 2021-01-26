@@ -181,26 +181,19 @@ VkPipelineShaderStageCreateInfo getShaderStage(VkShaderModule module, VkShaderSt
 MaterialPool::MaterialPool(Swapchain* swapchain,
   VmaAllocator allocator,
   RenderPass* renderPass,
-  const assets::Application* limits) :
+  const Config& config) :
     counter_(0),
     swapchain_(swapchain),
     renderPass_(renderPass)
 {
   shaderPool_  = std::make_unique<ShaderPool> (swapchain->device());
-  texturePool_ = std::make_unique<TexturePool>(swapchain->device(), allocator, limits->maxImageSize());
-  //resizeConnection_ = swapchain_->onResize(std::bind(&MaterialPool::onResize, this));
+  texturePool_ = std::make_unique<TexturePool>(swapchain->device(), allocator, config.maxImageSize());
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 MaterialPool::~MaterialPool()
 {
-  //swapchain_->onResize(resizeConnection_);
 }
-
-// -----------------------------------------------------------------------------------------------------------------------------
-//void MaterialPool::onResize()
-//{
-//}
 
 // -----------------------------------------------------------------------------------------------------------------------------
 MaterialPtr MaterialPool::get(Object* object, assets::Material* asset)

@@ -8,13 +8,15 @@ namespace vk {
 Context::Context(Swapchain* swapchain,
   VmaAllocator allocator,
   RenderPass* renderPass,
-  const assets::Application* limits) :
+  const Config& config,
+  yaga::Application* app) :
     prevTime_(chrono::now()),
     delta_(0.0f),
-    swapchain_(swapchain)
+    swapchain_(swapchain),
+    app_(app)
 {
-  meshPool_     = std::make_unique<MeshPool>    (swapchain->device(), allocator, limits);
-  materialPool_ = std::make_unique<MaterialPool>(swapchain, allocator, renderPass, limits);
+  meshPool_     = std::make_unique<MeshPool>    (swapchain->device(), allocator, config);
+  materialPool_ = std::make_unique<MaterialPool>(swapchain, allocator, renderPass, config);
   rendererPool_ = std::make_unique<Renderer3DPool>();
 }
 

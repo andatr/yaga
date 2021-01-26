@@ -1,10 +1,11 @@
-cmake_minimum_required(VERSION 3.16)
-cmake_policy(VERSION 3.16)
+cmake_minimum_required(VERSION 3.19)
+# in 3.19 target of generator-expression is not added as a dependency of the target this expression is evaluated on
+cmake_policy(VERSION 3.19)
 enable_testing()
 project(yaga VERSION 0.0.1 LANGUAGES CXX)
 
-include(${PROJECT_SOURCE_DIR}/CMake/set_precompiled_headers.cmake)
-include(${PROJECT_SOURCE_DIR}/CMake/target_link_libraries_alt.cmake)
+include(${PROJECT_SOURCE_DIR}/cmake/set_precompiled_headers.cmake)
+include(${PROJECT_SOURCE_DIR}/cmake/target_link_libraries_alt.cmake)
 
 set_property(GLOBAL PROPERTY CXX_STANDARD 14)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
@@ -22,6 +23,7 @@ endif(MSVC)
 add_definitions(-DGLM_FORCE_RADIANS)
 add_definitions(-DGLM_FORCE_DEPTH_ZERO_TO_ONE)
 add_definitions(-DGLFW_INCLUDE_VULKAN)
+add_definitions(-DIMGUI_USER_CONFIG="imgui_config.h")
 
 set(CMAKE_MODULE_PATH ${CMAKE_BINARY_DIR} ${CMAKE_MODULE_PATH})
 include_directories("external")
@@ -30,12 +32,8 @@ include_directories("external")
 # REQUIRED doesnt work with all packages.
 # Vulkan and OpenGl fail when REQUIRED is specified, regardless they were actually found and _FOUND variable is set
 # so I check _FOUND variable manually instead of using REQUIRED
-set(Boost_USE_STATIC_LIBS OFF)
-# from Boost.Log documentation:
-# if your application consists of more than one module (e.g. an exe and one or several dll's) that use Boost.Log,
-# the library must be built as a shared object
+set(Boost_USE_STATIC_LIBS ON)
 add_definitions(-DBOOST_ALL_NO_LIB)
-add_definitions(-DBOOST_ALL_DYN_LINK)
 find_package(Boost COMPONENTS
   filesystem
   log
@@ -71,32 +69,16 @@ if(NOT Vulkan_FOUND)
 endif()
 find_package(assimp        QUIET)
 find_package(imgui         QUIET)
-find_package(stb           QUIET) # header only, requires find_package only for conan
-find_package(tinyobjloader QUIET) # header only, requires find_package only for conan
-find_package(vma           QUIET) # header only, requires find_package only for conan
-
-# special target for "CMake/*.cmake files
-file(GLOB_RECURSE source_list
-  "CMake/*.cmake"
-  "conanfile.txt"
-  ".clang-format"
-  "readme.txt"
-  "LICENSE"
-)
-add_custom_target(cmake SOURCES ${source_list})
-set_target_properties(cmake PROPERTIES
-  FOLDER cmake
-  PROJECT_LABEL cmake
-)
+find_package(stb           QUIET) # header only, requires find_package for conan only
+find_package(tinyobjloader QUIET) # header only, requires find_package for conan only
+find_package(vma           QUIET) # header only, requires find_package for conan only
+find_package(rxcpp         QUIET) # header only, requires find_package for conan only
 
 add_subdirectory(assets)
+add_subdirectory(configs)
 add_subdirectory(engine)
-add_subdirectory(launcher)
+add_subdirectory(imgui_bindings)
 add_subdirectory(vulkan_renderer)
 add_subdirectory(utility)
 add_subdirectory(shaders)
-add_subdirectory(tube_race)
 add_subdirectory(model_viewer)
-add_subdirectory(orbit_sim)
-
-set_property(DIRECTORY ${PROJECT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT launcher)

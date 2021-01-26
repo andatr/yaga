@@ -10,16 +10,19 @@
 #include "assets/mesh.h"
 #include "assets/texture.h"
 
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_vulkan.h"
-
 #pragma warning(push, 0)
 #define VMA_IMPLEMENTATION
 #include <vk_mem_alloc.h>
 #pragma warning(pop)
 
 namespace yaga {
+
+// -----------------------------------------------------------------------------------------------------------------------------
+PlatformPtr createPlatform(const boost::property_tree::ptree& options)
+{
+  return std::make_unique<vk::Platform>(vk::Config(options));
+}
+
 namespace vk {
 namespace {
 
@@ -103,12 +106,6 @@ void checkVkResult(VkResult err)
 Platform::InitGLFW Platform::initGLFW_;
 
 // -----------------------------------------------------------------------------------------------------------------------------
-PlatformPtr createPlatform(const assets::Application* asset)
-{
-  return std::make_unique<vk::Platform>(asset);
-}
-
-// -----------------------------------------------------------------------------------------------------------------------------
 Platform::InitGLFW::InitGLFW()
 {
   glfwInit();
@@ -121,8 +118,8 @@ Platform::InitGLFW::~InitGLFW()
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Platform::Platform(const assets::Application* asset) :
-  asset_(asset),
+Platform::Platform(const Config& config) :
+  config_(config),
   running_(false)
 {
 }
@@ -259,19 +256,19 @@ void Platform::run(Application* app)
   running_ = true;
   app_ = app;
   checkValidationLayers();
-  auto extensions = createInstance(asset_->title());
+  auto extensions = createInstance(config_.title());
   setupLogging();
-  window_ = std::make_unique<Window>(*instance_, asset_);
+  window_ = std::make_unique<Window>(*instance_, config_);
   device_ = std::make_unique<Device>(*instance_, window_->surface(), extensions);
   createAllocator();
-  VkExtent2D resolution{ asset_->width(), asset_->height() };
+  VkExtent2D resolution{ config_.width(), config_.height() };
   swapchain_ = std::make_unique<Swapchain>(device_.get(), *allocator_, window_->surface(), resolution);
-  device_->createDescriptorPool(swapchain_->imageCount(), asset_);
+  device_->createDescriptorPool(swapchain_->imageCount(), config_);
   auto renderPass3D  = std::make_unique<RenderPass3D>(swapchain_.get());
-  context_ = std::make_unique<Context>(swapchain_.get(), *allocator_, renderPass3D.get(), asset_);
+  context_ = std::make_unique<Context>(swapchain_.get(), *allocator_, renderPass3D.get(), config_, app);
   std::vector<RenderStagePtr> stages(2);
   stages[0] = std::make_unique<RenderStage3D>(swapchain_.get(), *allocator_, std::move(renderPass3D));
-  stages[1] = std::make_unique<RenderStageGui>(swapchain_.get(), window_.get());
+  stages[1] = std::make_unique<RenderStageGui>(swapchain_.get(), window_.get(), config_);
   renderer_ = std::make_unique<Renderer>(swapchain_.get(), stages);
   app->init(context_.get(), window_->input());
   loop();

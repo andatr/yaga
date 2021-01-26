@@ -1,6 +1,7 @@
 #include "precompiled.h"
-#include "model_viewer.h"
+#include "application.h"
 #include "boundingBox.h"
+#include "gui.h"
 #include "importer.h"
 #include "assets/camera.h"
 #include "assets/scene.h"
@@ -8,31 +9,45 @@
 #include "engine/platform.h"
 
 namespace yaga {
+namespace mview {
 namespace {
+
+// -----------------------------------------------------------------------------------------------------------------------------
+unsigned int getTaskPoolSize()
+{
+  auto size = std::thread::hardware_concurrency();
+  if (size > 1) return size - 1;
+  return 1;
+}
 
 } // !namespace
 
 // -----------------------------------------------------------------------------------------------------------------------------
-ApplicationPtr createApplication(assets::Serializer* serializer)
+ApplicationPtr createApplication(const boost::property_tree::ptree& options)
 {
-  return std::make_unique<ModelViewer>(serializer);
+  return std::make_unique<Application>(options);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-ModelViewer::ModelViewer(assets::Serializer* serializer) :
-  BasicApplication(serializer)
+Application::Application(const boost::property_tree::ptree& options) :
+  BasicApplication(options),
+  running_(false),
+  taskPool_(getTaskPoolSize())
 {
+  gui_ = std::make_unique<Gui>(options, this);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-ModelViewer::~ModelViewer()
+Application::~Application()
 {
+  taskPool_.join();
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void ModelViewer::init(Context* context, Input* input)
+void Application::init(Context* context, Input* input)
 {
   base::init(context, input);
+  running_ = true;
 
   MeshMetadata meta {};
   auto m = importModel(R"(C:\Projects\Cpp\VulkanGame2\data\models\37-rp_eric_rigged_001_fbx\rp_eric_rigged_001_yup_a.fbx)", "material", meta);
@@ -44,7 +59,7 @@ void ModelViewer::init(Context* context, Input* input)
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
- assets::Mesh* ModelViewer::importModel(const std::string& path, const std::string& mname, MeshMetadata& meta)
+ assets::Mesh* Application::importModel(const std::string& path, const std::string& mname, MeshMetadata& meta)
 {
   auto objectUnique = std::make_unique<Object>();
   auto object = objectUnique.get();
@@ -52,7 +67,7 @@ void ModelViewer::init(Context* context, Input* input)
 
   auto mesh = importMesh(path, meta);
   auto m = mesh.get();
-  persistentAssets_->put(std::move(mesh));
+  assets_->put(std::move(mesh));
 
   object->addComponent(context_->createMesh(object, m));
   glm::vec3 bounds = meta.max - meta.min;
@@ -65,7 +80,7 @@ void ModelViewer::init(Context* context, Input* input)
   objectPosition_->local(glm::translate(glm::scale(objectPosition_->local(), { max, max, max }), -mid));
   object->addComponent(std::move(transform));
 
-  auto material = serializer_->deserialize<assets::Material>(mname, persistentAssets_.get());
+  auto material = serializer_->deserialize<assets::Material>(mname, assets_.get());
   auto mm = context_->createMaterial(object, material);
   mm->wireframe(true);
   object->addComponent(std::move(mm));
@@ -75,7 +90,7 @@ void ModelViewer::init(Context* context, Input* input)
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void ModelViewer::createBoundingBox(assets::Mesh* modelMesh, const MeshMetadata& meta)
+void Application::createBoundingBox(assets::Mesh* modelMesh, const MeshMetadata& meta)
 {
   auto objectUnique = std::make_unique<Object>();
   auto object = objectUnique.get();
@@ -94,13 +109,13 @@ void ModelViewer::createBoundingBox(assets::Mesh* modelMesh, const MeshMetadata&
   g->local(glm::translate(glm::scale(g->local(), { max, max, max }), -mid));
   object->addComponent(std::move(transform));
 
-  auto material = serializer_->deserialize<assets::Material>("ui_3d_mat", persistentAssets_.get());
+  auto material = serializer_->deserialize<assets::Material>("ui_3d_mat", assets_.get());
   object->addComponent(context_->createMaterial(object, material));
   object->addComponent(context_->createRenderer3D(object));
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void ModelViewer::setupCamera()
+void Application::setupCamera()
 {
   auto objectUnique = std::make_unique<Object>();
   auto object = objectUnique.get();
@@ -110,7 +125,7 @@ void ModelViewer::setupCamera()
   cameraPosition_ = transform.get();
   object->addComponent(std::move(transform));
 
-  //auto cameraAsset = serializer_->deserialize<assets::Camera>("camera", persistentAssets_.get());
+  //auto cameraAsset = serializer_->deserialize<assets::Camera>("camera", assets_.get());
   auto camera = context_->createCamera(object);
   camera_ = camera.get();
   object->addComponent(std::move(camera));
@@ -125,8 +140,9 @@ void ModelViewer::setupCamera()
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void ModelViewer::resize()
+void Application::resize()
 {
+  gui_->resize();
   auto res = context_->resolution();
   auto projection = glm::perspective(glm::radians(45.0f), (float)res.x / (float)res.y, 0.1f, 100.0f);
   projection[1][1] *= -1;
@@ -134,7 +150,7 @@ void ModelViewer::resize()
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-bool ModelViewer::loop()
+bool Application::loop()
 {
   static auto startTime = std::chrono::high_resolution_clock::now();
   auto currentTime = std::chrono::high_resolution_clock::now();
@@ -146,7 +162,7 @@ bool ModelViewer::loop()
   const auto& res = context->resolution();
   auto projection = glm::perspective(glm::radians(60.0f + 45.0f * sin(time)), (float)res.x / (float)res.y, 0.1f, 100.0f);
   projection[1][1] *= -1;
-  auto cameraAsset = persistentAssets_->get<assets::Camera>("camera");
+  auto cameraAsset = assets_->get<assets::Camera>("camera");
   cameraAsset->projection(projection);*/
 
   //
@@ -171,14 +187,39 @@ bool ModelViewer::loop()
   }
   objectPosition_->local(pos);*/
   
-  return true;
+  return running_;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void ModelViewer::shutdown()
+void Application::gui()
+{
+  gui_->render();
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+void Application::shutdown()
 {
   base::shutdown();
   objects_.clear();
 }
 
+// -----------------------------------------------------------------------------------------------------------------------------
+void Application::save(const std::string filename)
+{
+  std::this_thread::sleep_for(std::chrono::seconds(10));
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+void Application::open(const std::string filename)
+{
+  std::this_thread::sleep_for(std::chrono::seconds(10));
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+void Application::exit()
+{
+  running_ = false;
+}
+
+} // !namespace mview
 } // !namespace yaga

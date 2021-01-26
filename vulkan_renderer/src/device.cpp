@@ -234,13 +234,13 @@ void Device::createCommandPool()
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Device::createDescriptorPool(uint32_t frames, const assets::Application* limits)
+void Device::createDescriptorPool(uint32_t frames, const Config& config)
 {
   std::array<VkDescriptorPoolSize, 2> poolSizes{};
   poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
   poolSizes[0].descriptorCount = frames;
   poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  poolSizes[1].descriptorCount = limits->maxTextureCount() * frames;
+  poolSizes[1].descriptorCount = config.maxTextureCount() * frames;
 
   VkDescriptorPoolCreateInfo poolInfo{};
   poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;

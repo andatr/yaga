@@ -15,9 +15,9 @@ public:
   explicit Array(size_t size = 0);
   void resize(size_t size);
   T* operator*() const { return data_.get(); }
-  T* data() const { return data_.get(); }
+  T*      data() const { return data_.get(); }
+  size_t  size() const { return size_; }
   T& operator[](size_t i) { return data_.get()[i]; }
-  size_t size() const { return size_; }
 
 private:
   static void free(const T* p);
@@ -31,7 +31,9 @@ typedef Array<char> ByteArray;
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename T>
-Array<T>::Array(size_t size) : size_(size), data_(size > 0 ? new T[size] : nullptr, Array::free)
+Array<T>::Array(size_t size) :
+  size_(size),
+  data_(size > 0 ? new T[size] : nullptr, Array::free)
 {}
 
 // -----------------------------------------------------------------------------------------------------------------------------

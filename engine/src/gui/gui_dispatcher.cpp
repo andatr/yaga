@@ -1,24 +1,25 @@
 #include "precompiled.h"
-/*
-#include "camera.h"
-#include "camera_pool.h"
+#include "gui/gui_context.h"
 
 namespace yaga {
-namespace vk {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Camera::Camera(Object* obj, assets::Camera* asset, CameraPool* pool, uint32_t frames) :
-  yaga::Camera(obj, asset),
-  pool_(pool)
+GuiDispatcher::GuiDispatcher() :
+  current_(0),
+  next_(1)
 {
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Camera::~Camera()
+void GuiDispatcher::process()
 {
-  pool_->removeCamera(this);
+  auto& current = dispatchers_[current_];
+  current.poll();
+  if (current.stopped()) {
+    current.restart();
+  }
+  current_ = (current_ + 1) % 2;
+  next_    = (next_    + 1) % 2;
 }
 
-} // !namespace vk
 } // !namespace yaga
-*/

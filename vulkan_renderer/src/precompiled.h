@@ -19,11 +19,17 @@
 #include <vk_mem_alloc.h>
 #include <GLFW/glfw3.h>
 
+#include <boost/filesystem.hpp>
 #include <boost/optional.hpp>
+#include <boost/property_tree/ptree.hpp>
 #include <boost/signals2.hpp>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
+#include <imgui.h>
+#include <imgui_impl_vulkan.h>
+#include <imgui_impl_glfw.h>
 
 #pragma warning(pop)
 

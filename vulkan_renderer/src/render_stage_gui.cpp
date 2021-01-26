@@ -1,8 +1,5 @@
 #include "precompiled.h"
 #include "render_stage_gui.h"
-#include "imgui.h"
-#include "imgui_impl_vulkan.h"
-#include "imgui_impl_glfw.h"
 #include "render_pass_gui.h"
 
 namespace yaga {
@@ -20,12 +17,12 @@ void checkResult(VkResult result)
 } // !namespace
 
 // -----------------------------------------------------------------------------------------------------------------------------
-RenderStageGui::RenderStageGui(Swapchain* swapchain, Window* window) :
+RenderStageGui::RenderStageGui(Swapchain* swapchain, Window* window, const Config& config) :
   swapchain_(swapchain)
 {
   createDescriptorPool();
   renderPass_ = std::make_unique<RenderPassGui>(swapchain_);
-  initGui(window);
+  initGui(window, config);
   uploadFonts();
 }
 
@@ -38,7 +35,7 @@ RenderStageGui::~RenderStageGui()
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void RenderStageGui::initGui(Window* window)
+void RenderStageGui::initGui(Window* window, const Config& config)
 {
   IMGUI_CHECKVERSION();
   ImGui::CreateContext();
@@ -55,6 +52,9 @@ void RenderStageGui::initGui(Window* window)
   info.ImageCount      = swapchain_->imageCount();
   info.CheckVkResultFn = checkResult;
   ImGui_ImplVulkan_Init(&info, **renderPass_);
+  
+  ImGuiIO& io = ImGui::GetIO();
+  io.IniFilename = config.guiConfigPath();
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -67,12 +67,12 @@ void RenderStageGui::uploadFonts()
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-VkSemaphore RenderStageGui::render(Context*, uint32_t frame, VkSemaphore waitFor)
+VkSemaphore RenderStageGui::render(Context* context, uint32_t frame, VkSemaphore waitFor)
 {
   ImGui_ImplVulkan_NewFrame();
   ImGui_ImplGlfw_NewFrame();
   ImGui::NewFrame();
-  ImGui::ShowDemoWindow();
+  context->gui();
   ImGui::Render();
   ImDrawData* draw_data = ImGui::GetDrawData();
   auto command = renderPass_->beginRender(frame);

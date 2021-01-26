@@ -5,7 +5,7 @@ namespace yaga {
 namespace vk {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Window::Window(VkInstance instance, const assets::Application* asset) :
+Window::Window(VkInstance instance, const Config& config) :
   instance_(instance),
   size_{},
   minimised_(false),
@@ -13,7 +13,7 @@ Window::Window(VkInstance instance, const assets::Application* asset) :
 {
   namespace ph = std::placeholders;
 
-  createWindow(asset);
+  createWindow(config);
   createSurface(instance);
   updateSize();
   eventDispatcher_ = std::make_unique<EventDispatcher>(*window_);
@@ -26,7 +26,7 @@ Window::~Window()
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Window::createWindow(const assets::Application* asset)
+void Window::createWindow(const Config& config)
 {
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);
@@ -34,7 +34,7 @@ void Window::createWindow(const assets::Application* asset)
     glfwDestroyWindow(window);
     LOG(trace) << "Window destroyed";
   };
-  auto window = glfwCreateWindow(asset->width(), asset->height(), asset->title().c_str(), nullptr, nullptr);
+  auto window = glfwCreateWindow(config.width(), config.height(), config.title().c_str(), nullptr, nullptr);
   if (!window) {
     THROW("Could not create Window");
   }

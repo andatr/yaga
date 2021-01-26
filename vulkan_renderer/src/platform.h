@@ -4,17 +4,17 @@
 #include <memory>
 #include <string>
 #include <vector>
-#include <boost/dll/alias.hpp>
 
+#include "config.h"
 #include "context.h"
 #include "device.h"
 #include "renderer.h"
 #include "swapchain.h"
 #include "vulkan.h"
 #include "window.h"
-#include "assets/application.h"
 #include "engine/platform.h"
 #include "utility/auto_destructor.h"
+#include "vulkan_renderer/platform.h"
 
 namespace yaga {
 namespace vk {
@@ -30,7 +30,7 @@ public:
   };
 
 public:
-  explicit Platform(const assets::Application* asset);
+  explicit Platform(const Config& config);
   virtual ~Platform();
   void run(Application* app) override;
 
@@ -43,7 +43,7 @@ private:
 
 private:
   static InitGLFW initGLFW_;
-  const assets::Application* asset_;
+  const Config config_;
   bool running_;
   AutoDestructor<VkInstance> instance_;
   WindowPtr window_;  
@@ -56,11 +56,7 @@ private:
   Application* app_;
 };
 
-PlatformPtr createPlatform(const assets::Application* asset);
-
 } // !namespace vk
 } // !namespace yaga
-
-BOOST_DLL_ALIAS(yaga::vk::createPlatform, createPlatform)
 
 #endif // !YAGA_VULKAN_RENDERER_SRC_PLATFORM

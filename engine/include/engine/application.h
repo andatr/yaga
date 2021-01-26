@@ -3,7 +3,6 @@
 
 #include <memory>
 
-#include "assets/serializer.h"
 #include "engine/input.h"
 #include "engine/context.h"
 
@@ -17,11 +16,10 @@ public:
   virtual void resize()   = 0;
   virtual bool loop()     = 0;
   virtual void shutdown() = 0;
+  virtual void gui()      = 0;
 };
 
-typedef std::unique_ptr<Application> ApplicationPtr;
-typedef ApplicationPtr CreateApplicationFunc(assets::Serializer*);
-constexpr const char* createApplicationFuncName = "createApplication";
+typedef std::unique_ptr< Application> ApplicationPtr;
 
 } // !namespace yaga
 

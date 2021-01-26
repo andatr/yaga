@@ -6,7 +6,6 @@
 #include <string>
 #include <boost/noncopyable.hpp>
 
-#include "assets/application.h"
 #include "engine/application.h"
 #include "engine/input.h"
 #include "engine/context.h"
@@ -21,8 +20,6 @@ public:
 };
 
 typedef std::unique_ptr<Platform> PlatformPtr;
-typedef PlatformPtr CreatePlatformFunc(assets::Application*);
-constexpr const char* createPlatformFuncName = "createPlatform";
 
 } // !namespace yaga
 

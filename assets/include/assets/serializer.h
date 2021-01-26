@@ -16,7 +16,6 @@ typedef uint32_t AssetId;
 
 enum class StandardAssetId : AssetId
 {
-  application = 1,
   shader = 2,
   image = 3,
   mesh = 4,

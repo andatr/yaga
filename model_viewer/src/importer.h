@@ -4,6 +4,7 @@
 #include "assets/mesh.h"
 
 namespace yaga {
+namespace mview {
 
 struct MeshMetadata
 {
@@ -13,6 +14,7 @@ struct MeshMetadata
 
 assets::MeshPtr importMesh(const std::string& path, MeshMetadata& meta);
 
+} // !namespace mview
 } // !namespace yaga
 
 #endif // !YAGA_MODEL_VIEWER_SRC_IMPORTER

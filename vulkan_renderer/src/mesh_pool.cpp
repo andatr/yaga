@@ -16,12 +16,12 @@ void copyBuffer(VkBuffer source, VkBuffer destination, VkDeviceSize size, VkComm
 } // !namespace
 
 // -----------------------------------------------------------------------------------------------------------------------------
-MeshPool::MeshPool(Device* device, VmaAllocator allocator, const assets::Application* limits) :
+MeshPool::MeshPool(Device* device, VmaAllocator allocator, const Config& config) :
   counter_(0),
   device_(device),
   allocator_(allocator),
-  maxVertexCount_(limits->maxVertexCount()),
-  maxIndexCount_(limits->maxIndexCount())
+  maxVertexCount_(config.maxVertexCount()),
+  maxIndexCount_(config.maxIndexCount())
 {
   createStageBuffers(maxVertexCount_, maxIndexCount_);
 }

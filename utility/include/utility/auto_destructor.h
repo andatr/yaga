@@ -33,12 +33,15 @@ private:
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename T>
-AutoDestructor<T>::AutoDestructor() : destoyed_(true)
-{}
+AutoDestructor<T>::AutoDestructor() :
+  destoyed_(true)
+{
+}
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename T>
-AutoDestructor<T>::AutoDestructor(T& obj, const DestructorT& dtor) : destoyed_(true)
+AutoDestructor<T>::AutoDestructor(T& obj, const DestructorT& dtor) :
+  destoyed_(true)
 {
   set(obj, dtor);
 }

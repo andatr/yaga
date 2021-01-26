@@ -3,8 +3,10 @@
 
 #include <memory>
 #include <boost/noncopyable.hpp>
+#include <boost/property_tree/ptree_fwd.hpp>
 
 #include "assets/storage.h"
+#include "assets/serializer.h"
 #include "engine/application.h"
 
 namespace yaga {
@@ -14,7 +16,7 @@ class BasicApplication
   , public Application
 {
 public:
-  BasicApplication(assets::Serializer* serializer);
+  BasicApplication(const boost::property_tree::ptree& options);
   virtual ~BasicApplication();
 
 protected:
@@ -22,10 +24,11 @@ protected:
   void resize()   override;
   bool loop()     override;
   void shutdown() override;
+  void gui()      override;
 
 protected:
-  assets::StoragePtr persistentAssets_;
-  assets::Serializer* serializer_;
+  assets::StoragePtr assets_;
+  assets::SerializerPtr serializer_;
   Context* context_;
   Input* input_;
 };

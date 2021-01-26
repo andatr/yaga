@@ -5,10 +5,10 @@
 #include <unordered_map>
 
 #include "buffer.h"
+#include "config.h"
 #include "device.h"
 #include "mesh.h"
 #include "vulkan.h"
-#include "assets/application.h"
 #include "assets/mesh.h"
 #include "utility/auto_destructor.h"
 
@@ -18,7 +18,7 @@ namespace vk {
 class MeshPool
 {
 public:
-  explicit MeshPool(Device* device, VmaAllocator allocator, const assets::Application* limits);
+  explicit MeshPool(Device* device, VmaAllocator allocator, const Config& config);
   ~MeshPool();
   MeshPtr get(Object* object, assets::Mesh* asset);
   void clear();

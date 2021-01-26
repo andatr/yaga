@@ -6,8 +6,8 @@
 #include <vector>
 #include <boost/noncopyable.hpp>
 
+#include "config.h"
 #include "vulkan.h"
-#include "assets/application.h"
 #include "utility/auto_destructor.h"
 
 namespace yaga {
@@ -51,7 +51,7 @@ public:
   VkQueue presentQueue()  const { return queues_[1]; }
   VkQueue transferQueue() const { return queues_[2]; }
   VkQueue computeQueue()  const { return queues_[3]; }
-  void createDescriptorPool(uint32_t frames, const assets::Application* limits);
+  void createDescriptorPool(uint32_t frames, const Config& config);
   uint32_t getMemoryType(uint32_t filter, VkMemoryPropertyFlags props) const;
   void submitCommand(const CommandHandler& command) const;
   void waitIdle() const;

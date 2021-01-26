@@ -3,6 +3,7 @@
 #include "engine/triangulate.h"
 
 namespace yaga {
+namespace mview {
 namespace {
 
 // axis
@@ -154,4 +155,5 @@ assets::MeshPtr makeBoundingBox(assets::Mesh* mesh, const MeshMetadata& meta)
   return std::move(frameMesh);
 }
 
+} // !namespace mview
 } // !namespace yaga

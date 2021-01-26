@@ -2,10 +2,11 @@
 assimp/5.0.1
 glfw/3.3.2
 glm/0.9.9.8
-imgui/1.76
+imgui/1.79
 stb/20200203
 tinyobjloader/1.0.6
 vma/2.3@andatr/stable
+rxcpp/4.1.0
 
 [generators]
 cmake_find_package

@@ -25,7 +25,7 @@ private:
   const std::string message_;
 };
 
-namespace detail {
+namespace exception_detail {
 
 // -----------------------------------------------------------------------------------------------------------------------------
 inline std::string expandFormat(boost::format f)
@@ -40,12 +40,14 @@ std::string expandFormat(boost::format f, T&& t, Args&&... args)
   return expandFormat(f % std::forward<T>(t), std::forward<Args>(args)...);
 }
 
-} // !namespace detail
+} // !namespace exception_detail
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename... Args>
 Exception::Exception(const std::string& file, int line, const std::string& format, Args... args) :
-  file_(file), line_(line), message_(detail::expandFormat(boost::format(format), args...))
+  file_(file),
+  line_(line),
+  message_(exception_detail::expandFormat(boost::format(format), args...))
 {}
 
 } // !namespace yaga

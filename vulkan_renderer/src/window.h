@@ -4,10 +4,10 @@
 #include <memory>
 #include <thread>
 
+#include "config.h"
 #include "event_dispatcher.h"
 #include "input.h"
 #include "vulkan.h"
-#include "assets/application.h"
 #include "utility/auto_destructor.h"
 
 namespace yaga {
@@ -16,7 +16,7 @@ namespace vk {
 class Window
 {
 public:
-  Window(VkInstance instance, const assets::Application* asset);
+  Window(VkInstance instance, const Config& config);
   ~Window();
   VkInstance   instance() const { return instance_;    }
   Input*          input() const { return input_.get(); }
@@ -29,7 +29,7 @@ public:
   void update();
 
 private:
-  void createWindow(const assets::Application* asset);
+  void createWindow(const Config& config);
   void createSurface(VkInstance instance);
   void updateSize();
 

@@ -17,7 +17,9 @@ target_include_directories(engine
 target_link_libraries(engine
   PUBLIC
     assets
-    utility    
+    utility
+    imgui_bindings
 )
 target_link_libraries_alt(engine PUBLIC glm::glm glm)
+target_link_libraries_alt(engine PUBLIC rxcpp::rxcpp rxcpp)
 add_subdirectory(test)

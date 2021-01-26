@@ -2,6 +2,7 @@
 #include "importer.h"
 
 namespace yaga {
+namespace mview {
 
 // -----------------------------------------------------------------------------------------------------------------------------
 assets::MeshPtr importMesh(const std::string& path, MeshMetadata& meta)
@@ -56,4 +57,5 @@ assets::MeshPtr importMesh(const std::string& path, MeshMetadata& meta)
   return std::move(asset);
 }
 
+} // !namespace mview
 } // !namespace yaga

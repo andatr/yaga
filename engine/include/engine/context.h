@@ -1,6 +1,7 @@
 #ifndef YAGA_ENGINE_CONTEXT
 #define YAGA_ENGINE_CONTEXT
 
+#include <functional>
 #include <boost/noncopyable.hpp>
 
 #include "engine/camera.h"

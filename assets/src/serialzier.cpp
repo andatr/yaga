@@ -1,5 +1,4 @@
 #include "precompiled.h"
-#include "assets/application.h"
 #include "assets/camera.h"
 #include "assets/image.h"
 #include "assets/material.h"
@@ -33,7 +32,6 @@ Asset* RefResolver::getAsset(const std::string& name)
 // -----------------------------------------------------------------------------------------------------------------------------
 void Serializer::registerStandardAssets()
 {
-  registerAsset<Application>();
   registerAsset<Image>();
   registerAsset<Scene>();
   registerAsset<Shader>();

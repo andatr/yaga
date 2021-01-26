@@ -20,5 +20,6 @@ target_link_libraries(utility
     Boost::filesystem
     Boost::log
     Boost::log_setup
+    Boost::program_options
 )
 add_subdirectory(test)

@@ -4,7 +4,7 @@ file(GLOB_RECURSE source_list
   "src/*.cpp"
 )
 source_group(TREE ${CMAKE_CURRENT_SOURCE_DIR} FILES ${source_list})
-add_library(orbit_sim MODULE ${source_list})
+add_library(orbit_sim ${source_list})
 set_target_properties(orbit_sim PROPERTIES FOLDER app)
 set_precompiled_headers(orbit_sim)
 target_include_directories(orbit_sim
