@@ -20,6 +20,7 @@ public:
   virtual ~Gui();
   void render();
   void resize();
+  void exit();
   // IGuiContext
   ImVec2 screenSize() override;
   GuiDispatcher& guiDispatcher() override;

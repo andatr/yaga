@@ -280,9 +280,13 @@ void Platform::run(Application* app)
 // -----------------------------------------------------------------------------------------------------------------------------
 void Platform::loop()
 {
-  while (!glfwWindowShouldClose(**window_)) {
+  while (true) {
     window_->update();
     context_->update();
+    if (glfwWindowShouldClose(**window_)) {
+      app_->stop();
+      glfwSetWindowShouldClose(**window_, 0);
+    }
     if (!app_->loop()) break;
     if (window_->minimised()) continue;
     if (window_->resized() || !renderer_->render(context_.get())) {

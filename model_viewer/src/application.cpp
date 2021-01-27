@@ -31,7 +31,6 @@ ApplicationPtr createApplication(const boost::property_tree::ptree& options)
 // -----------------------------------------------------------------------------------------------------------------------------
 Application::Application(const boost::property_tree::ptree& options) :
   BasicApplication(options),
-  running_(false),
   taskPool_(getTaskPoolSize())
 {
   gui_ = std::make_unique<Gui>(options, this);
@@ -47,7 +46,6 @@ Application::~Application()
 void Application::init(Context* context, Input* input)
 {
   base::init(context, input);
-  running_ = true;
 
   MeshMetadata meta {};
   auto m = importModel(R"(C:\Projects\Cpp\VulkanGame2\data\models\37-rp_eric_rigged_001_fbx\rp_eric_rigged_001_yup_a.fbx)", "material", meta);
@@ -194,6 +192,12 @@ bool Application::loop()
 void Application::gui()
 {
   gui_->render();
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+void Application::stop()
+{
+  gui_->exit();
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------

@@ -23,10 +23,12 @@ protected:
   void init(Context* context, Input* input) override;
   void resize()   override;
   bool loop()     override;
+  void stop()     override;
   void shutdown() override;
   void gui()      override;
 
 protected:
+  bool running_;
   assets::StoragePtr assets_;
   assets::SerializerPtr serializer_;
   Context* context_;

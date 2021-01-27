@@ -29,6 +29,7 @@ assets::SerializerPtr createSerializer(const boost::property_tree::ptree& option
 
 // -----------------------------------------------------------------------------------------------------------------------------
 BasicApplication::BasicApplication(const boost::property_tree::ptree& options) :
+  running_(false),
   assets_(std::make_unique<assets::Storage>()),
   context_(nullptr),
   input_(nullptr)
@@ -45,6 +46,7 @@ BasicApplication::~BasicApplication()
 // -----------------------------------------------------------------------------------------------------------------------------
 void BasicApplication::init(Context* context, Input* input)
 {
+  running_ = true;
   context_ = context;
   input_ = input;
 }
@@ -61,7 +63,13 @@ bool BasicApplication::loop()
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void BasicApplication::shutdown() 
+void BasicApplication::stop()
+{
+  running_ = false;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+void BasicApplication::shutdown()
 {
 }
 

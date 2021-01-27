@@ -27,6 +27,7 @@ public:
   void init(Context* context, Input* input) override;
   void resize()   override;
   bool loop()     override;
+  void stop()     override;
   void shutdown() override;
   void gui()      override;
 
@@ -42,7 +43,6 @@ private:
   void open(const std::string filename);
 
 private:
-  bool running_;
   boost::asio::thread_pool taskPool_;
   GuiPtr gui_;
   std::vector<ObjectPtr> objects_;
