@@ -1,46 +1,133 @@
 #include "precompiled.h"
 #include "assets/image.h"
-
-#define STB_IMAGE_IMPLEMENTATION
-#include <stb_image.h>
+#include "binary_serializer_helper.h"
+#include "binary_serializer_registry.h"
+#include "friendly_serializer_helper.h"
 
 namespace yaga {
 namespace assets {
-
-const SerializationInfo Image::serializationInfo = {
-  (uint32_t)StandardAssetId::image,
-  { "png", "jpg", "jpeg", "bmp", "psd", "tga", "gif", "hdr", "pic" },
-  &Image::deserializeBinary,
-  &Image::deserializeFriendly
-};
+namespace {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Image::Image(const std::string& name) : Asset(name), bytes_(nullptr), width_(0), height_(0), channels_(0), size_(0)
+int readStbi(void* user, char* data, int size)
 {
+  auto stream = static_cast<std::istream*>(user);
+  return static_cast<int>(stream->read(data, size).gcount());
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+void skipStbi(void* user, int n)
+{
+  auto stream = static_cast<std::istream*>(user);
+  if (n < 0) {
+    stream->seekg(-n, std::ios::cur);
+  }
+  else {
+    stream->ignore(n);
+  }
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+int eofStbi(void* user)
+{
+  auto stream = static_cast<std::istream*>(user);
+  return stream->good() ? 0 : 1;
+}
+
+} // !namespace
+
+BINARY_SERIALIZER_REG(Image)
+
+// -----------------------------------------------------------------------------------------------------------------------------
+Image::Image(const std::string& name) :
+  Asset(name),
+  width_(0),
+  height_(0),
+  format_(0)
+{
+  addProperty("Bytes",  &bytes_);
+  addProperty("Width",  &width_);
+  addProperty("Height", &height_);
+  addProperty("Format", &format_);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 Image::~Image()
 {
-  stbi_image_free(bytes_);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-ImagePtr Image::deserializeBinary(const std::string&, std::istream&, size_t, RefResolver&)
+Image* Image::bytes(Updater handler)
+{
+  handler(bytes_);
+  properties_[PropertyIndex::bytes]->update(this);
+  return this;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+Image* Image::width(uint32_t value)
+{
+  width_ = value;
+  properties_[PropertyIndex::width]->update(this);
+  return this;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+Image* Image::height(uint32_t value)
+{
+  height_ = value;
+  properties_[PropertyIndex::height]->update(this);
+  return this;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+Image* Image::format(int value)
+{
+  format_ = value;
+  properties_[PropertyIndex::format]->update(this);
+  return this;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+ImagePtr Image::deserializeBinary(std::istream& stream)
+{
+  std::string name;
+  binser::read(stream, name);
+  auto image = std::make_unique<Image>(name);
+  binser::read(stream, image->width_ );
+  binser::read(stream, image->height_);
+  binser::read(stream, image->format_);
+  binser::read(stream, image->bytes_ );
+  return image;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+void Image::serializeBinary(Asset* asset, std::ostream& stream)
+{
+  auto image = dynamic_cast<Image*>(asset);
+  if (!image) THROW("Image serializer got wrong asset");
+  binser::write(stream, image->name_  );
+  binser::write(stream, image->width_ );
+  binser::write(stream, image->height_); 
+  binser::write(stream, image->format_);
+  binser::write(stream, image->bytes_ );
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+ImagePtr Image::deserializeFriendly(std::istream& stream)
 {
   THROW_NOT_IMPLEMENTED;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-ImagePtr Image::deserializeFriendly(const std::string& name, const std::string& path, RefResolver&)
+void Image::serializeFriendly(Asset*, std::ostream&)
 {
-  auto image = std::make_unique<Image>(name);
-  image->bytes_ = (char*)stbi_load(path.c_str(), &image->width_, &image->height_, &image->channels_, STBI_rgb_alpha);
-  if (!image->bytes_) {
-    THROW("Could not load image %1%", path);
-  }
-  image->size_ = image->width_ * image->height_ * 4;
-  return image;
+  THROW_NOT_IMPLEMENTED;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+void Image::resolveRefs(Asset*, Storage*)
+{
 }
 
 } // !namespace assets

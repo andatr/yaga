@@ -1,24 +1,33 @@
 #include "precompiled.h"
-#include "renderer3d.h"
-#include "renderer_3d_pool.h"
+#include "vulkan_renderer/renderer3d.h"
+#include "vulkan_renderer/renderer_3d_pool.h"
 #include "engine/object.h"
 
 namespace yaga {
 namespace vk {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Renderer3D::Renderer3D(Renderer3DPool* pool, Object* obj) :
-  yaga::Renderer3D(obj),
+Renderer3D::Renderer3D(Renderer3DPool* pool) :
   pool_(pool),
-  material_(obj->getComponent<Material>()),
-  mesh_(obj->getComponent<Mesh>()),
-  transform_(obj->getComponent<Transform>())
+  object_(nullptr),
+  material_(nullptr),
+  mesh_(nullptr),
+  transform_(nullptr)
 {}
 
 // -----------------------------------------------------------------------------------------------------------------------------
 Renderer3D::~Renderer3D()
 {
-  pool_->onRemove(this);
+  pool_->remove(this);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+void Renderer3D::onAttached(Object* object)
+{
+  object_    = object;
+  material_  = object->getComponent<Material>();
+  mesh_      = object->getComponent<Mesh>();
+  transform_ = object->getComponent<Transform>();
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------

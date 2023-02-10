@@ -1,5 +1,5 @@
 #include "precompiled.h"
-#include "swapchain.h"
+#include "vulkan_renderer/swapchain.h"
 
 namespace yaga {
 namespace vk {
@@ -83,10 +83,12 @@ VkExtent2D pickResolution(const VkSurfaceCapabilitiesKHR& capabilities, VkExtent
     return capabilities.currentExtent;
   }
   // init with min supported values
-  VkExtent2D resolution = { std::min(capabilities.maxImageExtent.width, requested.width),
-    std::min(capabilities.maxImageExtent.height, requested.height) };
+  VkExtent2D resolution = { 
+    std::min(capabilities.maxImageExtent.width,  requested.width),
+    std::min(capabilities.maxImageExtent.height, requested.height)
+  };
   // update to max supported
-  resolution.width = std::max(resolution.width, capabilities.minImageExtent.width);
+  resolution.width  = std::max(resolution.width,  capabilities.minImageExtent.width);
   resolution.height = std::max(resolution.height, capabilities.minImageExtent.height);
   return resolution;
 }
@@ -102,7 +104,10 @@ uint32_t pickBufferCount(const VkSurfaceCapabilitiesKHR& capabilities)
 
 // -----------------------------------------------------------------------------------------------------------------------------
 VkFormat getDepthImageFormat(
-  VkPhysicalDevice device, const std::vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features)
+  VkPhysicalDevice device,
+  const std::vector<VkFormat>& candidates,
+  VkImageTiling tiling,
+  VkFormatFeatureFlags features)
 {
   for (VkFormat format : candidates) {
     VkFormatProperties props;
@@ -118,8 +123,14 @@ VkFormat getDepthImageFormat(
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-ImagePtr createImage(Device* device, VmaAllocator allocator, VkExtent2D resolution, VkFormat format,
-  VkSampleCountFlagBits msaa, VkImageUsageFlags usage, VkImageAspectFlagBits aspectMask)
+ImagePtr createImage(
+  Device* device,
+  VmaAllocator allocator,
+  VkExtent2D resolution,
+  VkFormat format,
+  VkSampleCountFlagBits msaa,
+  VkImageUsageFlags usage,
+  VkImageAspectFlagBits aspectMask)
 {
   VkImageCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -180,49 +191,34 @@ VkSampleCountFlagBits getMaxMsaaLevel(Device* device)
   return VK_SAMPLE_COUNT_1_BIT;
 }
 
-// -----------------------------------------------------------------------------------------------------------------------------
-VkSwapchainCreateInfoKHR getSwapchainInfo(Device* device, VkSurfaceKHR surface, VkExtent2D resolution)
-{
-  auto pdevice = device->physical();
-  auto colorFormat = pickColorFormat(pdevice, surface);
-  VkSurfaceCapabilitiesKHR capabilitues{};
-  vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pdevice, surface, &capabilitues);
-
-  VkSwapchainCreateInfoKHR info{};
-  info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-  info.surface          = surface;
-  info.oldSwapchain     = VK_NULL_HANDLE;
-  info.minImageCount    = pickBufferCount(capabilitues);
-  info.imageFormat      = colorFormat.format;
-  info.imageColorSpace  = colorFormat.colorSpace;
-  info.imageExtent      = pickResolution(capabilitues, resolution);
-  info.imageArrayLayers = 1;
-  info.imageUsage       = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
-  info.preTransform     = capabilitues.currentTransform;
-  info.compositeAlpha   = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
-  info.presentMode      = pickBufferingMode(pdevice, surface);
-  info.clipped          = VK_TRUE;
-
-  return info;
-}
-
 } // !namespace
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Swapchain::Swapchain(Device* device, VmaAllocator allocator, VkSurfaceKHR surface, VkExtent2D resolution) :
+Swapchain::Swapchain(
+  Device* device,
+  VmaAllocator allocator,
+  VkSurfaceKHR surface,
+  ConfigPtr config,
+  const SwapchainParams& params
+) :
   device_(device),
   allocator_(allocator),
   surface_(surface),
   info_{},
+  capabilitues_{},
   depthFormat_(VK_FORMAT_UNDEFINED),
-  msaa_(VK_SAMPLE_COUNT_1_BIT)
+  msaaLevel_((VkSampleCountFlagBits)0)
 {
-  info_ = getSwapchainInfo(device, surface, resolution);
-  depthFormat_ = getDepthImageFormat(device_->physical(),
-    { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
-    VK_IMAGE_TILING_OPTIMAL,
-    VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
-  msaa_ = getMaxMsaaLevel(device);  
+  info_ = getSwapchainInfo(config, params);
+  if (config->rendering().depthBuffer()) {
+    depthFormat_ = getDepthImageFormat(device_->physical(),
+      { VK_FORMAT_D32_SFLOAT, VK_FORMAT_D32_SFLOAT_S8_UINT, VK_FORMAT_D24_UNORM_S8_UINT },
+      VK_IMAGE_TILING_OPTIMAL,
+      VK_FORMAT_FEATURE_DEPTH_STENCIL_ATTACHMENT_BIT);
+  }
+  if (config->rendering().msaaLevel()) {
+    msaaLevel_ = getMaxMsaaLevel(device);  
+  }
   init();
 }
 
@@ -235,9 +231,8 @@ Swapchain::~Swapchain()
 void Swapchain::resize(VkExtent2D resolution)
 {
   if (resolution.height == 0 || resolution.width == 0) return;
-  VkSurfaceCapabilitiesKHR capabilitues{};
-  vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device_->physical(), surface_, &capabilitues);
-  info_.imageExtent = pickResolution(capabilitues, resolution);
+  vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device_->physical(), surface_, &capabilitues_);
+  info_.imageExtent = pickResolution(capabilitues_, resolution);
   init();
   sigResize_();
 }
@@ -246,12 +241,45 @@ void Swapchain::resize(VkExtent2D resolution)
 void Swapchain::init()
 {
   createSwapchain();
-  msaaImage_ = createImage(device_, allocator_, info_.imageExtent, info_.imageFormat, msaa_,
-    VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
-    VK_IMAGE_ASPECT_COLOR_BIT);
-  depthImage_ = createImage(device_, allocator_, info_.imageExtent, depthFormat_, msaa_,
-    VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_IMAGE_ASPECT_DEPTH_BIT);
+  if (msaaLevel_) {
+    msaaImage_ = createImage(device_, allocator_, info_.imageExtent, info_.imageFormat, msaaLevel_,
+      VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT,
+      VK_IMAGE_ASPECT_COLOR_BIT);
+  }
+  if (depthFormat_) {
+    depthImage_ = createImage(device_, allocator_, info_.imageExtent, depthFormat_, msaaLevel_,
+      VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_IMAGE_ASPECT_DEPTH_BIT);
+  }
   createImageViews();
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+VkSwapchainCreateInfoKHR Swapchain::getSwapchainInfo(ConfigPtr config, const SwapchainParams& params)
+{
+  auto pdevice = device_->physical();
+  auto colorFormat = pickColorFormat(pdevice, surface_);
+  vkGetPhysicalDeviceSurfaceCapabilitiesKHR(pdevice, surface_, &capabilitues_);
+
+  VkExtent2D resolution { config->window().width(), config->window().height() };
+  VkSwapchainCreateInfoKHR info{};
+  info.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+  info.surface          = surface_;
+  info.oldSwapchain     = VK_NULL_HANDLE;
+  info.minImageCount    = pickBufferCount(capabilitues_);
+  info.imageFormat      = colorFormat.format;
+  info.imageColorSpace  = colorFormat.colorSpace;
+  info.imageExtent      = pickResolution(capabilitues_, resolution);
+  info.imageArrayLayers = 1;
+  info.imageUsage       = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+  if (config->rendering().msaaLevel()) {
+    info.imageUsage |= VK_IMAGE_USAGE_SAMPLED_BIT;
+  }
+  info.imageUsage    |= params.imageUsage;
+  info.preTransform   = capabilitues_.currentTransform;
+  info.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+  info.presentMode    = pickBufferingMode(pdevice, surface_);
+  info.clipped        = VK_TRUE;
+  return info;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -336,18 +364,26 @@ void Swapchain::createImageViews()
   info.subresourceRange.baseArrayLayer = 0;
   info.subresourceRange.layerCount     = 1;
   info.subresourceRange.levelCount     = 1;
-
-  uint32_t imageCount;
+   
+  uint32_t imageCount = 0;
   vkGetSwapchainImagesKHR(**device_, *swapchain_, &imageCount, nullptr);
   std::vector<VkImage> images(imageCount);
   images_.resize(imageCount);
+  imagesViews_.resize(imageCount);
   vkGetSwapchainImagesKHR(**device_, *swapchain_, &imageCount, images.data());
   for (uint32_t i = 0; i < imageCount; ++i) {
     info.image = images[i];
     VkImageView imageView;
     VULKAN_GUARD(vkCreateImageView(**device_, &info, nullptr, &imageView), "Could not create Vulkan Image View");
-    images_[i].set(imageView, destroyImageView);
+    imagesViews_[i].set(imageView, destroyImageView);
+    images_[i] = { images[i], imageView };
   }
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+SignalConnectionPtr Swapchain::onResize(const SignalResize::slot_type& handler)
+{
+  return std::make_unique<SignalConnection>(sigResize_.connect(handler));
 }
 
 } // !namespace vk

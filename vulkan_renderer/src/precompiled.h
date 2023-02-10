@@ -1,5 +1,7 @@
-#ifndef YAGA_VULKAN_RENDERER_SRC_PRECOMPILED
-#define YAGA_VULKAN_RENDERER_SRC_PRECOMPILED
+#ifndef YAGA_VULKAN_RENDERER_PRECOMPILED
+#define YAGA_VULKAN_RENDERER_PRECOMPILED
+
+#include "utility/compiler.h"
 
 #include <algorithm>
 #include <array>
@@ -14,7 +16,7 @@
 #include <string>
 #include <vector>
 
-#pragma warning(push, 0)
+DISABLE_WARNINGS
 
 #include <vk_mem_alloc.h>
 #include <GLFW/glfw3.h>
@@ -24,16 +26,15 @@
 #include <boost/property_tree/ptree.hpp>
 #include <boost/signals2.hpp>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
-
-#include <imgui.h>
+#include "imgui_wrapper.h"
+#include <imgui_freetype.h>
 #include <imgui_impl_vulkan.h>
 #include <imgui_impl_glfw.h>
 
-#pragma warning(pop)
+ENABLE_WARNINGS
 
+#include "utility/glm.h"
 #include "utility/exception.h"
 #include "utility/log.h"
 
-#endif // !YAGA_VULKAN_RENDERER_SRC_PRECOMPILED
+#endif // !YAGA_VULKAN_RENDERER_PRECOMPILED

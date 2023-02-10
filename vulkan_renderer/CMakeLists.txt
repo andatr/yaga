@@ -12,7 +12,6 @@ target_include_directories(vulkan_renderer
   PUBLIC 
     ${CMAKE_CURRENT_LIST_DIR}/include
   PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}/include/vulkan_renderer
     ${CMAKE_CURRENT_LIST_DIR}/src
 )
 target_link_libraries(vulkan_renderer

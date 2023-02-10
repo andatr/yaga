@@ -11,7 +11,6 @@ target_include_directories(utility
   PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/include
   PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}/include/utility
     ${CMAKE_CURRENT_LIST_DIR}/src
 )
 target_link_libraries(utility
@@ -22,4 +21,5 @@ target_link_libraries(utility
     Boost::log_setup
     Boost::program_options
 )
+target_link_libraries_alt(utility PUBLIC glm::glm glm)
 add_subdirectory(test)

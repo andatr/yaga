@@ -1,7 +1,7 @@
 #ifndef YAGA_ENGINE_INPUT_KEYS
 #define YAGA_ENGINE_INPUT_KEYS
 
-// the values were copied from glfw3
+// the values are copied from glfw3
 
 namespace yaga {
 namespace keys {

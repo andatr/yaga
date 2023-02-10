@@ -1,9 +1,9 @@
 #ifndef YAGA_IMGUI_BINDINGS_IMGUI_CONFIG
 #define YAGA_IMGUI_BINDINGS_IMGUI_CONFIG
 
-#pragma warning(push, 0)
-#include <glm/glm.hpp>
-#pragma warning(pop)
+#include "utility/glm.h"
+
+#define IMGUI_ENABLE_FREETYPE
 
 #define IM_VEC2_CLASS_EXTRA                                    \
                                                                \

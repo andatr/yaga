@@ -1,11 +1,29 @@
 #include "precompiled.h"
-#include "mesh.h"
+#include "engine/mesh.h"
 
 namespace yaga {
+namespace {
+
+const std::string componentName = "Mesh";
+
+} // !namespace
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Mesh::Mesh(Object* object, assets::Mesh* asset) : Component(object), asset_(asset)
+Mesh::Mesh(assets::MeshPtr asset) :
+  asset_(asset)
 {
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+Mesh::PropertyList& Mesh::properties()
+{
+  return asset_->properties();
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+const std::string& Mesh::name()
+{
+  return componentName;
 }
 
 } // !namespace yaga

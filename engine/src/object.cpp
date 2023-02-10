@@ -1,10 +1,12 @@
 #include "precompiled.h"
-#include "object.h"
+#include "engine/object.h"
 
 namespace yaga {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Object::Object() : active_(true)
+Object::Object(std::string name) :
+  name_(name),
+  active_(true)
 {
 }
 
@@ -21,30 +23,30 @@ Object::~Object()
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Object::addComponent(ComponentPtr component)
-{
-  const auto& id = typeid(*component);
-  if (components_.find(id) != components_.end()) {
-    THROW(std::string("Object already has component of type ") + id.name());
-  }
-  for (const auto& c : components_) {
-    c.second->onComponentAdd(component.get());
-  }
-  components_[id] = std::move(component);
-}
-
-// -----------------------------------------------------------------------------------------------------------------------------
 void Object::removeComponent(Component* component)
 {
   const auto& id = typeid(*component);
   auto it = components_.find(id);
   if (it == components_.end() || it->second.get() != component) {
-    THROW(std::string("Object does not have component of type ") + id.name());
+    THROW("Object has no components of type \"%1%\"", id.name());
   }
   for (const auto& c : components_) {
-    c.second->onComponentRemove(component);
+    if (c.second != it->second) {
+      c.second->onComponentRemove(component);
+    }
   }
   components_.erase(it);
+  makeProperties();
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+void Object::makeProperties()
+{
+  properties_.clear();
+  for (auto& component : components_) {
+    const auto ptr = component.second.get();
+    addProperty(ptr->name(), ptr);
+  }
 }
 
 } // !namespace yaga

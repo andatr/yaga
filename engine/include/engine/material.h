@@ -10,15 +10,20 @@ namespace yaga {
 
 class Material : public Component
 {
+friend class Context;
+
 public:
-  explicit Material(Object* object, assets::Material* asset);
   virtual ~Material() {}
-  assets::Material* asset() const { return asset_; }
+  assets::MaterialPtr asset() const { return asset_; }
   virtual bool wireframe() = 0;
   virtual void wireframe(bool value) = 0;
+  const std::string& name() override;
 
 protected:
-  assets::Material* asset_;
+  explicit Material(assets::MaterialPtr asset);
+
+protected:
+  assets::MaterialPtr asset_;
 };
 
 typedef std::unique_ptr<Material> MaterialPtr;

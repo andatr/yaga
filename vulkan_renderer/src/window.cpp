@@ -1,11 +1,11 @@
 #include "precompiled.h"
-#include "window.h"
+#include "vulkan_renderer/window.h"
 
 namespace yaga {
 namespace vk {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Window::Window(VkInstance instance, const Config& config) :
+Window::Window(VkInstance instance, const Config::Window& config) :
   instance_(instance),
   size_{},
   minimised_(false),
@@ -17,7 +17,7 @@ Window::Window(VkInstance instance, const Config& config) :
   createSurface(instance);
   updateSize();
   eventDispatcher_ = std::make_unique<EventDispatcher>(*window_);
-  input_ = std::make_unique<Input>(*window_, eventDispatcher_.get());
+  input_ = std::make_unique<VkInput>(*window_, eventDispatcher_.get());
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -26,7 +26,7 @@ Window::~Window()
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Window::createWindow(const Config& config)
+void Window::createWindow(const Config::Window& config)
 {
   glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
   glfwWindowHint(GLFW_RESIZABLE, GLFW_TRUE);

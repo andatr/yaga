@@ -1,18 +1,17 @@
 #include "precompiled.h"
-#include "context.h"
+#include "engine/context.h"
 
 namespace yaga {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-TransformPtr Context::createTransform(Object* object)
+Context::Context()
 {
-  return std::make_unique<Transform>(object);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-CameraPtr Context::createCamera(Object* object)
+TransformPtr Context::createTransform(assets::TransformPtr asset)
 {
-  return std::make_unique<Camera>(object);
+  return std::unique_ptr<Transform>(new Transform(asset));
 }
 
 } // !namespace yaga

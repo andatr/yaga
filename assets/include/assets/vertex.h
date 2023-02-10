@@ -1,7 +1,7 @@
 #ifndef YAGA_ASSETS_VERTEX
 #define YAGA_ASSETS_VERTEX
 
-#include "assets/glm.h"
+#include "utility/glm.h"
 
 namespace yaga {
 

@@ -3,6 +3,7 @@
 
 #include <istream>
 #include <memory>
+#include <vector>
 
 #include "assets/asset.h"
 #include "assets/serializer.h"
@@ -11,30 +12,47 @@ namespace yaga {
 namespace assets {
 
 class Image;
-typedef std::unique_ptr<Image> ImagePtr;
+typedef std::shared_ptr<Image> ImagePtr;
 
 class Image : public Asset
 {
 public:
-  explicit Image(const std::string& name);
-  virtual ~Image();
-  int width() const { return width_; }
-  int height() const { return height_; }
-  int channels() const { return channels_; }
-  size_t size() const { return size_; }
-  const char* data() const { return bytes_; }
+  typedef std::vector<char> Bytes;
+  typedef std::function<void(Bytes&)> Updater;
+  struct PropertyIndex
+  {
+    static const int  bytes = 0;
+    static const int  width = 1;
+    static const int height = 2;
+    static const int format = 3;
+  };
 
 public:
-  static const SerializationInfo serializationInfo;
-  static ImagePtr deserializeBinary(const std::string& name, std::istream& stream, size_t size, RefResolver& resolver);
-  static ImagePtr deserializeFriendly(const std::string& name, const std::string& path, RefResolver& resolver);
+  explicit Image(const std::string& name);
+  virtual ~Image();
+  const Bytes& bytes() const { return bytes_; }
+  uint32_t     width() const { return width_;  }
+  uint32_t    height() const { return height_; }
+  int         format() const { return format_; }
+  AssetType     type() const override { return typeId; }
+  Image*  bytes(Updater  handler);
+  Image*  width(uint32_t value);
+  Image* height(uint32_t value);
+  Image* format(int      value);
+
+public:
+  static const AssetType typeId = (uint32_t)StandardAssetType::image;
+  static ImagePtr deserializeBinary  (std::istream& stream);
+  static ImagePtr deserializeFriendly(std::istream& stream);
+  static void serializeBinary  (Asset* asset, std::ostream& stream);
+  static void serializeFriendly(Asset* asset, std::ostream& stream);
+  static void resolveRefs(Asset* asset, Storage* storage);
 
 private:
-  char* bytes_;
-  int width_;
-  int height_;
-  int channels_;
-  size_t size_;
+  std::vector<char> bytes_;
+  uint32_t width_;
+  uint32_t height_;
+  int format_;
 };
 
 } // !namespace assets

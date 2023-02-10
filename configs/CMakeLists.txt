@@ -9,4 +9,5 @@ add_custom_target(configs SOURCES
   "${PROJECT_SOURCE_DIR}/readme.txt"
   "${PROJECT_SOURCE_DIR}/LICENSE"
   "${PROJECT_SOURCE_DIR}/CMakeLists.txt"
+  "${PROJECT_SOURCE_DIR}/pyutils.py"
 )

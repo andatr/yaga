@@ -44,11 +44,11 @@ void main()
     vec2 tangent = normalize(dirPrev + dirNext);
     vec2 normal  = vec2(-tangent.y, tangent.x);
     vec2 perp    = vec2(-dirNext.y, dirNext.x);
-    float len = thickness.x / dot(normal, perp);
+    float len = thickness.x / max(dot(normal, perp), 0.7);
     offset = normal * len / aspectVec;
   }
 
-  gl_Position = projected + vec4(offset, 0.0f, 1.0);
+  gl_Position = projected + vec4(offset, 0.0f, 0.0);
   outColor = inColor;
   outTexture = inTexture;
 }

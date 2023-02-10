@@ -1,22 +1,20 @@
 #ifndef YAGA_UTILITY_LOG
 #define YAGA_UTILITY_LOG
 
+#include "utility/compiler.h"
+
 #include <string>
+
+DISABLE_WARNINGS
 #include <boost/log/expressions/keyword.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/utility/manipulators/add_value.hpp>
 #include <boost/optional.hpp>
-
-#include "exception.h"
+ENABLE_WARNINGS
 
 #define LOG(severity) BOOST_LOG_TRIVIAL(severity)                 \
   << boost::log::add_value(yaga::log::a_file, __FILE__)           \
   << boost::log::add_value(yaga::log::a_line, __LINE__)
-
-#define LOG_E(severity, exception) BOOST_LOG_TRIVIAL(severity)    \
-  << boost::log::add_value(yaga::log::a_file, (exception).File()) \
-  << boost::log::add_value(yaga::log::a_line, (exception).Line()) \
-  << (exception).what()
 
 namespace yaga {
 namespace log {

@@ -1,42 +1,37 @@
 #include "precompiled.h"
-#include "image.h"
+#include "vulkan_renderer/image.h"
+#include "vulkan_renderer/vulkan_utils.h"
 
 namespace yaga {
 namespace vk {
 
 // -----------------------------------------------------------------------------------------------------------------------------
 Image::Image(Device* device, VmaAllocator allocator, VkImageCreateInfo& info, VkImageViewCreateInfo& viewInfo) :
+  device_(**device),
   allocator_(allocator),
   info_(info)
 {
-  auto destroyImage = [this](auto image) {
-    vmaDestroyImage(allocator_, image, allocation_);
-    LOG(trace) << "Vulkan Image destroyed";
-  };
-
-  auto destroyView = [device = **device](auto view) {
-    vkDestroyImageView(device, view, nullptr);
-    LOG(trace) << "Image View destroyed";
-  };
-
-  VmaAllocationCreateInfo allocInfo{};
-  allocInfo.usage = VMA_MEMORY_USAGE_GPU_ONLY;
-
-  VkImage image;
-  VULKAN_GUARD(vmaCreateImage(allocator_, &info, &allocInfo, &image, &allocation_, nullptr), "Could not create Image");
-  LOG(trace) << "Vulkan Image created";
-  image_.set(image, destroyImage);
-  
-  VkImageView view;
-  viewInfo.image = *image_;
-  VULKAN_GUARD(vkCreateImageView(**device, &viewInfo, nullptr, &view), "Could not create Image View");
-  LOG(trace) << "Image View created";
-  view_.set(view, destroyView);
+  creatImage(info);
+  creatImageView(viewInfo);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 Image::~Image()
 {
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+void Image::creatImage(VkImageCreateInfo& info)
+{
+  info_ = info;
+  image_ = vk::createImage(allocator_, info);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+void Image::creatImageView(VkImageViewCreateInfo& info)
+{
+  info.image = *image_;
+  view_ = vk::createImageView(device_, info);
 }
 
 } // !namespace vk

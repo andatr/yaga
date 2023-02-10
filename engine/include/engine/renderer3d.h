@@ -3,18 +3,16 @@
 
 #include <memory>
 
-#include "engine/component.h"
-#include "engine/material.h"
-#include "engine/mesh.h"
-#include "engine/transform.h"
+#include "engine/renderer.h"
 
 namespace yaga {
 
-class Renderer3D : public Component
+class Renderer3D : public Renderer
 {
 public:
-  explicit Renderer3D(Object* obj);
+  explicit Renderer3D();
   virtual ~Renderer3D() {}
+  const std::string& name() override;
 };
 
 typedef std::unique_ptr<Renderer3D> Renderer3DPtr;

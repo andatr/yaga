@@ -1,6 +1,8 @@
 #ifndef YAGA_ASSETS_SRC_PRECOMPILED
 #define YAGA_ASSETS_SRC_PRECOMPILED
 
+#include "utility/compiler.h"
+
 #include <fstream>
 #include <map>
 #include <memory>
@@ -8,7 +10,7 @@
 #include <unordered_map>
 #include <vector>
 
-#pragma warning(push, 0)
+DISABLE_WARNINGS
 
 #include <boost/algorithm/string.hpp>
 #include <boost/endian/conversion.hpp>
@@ -16,14 +18,12 @@
 #include <boost/property_tree/json_parser.hpp>
 #include <boost/property_tree/ptree.hpp>
 
-#include <stb_image.h>
 #include <tiny_obj_loader.h>
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
 
-#pragma warning(pop)
+ENABLE_WARNINGS
 
 #include "utility/exception.h"
+#include "utility/glm.h"
 #include "utility/log.h"
 
 #endif // !YAGA_ASSETS_SRC_PRECOMPILED

@@ -1,5 +1,6 @@
 #include "precompiled.h"
-#include "log.h"
+#include "utility/log.h"
+#include "utility/exception.h"
 
 namespace yaga {
 namespace log {
@@ -16,7 +17,7 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(a_time,   a_time_str,   time_point)
 BOOST_LOG_ATTRIBUTE_KEYWORD(a_format, a_format_str, int)
 const auto a_severity = logging::aux::default_attribute_names::severity();
 
-// --------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void yagaFormatter(logging::record_view const& rec, logging::formatting_ostream& strm)
 {
   const auto& format = rec.attribute_values()[a_format].get();
@@ -34,7 +35,7 @@ void yagaFormatter(logging::record_view const& rec, logging::formatting_ostream&
   strm << rec[logging::expressions::smessage];
 }
 
-// --------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 void init(boost::optional<Severity> severity, int format)
 {
   auto core = logging::core::get();
@@ -47,7 +48,7 @@ void init(boost::optional<Severity> severity, int format)
   }
 }
 
-// --------------------------------------------------------------------------------------------
+// -----------------------------------------------------------------------------------------------------------------------------
 Severity severityFromString(std::string str)
 {
   using namespace logging::trivial;

@@ -1,23 +1,25 @@
 #include "precompiled.h"
-#include "context.h"
+#include "vulkan_renderer/context.h"
 
 namespace yaga {
 namespace vk {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Context::Context(Swapchain* swapchain,
-  VmaAllocator allocator,
-  RenderPass* renderPass,
-  const Config& config,
-  yaga::Application* app) :
-    prevTime_(chrono::now()),
-    delta_(0.0f),
-    swapchain_(swapchain),
-    app_(app)
+Context::Context(
+  Swapchain*      swapchain,
+  CameraPool*     cameraPool,
+  MeshPool*       meshPool,
+  MaterialPool*   materialPool,
+  Renderer3DPool* rendererPool
+) :
+  prevTime_(chrono::now()),
+  delta_(0.0f),
+  swapchain_   (swapchain),
+  meshPool_    (meshPool),
+  cameraPool_  (cameraPool),
+  materialPool_(materialPool),
+  rendererPool_(rendererPool)
 {
-  meshPool_     = std::make_unique<MeshPool>    (swapchain->device(), allocator, config);
-  materialPool_ = std::make_unique<MaterialPool>(swapchain, allocator, renderPass, config);
-  rendererPool_ = std::make_unique<Renderer3DPool>();
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -30,21 +32,47 @@ glm::uvec2 Context::resolution() const
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-yaga::MaterialPtr Context::createMaterial(Object* object, assets::Material* asset)
+yaga::MaterialPtr Context::createMaterial(assets::MaterialPtr asset)
 {
-  return materialPool_->get(object, asset);
+  return materialPool_->get(asset);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-yaga::MeshPtr Context::createMesh(Object* object, assets::Mesh* asset)
+yaga::MeshPtr Context::createMesh(assets::MeshPtr asset)
 {
-  return meshPool_->get(object, asset);
+  return meshPool_->get(asset);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-yaga::Renderer3DPtr Context::createRenderer3D(Object* object)
+yaga::Renderer3DPtr Context::createRenderer3D()
 {
-  return rendererPool_->create(object);
+  return rendererPool_->create();
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+CameraPtr Context::createCamera(assets::CameraPtr asset) 
+{
+  return cameraPool_->get(asset);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+yaga::Camera* Context::mainCamera() const
+{
+  return cameraPool_->mainCamera();
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+void Context::mainCamera(yaga::Camera* camera)
+{
+  auto c = dynamic_cast<Camera*>(camera);
+  cameraPool_->mainCamera(c);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+yaga::PostProcessorPtr Context::createPostProcessor(int, bool, PostProcessor::Proc)
+{
+  //return processorPool_->create(order, hostMemory, proc);
+  return nullptr;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -54,6 +82,7 @@ void Context::clear()
   rendererPool_->clear();
   materialPool_->clear();
   meshPool_->clear();
+  //processorPool_->clear();
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------

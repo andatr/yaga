@@ -1,5 +1,3 @@
-#!/usr/bin/python3
-
 import os
 import subprocess
 import sys
@@ -11,7 +9,7 @@ inDir  = sys.argv[1] if os.path.isabs(sys.argv[1]) else os.path.join(os.getcwd()
 outDir = sys.argv[2] if os.path.isabs(sys.argv[2]) else os.path.join(os.getcwd(), sys.argv[2])
 for root, dirs, files in os.walk(inDir):
   for file in files:
-    if file.endswith('.vert') or file.endswith('.frag'):
+    if file.endswith('.vert') or file.endswith('.frag') or file.endswith('.comp'):
       inFile = os.path.join(root, file)
       relPath = os.path.relpath(inFile, inDir)
       outFile = os.path.join(outDir, relPath)

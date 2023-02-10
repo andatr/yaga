@@ -1,10 +1,10 @@
 #include "precompiled.h"
-#include "component.h"
+#include "engine/component.h"
 
 namespace yaga {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Component::Component(Object* obj) : object_(obj)
+void Component::onAttached(Object*)
 {
 }
 

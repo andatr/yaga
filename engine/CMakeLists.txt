@@ -11,7 +11,6 @@ target_include_directories(engine
   PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/include
   PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}/include/engine
     ${CMAKE_CURRENT_LIST_DIR}/src
 )
 target_link_libraries(engine
@@ -20,6 +19,4 @@ target_link_libraries(engine
     utility
     imgui_bindings
 )
-target_link_libraries_alt(engine PUBLIC glm::glm glm)
-target_link_libraries_alt(engine PUBLIC rxcpp::rxcpp rxcpp)
 add_subdirectory(test)

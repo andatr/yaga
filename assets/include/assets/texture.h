@@ -3,40 +3,38 @@
 
 #include <istream>
 #include <memory>
+#include <string>
 
 #include "assets/asset.h"
 #include "assets/image.h"
 #include "assets/serializer.h"
-#include "utility/update_notifier.h"
 
 namespace yaga {
 namespace assets {
 
 class Texture;
-typedef std::unique_ptr<Texture> TexturePtr;
+typedef std::shared_ptr<Texture> TexturePtr;
 
-enum class TextureProperty
-{
-  image
-};
-
-class Texture
-  : public Asset
-  , public UpdateNotifier<TextureProperty>
+class Texture : public Asset
 {
 public:
   explicit Texture(const std::string& name);
   virtual ~Texture();
-  Image* image() const { return image_; }
-  void image(Image* image);
+  ImagePtr image() const { return image_; }
+  //void image(Image* image);
+  AssetType type() const override { return typeId; }
 
 public:
-  static const SerializationInfo serializationInfo;
-  static TexturePtr deserializeBinary(const std::string& name, std::istream& stream, size_t size, RefResolver& resolver);
-  static TexturePtr deserializeFriendly(const std::string& name, const std::string& path, RefResolver& resolver);
+  static const AssetType typeId = (uint32_t)StandardAssetType::texture;
+  static TexturePtr deserializeBinary  (std::istream& stream);
+  static TexturePtr deserializeFriendly(std::istream& stream);
+  static void serializeBinary  (Asset* asset, std::ostream& stream);
+  static void serializeFriendly(Asset* asset, std::ostream& stream);
+  static void resolveRefs(Asset* asset, Storage* storage);
 
 private:
-  Image* image_;
+  ImagePtr image_;
+  std::string imageName_;
 };
 
 } // !namespace assets

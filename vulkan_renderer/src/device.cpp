@@ -1,6 +1,6 @@
 #include "precompiled.h"
-#include "device.h"
-#include "swapchain.h"
+#include "vulkan_renderer/device.h"
+#include "vulkan_renderer/swapchain.h"
 
 namespace yaga {
 namespace vk {
@@ -223,7 +223,7 @@ void Device::createCommandPool()
   info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
   info.queueFamilyIndex = queueFamilies_.graphics;
 
-  VkCommandPool commandPool;
+  VkCommandPool commandPool{};
   auto destroyCommandPool = [this](auto commandPool) {
     vkDestroyCommandPool(*logicalDevice_, commandPool, nullptr);
     LOG(trace) << "Command Pool destroyed";
@@ -231,32 +231,6 @@ void Device::createCommandPool()
   VULKAN_GUARD(vkCreateCommandPool(*logicalDevice_, &info, nullptr, &commandPool), "Could not create Command Pool");
   commandPool_.set(commandPool, destroyCommandPool);
   LOG(trace) << "Command Pool created";
-}
-
-// -----------------------------------------------------------------------------------------------------------------------------
-void Device::createDescriptorPool(uint32_t frames, const Config& config)
-{
-  std::array<VkDescriptorPoolSize, 2> poolSizes{};
-  poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  poolSizes[0].descriptorCount = frames;
-  poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-  poolSizes[1].descriptorCount = config.maxTextureCount() * frames;
-
-  VkDescriptorPoolCreateInfo poolInfo{};
-  poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-  poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
-  poolInfo.pPoolSizes = poolSizes.data();
-  poolInfo.maxSets = 50; // TODO: FIX !
-
-  VkDescriptorPool pool;
-  auto destroyPool = [device = *logicalDevice_](auto pool) {
-    vkDestroyDescriptorPool(device, pool, nullptr);
-    LOG(trace) << "Descriptor Pool destroyed";
-  };
-
-  VULKAN_GUARD(vkCreateDescriptorPool(*logicalDevice_, &poolInfo, nullptr, &pool), "Could not create descriptor pool");
-  descriptorPool_.set(pool, destroyPool);
-  LOG(trace) << "Descriptor Pool created";
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------

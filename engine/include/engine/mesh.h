@@ -10,13 +10,19 @@ namespace yaga {
 
 class Mesh : public Component
 {
+friend class Context;
+
 public:
-  explicit Mesh(Object* object, assets::Mesh* asset);
   virtual ~Mesh() {}
-  assets::Mesh* asset() const { return asset_; }
+  assets::MeshPtr asset() const { return asset_; }
+  PropertyList& properties() override;
+  const std::string& name() override;
 
 protected:
-  assets::Mesh* asset_;
+  explicit Mesh(assets::MeshPtr asset);
+
+protected:
+  assets::MeshPtr asset_;
 };
 
 typedef std::unique_ptr<Mesh> MeshPtr;

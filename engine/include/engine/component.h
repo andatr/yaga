@@ -1,32 +1,34 @@
 #ifndef YAGA_ENGINE_COMPONENT
 #define YAGA_ENGINE_COMPONENT
 
-#include <functional>
-#include <memory>
-#include <boost/noncopyable.hpp>
-#include <boost/signals2.hpp>
+#include "utility/compiler.h"
 
-#include "utility/update_notifier.h"
+#include <memory>
+
+DISABLE_WARNINGS
+#include <boost/noncopyable.hpp>
+ENABLE_WARNINGS
+
+#include "utility/prop_info.h"
 
 namespace yaga {
 
 class Component
   : private boost::noncopyable
-  , public UpdateNotifier<uint32_t>
+  , public PropInfo
 {
-  friend class Object;
+friend class Object;
 
 public:
-  explicit Component(Object* obj);
   virtual ~Component() {}
-  Object* object() const { return object_; }
+  virtual const std::string& name() = 0;
+
+protected:
+  virtual void onAttached(Object* object);
 
 private:
   virtual void onComponentAdd(Component*) {}
   virtual void onComponentRemove(Component*) {}
-
-protected:
-  Object* object_;
 };
 
 typedef std::unique_ptr<Component> ComponentPtr;

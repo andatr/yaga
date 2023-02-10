@@ -1,6 +1,8 @@
 #ifndef YAGA_ENGINE_SRC_PRECOMPILED
 #define YAGA_ENGINE_SRC_PRECOMPILED
 
+#include "utility/compiler.h"
+
 #include <functional>
 #include <map>
 #include <math.h>
@@ -11,23 +13,22 @@
 #include <unordered_set>
 #include <vector>
 
-#pragma warning(push, 0)
+DISABLE_WARNINGS
 
 #include <boost/asio.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/endian/conversion.hpp>
 #include <boost/filesystem.hpp>
 #include <boost/property_tree/ptree.hpp>
+#include <boost/property_tree/ini_parser.hpp>
 #include <boost/math/constants/constants.hpp>
 
-#include <glm/glm.hpp>
-#include <glm/gtc/matrix_transform.hpp>
+#include "imgui_wrapper.h"
 
-#include <imgui.h>
-
-#pragma warning(pop)
+ENABLE_WARNINGS
 
 #include "utility/exception.h"
+#include "utility/glm.h"
 #include "utility/log.h"
 
 #endif // !YAGA_ENGINE_SRC_PRECOMPILED

@@ -1,5 +1,5 @@
 #include "precompiled.h"
-#include "shader_pool.h"
+#include "vulkan_renderer/shader_pool.h"
 
 namespace yaga {
 namespace vk {
@@ -16,15 +16,15 @@ ShaderPool::~ShaderPool()
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-VkShaderModule ShaderPool::get(assets::Shader* asset)
+VkShaderModule ShaderPool::get(assets::ShaderPtr asset)
 {
   auto it = shaders_.find(asset);
   if (it != shaders_.end()) return *it->second;
 
   VkShaderModuleCreateInfo createInfo{};
   createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-  createInfo.codeSize = asset->code().size();
-  createInfo.pCode = reinterpret_cast<const uint32_t*>(asset->code().data());
+  createInfo.codeSize = asset->bytes().size();
+  createInfo.pCode = reinterpret_cast<const uint32_t*>(asset->bytes().data());
   auto vkDevice = **device_;
   auto destroyShader = [vkDevice](auto shader) {
     vkDestroyShaderModule(vkDevice, shader, nullptr);

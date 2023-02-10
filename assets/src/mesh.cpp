@@ -1,121 +1,109 @@
 #include "precompiled.h"
 #include "assets/mesh.h"
-
-#pragma warning(push, 0)
-#define GLM_ENABLE_EXPERIMENTAL
-#include <glm/gtx/hash.hpp>
-#define TINYOBJLOADER_IMPLEMENTATION
-#include <tiny_obj_loader.h>
-#pragma warning(pop)
-
-namespace std {
-
-template <>
-struct hash<yaga::Vertex>
-{
-  size_t operator()(yaga::Vertex const& vertex) const;
-};
-
-// -----------------------------------------------------------------------------------------------------------------------------
-size_t hash<yaga::Vertex>::operator()(yaga::Vertex const& vertex) const
-{
-  return ((hash<glm::vec3>()(vertex.position) ^ (hash<glm::vec3>()(vertex.color) << 1)) >> 1) /*^ (hash<glm::vec2>()(vertex.texCoord) << 1)*/;
-}
-
-} // !namespace std
+#include "assets/storage.h"
+#include "binary_serializer_helper.h"
+#include "binary_serializer_registry.h"
 
 namespace yaga {
-
-// -----------------------------------------------------------------------------------------------------------------------------
-bool operator==(const Vertex& first, const Vertex& second)
-{
-  return first.position == second.position && first.color == second.color /*&& first.texCoord == second.texCoord*/;
-}
-
 namespace assets {
 
-const SerializationInfo Mesh::serializationInfo = { (uint32_t)StandardAssetId::mesh, { "obj" }, &Mesh::deserializeBinary,
-  &Mesh::deserializeFriendly };
+BINARY_SERIALIZER_REG(Mesh)
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Mesh::Mesh(const std::string& name) : Asset(name) {}
+Mesh::Mesh(const std::string& name) :
+  Asset(name),
+  bounds_{}
+{
+  addProperty<int64_t, size_t>("Vertices", std::bind(&Vertices::size, &vertices_));
+  addProperty<int64_t, size_t>("Indices",  std::bind(&Indices::size,  &indices_ ));
+  addProperty("Bounds", &bounds_, true);
+}
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Mesh::~Mesh() {}
+Mesh::~Mesh()
+{
+}
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Mesh::vertices(VertexUpdater handler)
+Mesh* Mesh::vertices(VertexUpdater handler)
 {
   handler(vertices_);
-  fireUpdate(MeshProperty::vertices);
+  properties_[PropertyIndex::vertices]->update(this);
+  return this;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Mesh::vertices(const Vertices& vertices)
+Mesh* Mesh::vertices(const Vertices& value)
 {
-  vertices_ = vertices;
-  fireUpdate(MeshProperty::vertices);
+  vertices_ = value;
+  properties_[PropertyIndex::vertices]->update(this);
+  return this;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Mesh::indices(IndexUpdater handler)
+Mesh* Mesh::indices(IndexUpdater handler)
 {
   handler(indices_);
-  fireUpdate(MeshProperty::indices);
+  properties_[PropertyIndex::indices]->update(this);
+  return this;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Mesh::indices(const Indices& indices)
+Mesh* Mesh::indices(const Indices& value)
 {
-  indices_ = indices;
-  fireUpdate(MeshProperty::indices);
+  indices_ = value;
+  properties_[PropertyIndex::indices]->update(this);
+  return this;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-MeshPtr Mesh::deserializeBinary(const std::string&, std::istream&, size_t, RefResolver&)
+Mesh* Mesh::bounds(const Bounds& value)
+{
+  bounds_ = value;
+  properties_[PropertyIndex::bounds]->update(this);
+  return this;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+MeshPtr Mesh::deserializeBinary(std::istream& stream)
+{
+  std::string name;
+  binser::read(stream, name);
+  auto mesh = std::make_unique<Mesh>(name);
+  binser::read(stream, mesh->name_);
+  binser::read(stream, mesh->bounds_.min);
+  binser::read(stream, mesh->bounds_.max);
+  binser::read(stream, mesh->vertices_);
+  binser::read(stream, mesh->indices_);
+  return mesh;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+void Mesh::serializeBinary(Asset* asset, std::ostream& stream)
+{
+  auto mesh = assetCast<Mesh>(asset);
+  binser::write(stream, mesh->name_);
+  binser::write(stream, mesh->bounds_.min); 
+  binser::write(stream, mesh->bounds_.max);
+  binser::write(stream, mesh->vertices_);
+  binser::write(stream, mesh->indices_);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+MeshPtr Mesh::deserializeFriendly(std::istream&)
 {
   THROW_NOT_IMPLEMENTED;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-MeshPtr Mesh::deserializeFriendly(const std::string& name, const std::string& path, RefResolver&)
+void Mesh::serializeFriendly(Asset*, std::ostream&)
 {
-  // TODO: rework!
-  auto mesh = std::make_unique<Mesh>(name);
+  THROW_NOT_IMPLEMENTED;
+}
 
-  tinyobj::attrib_t attrib;
-  std::vector<tinyobj::shape_t> shapes;
-  std::vector<tinyobj::material_t> materials;
-  std::string err;
-  // std::ifstream stream(path, std::ios::in | std::ios::binary);
-  if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &err, path.c_str())) {
-    throw std::runtime_error(err);
-  }
-  std::unordered_map<Vertex, uint32_t, std::hash<Vertex>> uniqueVertices{};
-  for (const auto& shape : shapes) {
-    for (const auto& index : shape.mesh.indices) {
-      Vertex vertex{};
-
-      vertex.position = {
-        attrib.vertices[3 * index.vertex_index + 0],
-        attrib.vertices[3 * index.vertex_index + 1],
-        attrib.vertices[3 * index.vertex_index + 2],
-        1.0f
-      };
-
-      //vertex.texCoord = { attrib.texcoords[2 * index.texcoord_index + 0], 1.0f - attrib.texcoords[2 * index.texcoord_index + 1] };
-
-      vertex.color = { 1.0f, 1.0f, 1.0f, 1.0f };
-
-      if (uniqueVertices.count(vertex) == 0) {
-        uniqueVertices[vertex] = static_cast<uint32_t>(mesh->vertices_.size());
-        mesh->vertices_.push_back(vertex);
-      }
-
-      mesh->indices_.push_back(uniqueVertices[vertex]);
-    }
-  }
-  return mesh;
+// -----------------------------------------------------------------------------------------------------------------------------
+void Mesh::resolveRefs(Asset*, Storage*)
+{
 }
 
 } // !namespace assets

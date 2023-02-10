@@ -6,40 +6,39 @@
 #include <ostream>
 
 #include "assets/asset.h"
-#include "assets/glm.h"
 #include "assets/serializer.h"
-#include "utility/update_notifier.h"
+#include "utility/glm.h"
 
 namespace yaga {
 namespace assets {
 
 class Camera;
-typedef std::unique_ptr<Camera> CameraPtr;
+typedef std::shared_ptr<Camera> CameraPtr;
 
-enum class CameraProperty
+class Camera : public Asset
 {
-  projection,
-  lookAt
-};
+public:
+  struct PropertyIndex
+  {
+    static const int lookAt = 0;
+  };
 
-class Camera
-  : public Asset
-  , public UpdateNotifier<CameraProperty>
-{
 public:
   explicit Camera(const std::string& name);
   virtual ~Camera();
-  const glm::mat4& projection() const { return projection_; }
-  virtual void projection(const glm::mat4& p);
-  void lookAt(const glm::vec3& lookAt);
+  const glm::vec3& lookAt() const { return lookAt_; }
+  Camera* lookAt(const glm::vec3& value);
+  AssetType type() const override { return typeId; }
 
 public:
-  static const SerializationInfo serializationInfo;
-  static CameraPtr deserializeBinary(const std::string& name, std::istream& stream, size_t size, RefResolver& resolver);
-  static CameraPtr deserializeFriendly(const std::string& name, const std::string& path, RefResolver& resolver);
+  static const AssetType typeId = (uint32_t)StandardAssetType::camera;
+  static CameraPtr deserializeBinary  (std::istream& stream);
+  static CameraPtr deserializeFriendly(std::istream& stream);
+  static void serializeBinary  (Asset* asset, std::ostream& stream);
+  static void serializeFriendly(Asset* asset, std::ostream& stream);
+  static void resolveRefs(Asset* asset, Storage* storage);
 
 private:
-  glm::mat4 projection_;
   glm::vec3 lookAt_;
 };
 

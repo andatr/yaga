@@ -1,5 +1,5 @@
 #include "precompiled.h"
-#include "texture_pool.h"
+#include "vulkan_renderer/texture_pool.h"
 
 namespace yaga {
 namespace vk {
@@ -142,12 +142,13 @@ TexturePool::~TexturePool()
 {
 }
 
+
 // -----------------------------------------------------------------------------------------------------------------------------
-Texture* TexturePool::get(assets::Texture* asset)
+Texture* TexturePool::get(assets::TexturePtr asset)
 {
   auto it = textures_.find(asset);
   if (it != textures_.end()) return it->second.get();
-  if (asset->image()->size() > maxSize_) THROW("Image exceed max size");
+  if (asset->image()->bytes().size() > maxSize_) THROW("Image exceed max size");
 
   VkImageCreateInfo info{};
   info.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
@@ -179,8 +180,8 @@ Texture* TexturePool::get(assets::Texture* asset)
   viewInfo.subresourceRange.layerCount     = 1;
   viewInfo.subresourceRange.levelCount     = info.mipLevels;
 
-  auto texture = std::make_unique<Texture>(device_, allocator_, info, viewInfo, asset);
-  memcpy(stageBuffer_->memory().pMappedData, asset->image()->data(), asset->image()->size());
+  auto texture = std::make_unique<Texture>(this, device_, allocator_, info, viewInfo, asset);
+  memcpy(stageBuffer_->memory().pMappedData, asset->image()->bytes().data(), asset->image()->bytes().size());
   device_->submitCommand([buffer = **stageBuffer_, image = texture.get()](auto command) {
     changeImageLayout(image, command, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
     setImageData(image, buffer, command);
@@ -190,6 +191,18 @@ Texture* TexturePool::get(assets::Texture* asset)
   auto ptr = texture.get();
   textures_[asset] = std::move(texture);
   return ptr;
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+void TexturePool::update(Texture* texture)
+{
+  const auto image = texture->asset()->image();
+  memcpy(stageBuffer_->memory().pMappedData, image->bytes().data(), image->bytes().size());
+  device_->submitCommand([buffer = **stageBuffer_, texture](auto command) {
+    changeImageLayout(texture, command, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+    setImageData(texture, buffer, command);
+    generateMipMaps(texture, command);
+  });
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------

@@ -1,14 +1,25 @@
 #include "precompiled.h"
-#include "render_pass.h"
+#include "vulkan_renderer/render_pass.h"
 
 namespace yaga {
 namespace vk {
+namespace {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-RenderPass::RenderPass(Device* device) :
-  device_(device),
-  finalStage_(VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT)
+inline VkRect2D getRenderArea(Swapchain* swapchain)
 {
+  const auto& r = swapchain->resolution();
+  return {{ 0, 0 }, { r.width, r.height }};
+}
+
+} // !namespace
+
+// -----------------------------------------------------------------------------------------------------------------------------
+RenderPass::RenderPass(Swapchain* swapchain) :
+  swapchain_(swapchain),
+  renderArea_(getRenderArea(swapchain))
+{
+  connections_.push_back(swapchain_->onResize([this]() { onResize(); }));
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -17,9 +28,23 @@ RenderPass::~RenderPass()
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-VkCommandBuffer RenderPass::beginRender(uint32_t image)
+void RenderPass::onResize()
 {
-  const auto& frame = frameBuffers_[image];
+  renderArea_ = getRenderArea(swapchain_);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+VkSemaphore RenderPass::render(uint32_t imageIndex, VkSemaphore waitFor)
+{
+  beginRender(imageIndex);
+  render(imageIndex);
+  return finishRender(imageIndex, waitFor);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+void RenderPass::beginRender(uint32_t imageIndex)
+{
+  const auto* frame = frameBuffers_[imageIndex].get();
 
   VkRenderPassBeginInfo info{};
   info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -33,17 +58,16 @@ VkCommandBuffer RenderPass::beginRender(uint32_t image)
   beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
   const auto fence = frame->syncSubmit();
-  vkWaitForFences(**device_, 1, &fence, VK_TRUE, UINT64_MAX);
+  vkWaitForFences(**swapchain_->device(), 1, &fence, VK_TRUE, UINT64_MAX);
   const auto command = frame->command();
   VULKAN_GUARD(vkBeginCommandBuffer(command, &beginInfo), "Failed to start recording Command Buffer");
   vkCmdBeginRenderPass(command, &info, VK_SUBPASS_CONTENTS_INLINE);
-  return command;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-RenderPass::WaitFor RenderPass::finishRender(uint32_t image, WaitFor waitFor)
+VkSemaphore RenderPass::finishRender(uint32_t imageIndex, VkSemaphore waitFor)
 {
-  const auto& frame     = frameBuffers_[image];
+  const auto* frame     = frameBuffers_[imageIndex].get();
   const auto  fence     = frame->syncSubmit();
   const auto  semaphore = frame->syncRender();
   const auto  command   = frame->command();
@@ -51,19 +75,19 @@ RenderPass::WaitFor RenderPass::finishRender(uint32_t image, WaitFor waitFor)
   vkCmdEndRenderPass(command);
   VULKAN_GUARD(vkEndCommandBuffer(command), "Failed to record Command Buffer");
 
+  const VkPipelineStageFlags stage = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
   VkSubmitInfo submitInfo{};
   submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
   submitInfo.waitSemaphoreCount   = 1;
-  submitInfo.pWaitSemaphores      = &waitFor.semaphore;
-  submitInfo.pWaitDstStageMask    = &waitFor.stage;
+  submitInfo.pWaitSemaphores      = &waitFor;
+  submitInfo.pWaitDstStageMask    = &stage;
   submitInfo.commandBufferCount   = 1;
   submitInfo.pCommandBuffers      = &command;
   submitInfo.signalSemaphoreCount = 1;
   submitInfo.pSignalSemaphores    = &semaphore;
-  vkResetFences(**device_, 1, &fence);
-  VULKAN_GUARD(vkQueueSubmit(device_->graphicsQueue(), 1, &submitInfo, fence), "Could not draw frame");
-
-  return { finalStage_, semaphore };
+  vkResetFences(**swapchain_->device(), 1, &fence);
+  VULKAN_GUARD(vkQueueSubmit(swapchain_->device()->graphicsQueue(), 1, &submitInfo, fence), "Could not draw a frame");
+  return semaphore;
 }
 
 } // !namespace vk

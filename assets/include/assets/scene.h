@@ -12,7 +12,7 @@ namespace yaga {
 namespace assets {
 
 class Scene;
-typedef std::unique_ptr<Scene> ScenePtr;
+typedef std::shared_ptr<Scene> ScenePtr;
 
 class Scene : public Asset
 {
@@ -20,11 +20,15 @@ public:
   explicit Scene(const std::string& name);
   virtual ~Scene();
   Model* model() const { return model_; }
+  AssetType type() const override { return typeId; }
 
 public:
-  static const SerializationInfo serializationInfo;
-  static ScenePtr deserializeBinary(const std::string& name, std::istream& stream, size_t size, RefResolver& resolver);
-  static ScenePtr deserializeFriendly(const std::string& name, const std::string& path, RefResolver& resolver);
+  static const AssetType typeId = (uint32_t)StandardAssetType::scene;
+  static ScenePtr deserializeBinary  (std::istream& stream);
+  static ScenePtr deserializeFriendly(std::istream& stream);
+  static void serializeBinary  (Asset* asset, std::ostream& stream);
+  static void serializeFriendly(Asset* asset, std::ostream& stream);
+  static void resolveRefs(Asset* asset, Storage* storage);
 
 private:
   Model* model_;

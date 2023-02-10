@@ -2,42 +2,50 @@
 #define YAGA_ENGINE_CAMERA
 
 #include <memory>
+#include <string>
 
+#include "assets/camera.h"
 #include "engine/component.h"
 #include "engine/transform.h"
+#include "utility/signal.h"
 
 namespace yaga {
 
 class Camera : public Component
 {
-public:
-  static const uint32_t viewProperty = 1;
+friend class Context;
 
 public:
-  explicit Camera(Object* obj);
+  struct PropertyIndex
+  {
+    static const int projection = 0;
+    static const int view       = 1;
+  };
+
+public:
   virtual ~Camera();
-  const glm::mat4& view() const { return view_; }
-  const glm::mat4& projection() const { return projection_; }
-  virtual void projection(const glm::mat4& value);
-  const glm::vec3& lookAt() const { return lookAt_; }
-  virtual void lookAt(const glm::vec3& lookAt);
+  const glm::mat4&   view()       const { return view_;       }
+  const glm::mat4&   projection() const { return projection_; }
+  const std::string& name() override;
+  assets::CameraPtr asset() { return asset_; }
+  virtual Camera* projection(const glm::mat4& value);
 
 protected:
-  virtual void updateView();
+  explicit Camera(assets::CameraPtr asset);
+  void onAttached(Object* object) override;
+  void updateView();
 
 private:
   void onComponentAdd(Component* component) override;
   void onComponentRemove(Component* component) override;
-  virtual void onTransformUpdated(uint32_t prop);
+  virtual void onTransformUpdate(void*);
 
 protected:
+  assets::CameraPtr asset_;
+  glm::mat4 projection_;
+  glm::mat4 view_;
   Transform* transform_;
-  glm::mat4  projection_;
-  glm::vec3  lookAt_;
-  glm::mat4  view_;
-
-private:
-  Connection transformConnection_;
+  SignalConnections connections_;
 };
 
 typedef std::unique_ptr<Camera> CameraPtr;

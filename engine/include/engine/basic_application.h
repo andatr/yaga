@@ -1,11 +1,15 @@
 #ifndef YAGA_ENGINE_BASIC_APPLICATION
 #define YAGA_ENGINE_BASIC_APPLICATION
 
-#include <memory>
-#include <boost/noncopyable.hpp>
-#include <boost/property_tree/ptree_fwd.hpp>
+#include "utility/compiler.h"
 
-#include "assets/storage.h"
+#include <memory>
+
+DISABLE_WARNINGS
+#include <boost/noncopyable.hpp>
+ENABLE_WARNINGS
+
+#include "config.h"
 #include "assets/serializer.h"
 #include "engine/application.h"
 
@@ -16,26 +20,26 @@ class BasicApplication
   , public Application
 {
 public:
-  BasicApplication(const boost::property_tree::ptree& options);
+  explicit BasicApplication(ConfigPtr config);
   virtual ~BasicApplication();
 
 protected:
   void init(Context* context, Input* input) override;
-  void resize()   override;
-  bool loop()     override;
-  void stop()     override;
-  void shutdown() override;
-  void gui()      override;
+  void resize()      override;
+  bool loop()        override;
+  void stop()        override;
+  void shutdown()    override;
+  void gui()         override;
+  ConfigPtr config() override { return config_; }
 
 protected:
+  ConfigPtr config_;
   bool running_;
-  assets::StoragePtr assets_;
-  assets::SerializerPtr serializer_;
   Context* context_;
   Input* input_;
 };
 
-typedef std::unique_ptr<BasicApplication> BasicApplicationPtr;
+typedef std::shared_ptr<BasicApplication> BasicApplicationPtr;
 
 } // !namespace yaga
 

@@ -1,0 +1,46 @@
+#version 450
+
+layout (local_size_x = 1, local_size_y = 1) in;
+layout (binding = 0, r16ui ) uniform readonly uimage2D lumaImage;
+layout (binding = 1, rg16ui) uniform readonly uimage2D chromaImage;
+layout (binding = 2, rgba8 ) uniform           image2D outImage;
+
+
+
+vec4 yuvToRgb(uint y, uint u, uint v)
+{
+  mat3 matYuv2Rgb = mat3(
+  
+    vec3(1.16438353, 0.0, 1.83367121),
+    vec3(1.16438353, -0.218117282, -0.545076191),
+    vec3(1.16438353, 2.16063023, 0.0)
+  
+   // vec3(1.16438353, 1.16438353, 1.16438353),
+    //vec3(0.0, -0.218117282, 2.16063023),
+    //vec3(1.83367121, -0.545076191, 0.0)
+  );
+
+  uint low = 1 << 12;
+  uint mid = 1 << 15;
+  float maxf = float(1 << 16) - 1.0f;
+
+  float fy = float(y) - float(low);
+  float fu = float(u) - float(mid);
+  float fv = float(v) - float(mid);
+  return vec4(
+    clamp(matYuv2Rgb[0][0] * fy + matYuv2Rgb[0][1] * fu + matYuv2Rgb[0][2] * fv, 0.0f, maxf) / 65536.0,
+    clamp(matYuv2Rgb[1][0] * fy + matYuv2Rgb[1][1] * fu + matYuv2Rgb[1][2] * fv, 0.0f, maxf) / 65536.0,
+    clamp(matYuv2Rgb[2][0] * fy + matYuv2Rgb[2][1] * fu + matYuv2Rgb[2][2] * fv, 0.0f, maxf) / 65536.0,
+	  1.0
+  );
+}
+
+void main()
+{
+  uint  luma   = imageLoad(lumaImage,   ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y)).r;
+  uvec4 chroma = imageLoad(chromaImage, ivec2(gl_GlobalInvocationID.x / 2, gl_GlobalInvocationID.y /2));
+  vec4 res     = yuvToRgb(luma, chroma.r, chroma.g);
+  //vec4 res = vec4(float(luma) / 65534.0, float(chroma.r) / 65534.0, float(chroma.g) / 65534.0, 1.0);
+  //vec4 res = vec4(float(luma) / 65534.0, 0.0, 0.0, 1.0);
+  imageStore(outImage, ivec2(gl_GlobalInvocationID.x, gl_GlobalInvocationID.y), res);
+}

@@ -1,19 +1,20 @@
 #include "precompiled.h"
-#include "input.h"
+#include "vulkan_renderer/input.h"
 
 namespace yaga {
 namespace vk {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Input::Input(GLFWwindow* window, EventDispatcher* dispatcher) :
+VkInput::VkInput(GLFWwindow* window, EventDispatcher* dispatcher) :
   window_(window), dispatcher_(dispatcher)
 {
   namespace ph = std::placeholders;
-  keyboardConnection_     = dispatcher_->onKeyboard   (std::bind(&Input::onKeyboard,    this, ph::_1, ph::_2, ph::_3, ph::_4));
-  characterConnection_    = dispatcher_->onCharacter  (std::bind(&Input::onCharacter,   this, ph::_1                        ));
-  mouseButtonConnection_  = dispatcher_->onMouseButton(std::bind(&Input::onMouseButton, this, ph::_1, ph::_2, ph::_3        ));
-  cursorMoveConnection_   = dispatcher_->onCursorMove (std::bind(&Input::onCursorMove,  this, ph::_1, ph::_2                ));
-  cursorLeaveConnection_  = dispatcher_->onCursorLeave(std::bind(&Input::onCursorLeave, this, ph::_1                        ));
+  connections_.push_back(dispatcher_->onKeyboard   (std::bind(&VkInput::onKeyboard,    this, ph::_1, ph::_2, ph::_3, ph::_4)));
+  connections_.push_back(dispatcher_->onCharacter  (std::bind(&VkInput::onCharacter,   this, ph::_1                        )));
+  connections_.push_back(dispatcher_->onMouseButton(std::bind(&VkInput::onMouseButton, this, ph::_1, ph::_2, ph::_3        )));
+  connections_.push_back(dispatcher_->onCursorMove (std::bind(&VkInput::onCursorMove,  this, ph::_1, ph::_2                )));
+  connections_.push_back(dispatcher_->onCursorLeave(std::bind(&VkInput::onCursorLeave, this, ph::_1                        )));
+
   for (int i = 0; i < KEYS_NUMBER; ++i) {
     buffer_.pressedKeys[i]      = 0;
     buffer_.releasedKeys[i]     = 0;
@@ -29,17 +30,13 @@ Input::Input(GLFWwindow* window, EventDispatcher* dispatcher) :
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Input::~Input()
+VkInput::~VkInput()
 {
   glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-  dispatcher_->onCharacter  (characterConnection_  );
-  dispatcher_->onMouseButton(mouseButtonConnection_);
-  dispatcher_->onCursorMove (cursorMoveConnection_ ); 
-  dispatcher_->onCursorLeave(cursorLeaveConnection_);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Input::updateState()
+void VkInput::updateState()
 {
   updateKeyboardState();
   updateMouseState();
@@ -47,7 +44,7 @@ void Input::updateState()
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Input::updateKeyboardState()
+void VkInput::updateKeyboardState()
 {
   for (int i = 0; i < KEYS_NUMBER; ++i) {
     auto pressed = buffer_.pressedKeys[i].load();
@@ -65,7 +62,7 @@ void Input::updateKeyboardState()
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Input::updateMouseState()
+void VkInput::updateMouseState()
 {
   for (int i = 0; i < MOUSE_BUTTONS_NUMBER; ++i) {
     auto pressed  = buffer_.pressedMouseButtons[i].load();
@@ -83,7 +80,7 @@ void Input::updateMouseState()
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Input::updateCursorState()
+void VkInput::updateCursorState()
 {
   state_.cursorOut = buffer_.cursorOut.load();
   state_.cursorPosition[0] = buffer_.cursorX.load();
@@ -94,63 +91,63 @@ void Input::updateCursorState()
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Input::setCursorMode(CursorMode mode)
+void VkInput::setCursorMode(CursorMode mode)
 {
   switch (mode) {
-    case CursorMode::Normal:
-      glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-      break;
-    case CursorMode::Hidden:
-      glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-      if (glfwRawMouseMotionSupported()) {
-        glfwSetInputMode(window_, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
-      }
-      break;
+  case CursorMode::Normal:
+    glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
+    break;
+  case CursorMode::Hidden:
+    glfwSetInputMode(window_, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    if (glfwRawMouseMotionSupported()) {
+      glfwSetInputMode(window_, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
+    }
+    break;
   }
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Input::onKeyboard(int key, int /*scancode*/, int action, int /*mods*/)
+void VkInput::onKeyboard(int key, int /*scancode*/, int action, int /*mods*/)
 {
   if (key < 0 || key >= KEYS_NUMBER) return;
   switch (action) {
-    case GLFW_PRESS:
-      buffer_.pressedKeys[key] += 1;
-      break;
-    case GLFW_RELEASE:
-      buffer_.releasedKeys[key] += 1;
-      break;
+  case GLFW_PRESS:
+    buffer_.pressedKeys[key] += 1;
+    break;
+  case GLFW_RELEASE:
+    buffer_.releasedKeys[key] += 1;
+    break;
   }
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Input::onCharacter(unsigned int /*codepoint*/)
+void VkInput::onCharacter(unsigned int /*codepoint*/)
 {
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Input::onMouseButton(int button, int action, int /*mods*/)
+void VkInput::onMouseButton(int button, int action, int /*mods*/)
 {
   if (button < 0 || button >= MOUSE_BUTTONS_NUMBER) return;
   switch (action) {
-    case GLFW_PRESS:
-      buffer_.pressedMouseButtons[button] += 1;
-      break;
-    case GLFW_RELEASE:
-      buffer_.releasedMouseButtons[button] += 1;
-      break;
+  case GLFW_PRESS:
+    buffer_.pressedMouseButtons[button] += 1;
+    break;
+  case GLFW_RELEASE:
+    buffer_.releasedMouseButtons[button] += 1;
+    break;
   }
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Input::onCursorMove(double xpos, double ypos)
+void VkInput::onCursorMove(double xpos, double ypos)
 {
   buffer_.cursorX = static_cast<float>(xpos);
   buffer_.cursorY = static_cast<float>(ypos);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Input::onCursorLeave(int entered)
+void VkInput::onCursorLeave(int entered)
 {
   buffer_.cursorOut = entered <= 0;
 }

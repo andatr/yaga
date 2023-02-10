@@ -14,38 +14,29 @@ namespace assets {
 class Storage
 {
 public:
-  Asset* get(const std::string& name) const;
-  Asset* tryGet(const std::string& name) const;
-  void put(AssetPtr asset);
-  void remove(Asset* asset);
-  void remove(const std::string& name);
+  virtual ~Storage() {};
+  virtual AssetPtr get(AssetType type, const std::string& name) = 0;
+  virtual AssetPtr tryGet(AssetType type, const std::string& name) = 0;
   template <typename T>
-  T* get(const std::string& name) const;
+  std::shared_ptr<T> get(const std::string& name);
   template <typename T>
-  T* tryGet(const std::string& name) const;
-
-private:
-  std::map<std::string, AssetPtr> assets_;
+  std::shared_ptr<T> tryGet(const std::string& name);
 };
 
 typedef std::unique_ptr<Storage> StoragePtr;
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename T>
-T* Storage::get(const std::string& name) const
+std::shared_ptr<T> Storage::get(const std::string& name)
 {
-  auto ptr = dynamic_cast<T*>(get(name));
-  if (!ptr) {
-    THROW("Wrong asset type \"%1%\"", name);
-  }
-  return ptr;
+  return std::static_pointer_cast<T>(get(T::typeId, name));
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 template <typename T>
-T* Storage::tryGet(const std::string& name) const
+std::shared_ptr<T> Storage::tryGet(const std::string& name)
 {
-  return dynamic_cast<T*>(tryGet(name));
+  return std::static_pointer_cast<T>(tryGet(T::typeId, name));
 }
 
 } // !namespace assets

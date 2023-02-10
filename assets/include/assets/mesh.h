@@ -11,48 +11,60 @@
 #include "assets/serializer.h"
 #include "assets/vertex.h"
 #include "utility/array.h"
-#include "utility/update_notifier.h"
+#include "utility/glm.h"
 
 namespace yaga {
 namespace assets {
 
 class Mesh;
-typedef std::unique_ptr<Mesh> MeshPtr;
+typedef std::shared_ptr<Mesh> MeshPtr;
 
-enum class MeshProperty
+class Mesh : public Asset
 {
-  vertices,
-  indices
-};
+public:
+  struct PropertyIndex
+  {
+    static const int vertices = 0;
+    static const int indices  = 1;
+    static const int bounds   = 2;
+  };
 
-class Mesh
-  : public Asset
-  , public UpdateNotifier<MeshProperty>
-{
 public:
   typedef std::vector<Vertex> Vertices;
   typedef std::vector<Index> Indices;
   typedef std::function<void(Vertices&)> VertexUpdater;
-  typedef std::function<void(Indices&)> IndexUpdater;
+  typedef std::function<void(Indices&)>  IndexUpdater;
+  struct Bounds
+  {
+    glm::vec3 min;
+    glm::vec3 max;
+  };
 
 public:
   explicit Mesh(const std::string& name);
   virtual ~Mesh();
   const Vertices& vertices() const { return vertices_; }
-  void vertices(VertexUpdater handler);
-  void vertices(const Vertices& vertices);
-  const Indices& indices() const { return indices_; }
-  void indices(const Indices& indices);
-  void indices(IndexUpdater handler);
+  const Indices&  indices()  const { return indices_;  }
+        Bounds&   bounds()         { return bounds_;   }
+  Mesh* vertices(VertexUpdater   handler );
+  Mesh* indices (IndexUpdater    handler );
+  Mesh* vertices(const Vertices& value);
+  Mesh* indices (const Indices&  value);
+  Mesh* bounds  (const Bounds&   value);
+  AssetType type() const override { return typeId; }
 
 public:
-  static const SerializationInfo serializationInfo;
-  static MeshPtr deserializeBinary(const std::string& name, std::istream& stream, size_t size, RefResolver& resolver);
-  static MeshPtr deserializeFriendly(const std::string& name, const std::string& path, RefResolver& resolver);
+  static const AssetType typeId = (uint32_t)StandardAssetType::mesh;
+  static MeshPtr deserializeBinary  (std::istream& stream);
+  static MeshPtr deserializeFriendly(std::istream& stream);
+  static void serializeBinary  (Asset* asset, std::ostream& stream);
+  static void serializeFriendly(Asset* asset, std::ostream& stream);
+  static void resolveRefs(Asset* asset, Storage* storage);
 
 private:
   Vertices vertices_;
   Indices indices_;
+  Bounds bounds_;
 };
 
 } // !namespace assets

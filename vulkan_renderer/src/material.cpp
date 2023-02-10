@@ -1,13 +1,13 @@
 #include "precompiled.h"
-#include "material.h"
-#include "material_pool.h"
+#include "vulkan_renderer/material.h"
+#include "vulkan_renderer/material_pool.h"
 
 namespace yaga {
 namespace vk {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Material::Material(MaterialPool* pool, Object* object, assets::Material* asset, Pipeline* pipeline) :
-  yaga::Material(object, asset),
+Material::Material(MaterialPool* pool, assets::MaterialPtr asset, Pipeline* pipeline) :
+  yaga::Material(asset),
   pool_(pool),
   pipeline_(std::move(pipeline)),
   wireframe_(false)
@@ -17,7 +17,7 @@ Material::Material(MaterialPool* pool, Object* object, assets::Material* asset, 
 // -----------------------------------------------------------------------------------------------------------------------------
 Material::~Material()
 {
-  pool_->onRemove(this);
+  pool_->remove(this);
 }
 
 } // !namespace vk

@@ -1,11 +1,30 @@
 #include "precompiled.h"
-#include "transform.h"
+#include "engine/transform.h"
 
 namespace yaga {
+namespace {
+
+const std::string componentName = "Transform";
+const int parentConnection = 0;
+
+} // !namespace
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Transform::Transform(Object* obj) : Component(obj), world_(1.0f), local_(1.0f), parent_(nullptr)
+Transform::Transform(assets::TransformPtr asset) :
+  asset_(asset),
+  world_(1.0f),
+  local_(1.0f),
+  parent_(nullptr)
 {
+  addProperty("Local",  &local_);
+  addProperty("World",  &world_);
+  addProperty("Parent", &parent_);
+  auto handler = [this](void*) { updateLocal(); };
+  connections_.push_back(nullptr); // parent's 'World' property
+  connections_.push_back(asset->properties(assets::Transform::PropertyIndex::rotation)   ->onUpdate(handler));
+  connections_.push_back(asset->properties(assets::Transform::PropertyIndex::scale)      ->onUpdate(handler));
+  connections_.push_back(asset->properties(assets::Transform::PropertyIndex::translation)->onUpdate(handler));
+  handler(this);
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
@@ -16,14 +35,16 @@ Transform::~Transform()
   }
   if (parent_) {
     parent_->children_.erase(this);
-    parent_->onUpdate(parentConnection_);
   }
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-void Transform::local(const glm::mat4& m)
+void Transform::updateLocal()
 {
-  local_ = m;
+  local_  = glm::scale(glm::mat4(1.0f), asset_->scale());
+  local_ *= glm::mat4_cast(asset_->rotation());
+  local_  = glm::translate(local_, asset_->translation());
+  properties_[PropertyIndex::local]->update(this);
   updateWorld();
 }
 
@@ -33,13 +54,14 @@ void Transform::parent(Transform* parent)
   if (parent == parent_) return;
   if (parent_ != nullptr) {
     parent_->children_.erase(this);
-    parent_->onUpdate(parentConnection_);
+    connections_[parentConnection] = nullptr;
   }
   if (parent != nullptr) {
     parent->children_.insert(this);
-    parentConnection_ = parent->onUpdate(std::bind(&Transform::updateWorld, this));
+    connections_[parentConnection] = parent->properties(PropertyIndex::world)->onUpdate([this](void*) { updateWorld(); });
   }
   parent_ = parent;
+  properties_[PropertyIndex::parent]->update(this);
   updateWorld();
 }
 
@@ -51,7 +73,13 @@ void Transform::updateWorld()
   } else {
     world_ = local_;
   }
-  fireUpdate(worldProperty);
+  properties_[PropertyIndex::world]->update(this);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+const std::string& Transform::name()
+{
+  return componentName;
 }
 
 } // !namespace yaga

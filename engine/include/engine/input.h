@@ -8,21 +8,23 @@
 
 namespace yaga {
 
+enum class CursorMode
+{
+  Normal,
+  Hidden
+};
+
 // -----------------------------------------------------------------------------------------------------------------------------
 class Input
 {
 public:
-  enum class CursorMode
-  {
-    Normal,
-    Hidden
-  };
   struct KeyState
   {
     bool wasPressed;
     bool wasReleased;
     bool pressed;
   };
+
   struct State
   {
     std::array<KeyState, KEYS_NUMBER> keys;

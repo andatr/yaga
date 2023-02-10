@@ -13,24 +13,30 @@ namespace yaga {
 namespace assets {
 
 class Model;
-typedef std::unique_ptr<Model> ModelPtr;
+typedef std::shared_ptr<Model> ModelPtr;
 
 class Model : public Asset
 {
 public:
   explicit Model(const std::string& name);
   virtual ~Model();
-  Material* material() const { return material_; }
-  Mesh* mesh() const { return mesh_; }
+  MaterialPtr material() const { return material_; }
+  MeshPtr         mesh() const { return mesh_;     }
+  AssetType type() const override { return typeId; }
 
 public:
-  static const SerializationInfo serializationInfo;
-  static ModelPtr deserializeBinary(const std::string& name, std::istream& stream, size_t size, RefResolver& resolver);
-  static ModelPtr deserializeFriendly(const std::string& name, const std::string& path, RefResolver& resolver);
+  static const AssetType typeId = (uint32_t)StandardAssetType::model;
+  static ModelPtr deserializeBinary  (std::istream& stream);
+  static ModelPtr deserializeFriendly(std::istream& stream);
+  static void serializeBinary  (Asset* asset, std::ostream& stream);
+  static void serializeFriendly(Asset* asset, std::ostream& stream);
+  static void resolveRefs(Asset* asset, Storage* storage);
 
 private:
-  Material* material_;
-  Mesh* mesh_;
+  std::string materialName_;
+  std::string meshName_;
+  MaterialPtr material_;
+  MeshPtr mesh_;
 };
 
 } // !namespace assets

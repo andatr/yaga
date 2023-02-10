@@ -1,5 +1,5 @@
 #include "precompiled.h"
-#include "event_dispatcher.h"
+#include "vulkan_renderer/event_dispatcher.h"
 
 namespace yaga {
 namespace vk {
@@ -14,6 +14,42 @@ EventDispatcher::EventDispatcher(GLFWwindow* window) : window_(window)
   glfwSetMouseButtonCallback    (window, mouseButtonCallback);
   glfwSetCursorPosCallback      (window, cursorMoveCallback);
   glfwSetCursorEnterCallback    (window, cursorLeaveCallback);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+SignalConnectionPtr EventDispatcher::onResize(const SignalResize::slot_type& handler)
+{
+  return std::make_unique<SignalConnection>(sigResize_.connect(handler));
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+SignalConnectionPtr EventDispatcher::onKeyboard(const SignalKeyboard::slot_type&    handler)
+{
+  return std::make_unique<SignalConnection>(sigKeyboard_.connect(handler));
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+SignalConnectionPtr EventDispatcher::onCharacter(const SignalCharacter::slot_type&   handler)
+{
+  return std::make_unique<SignalConnection>(sigCharacter_.connect(handler));
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+SignalConnectionPtr EventDispatcher::onMouseButton(const SignalMouseButton::slot_type& handler)
+{
+  return std::make_unique<SignalConnection>(sigMouseButton_.connect(handler));
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+SignalConnectionPtr EventDispatcher::onCursorMove(const SignalCursorMove::slot_type&  handler)
+{
+  return std::make_unique<SignalConnection>(sigCursorMove_.connect(handler));
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+SignalConnectionPtr EventDispatcher::onCursorLeave(const SignalCursorLeave::slot_type& handler)
+{
+  return std::make_unique<SignalConnection>(sigCursorLeave_.connect(handler));
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------

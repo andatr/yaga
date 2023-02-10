@@ -1,31 +1,44 @@
 #include "precompiled.h"
-#include "mesh.h"
-#include "mesh_pool.h"
+#include "vulkan_renderer/mesh.h"
+#include "vulkan_renderer/mesh_pool.h"
 
 namespace yaga {
 namespace vk {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Mesh::Mesh(MeshPool* pool, 
-  Object* object,
-  assets::Mesh* asset,
+Mesh::Mesh(
+  MeshPool* pool, 
+  assets::MeshPtr asset,
   Buffer* vertices,
-  Buffer* indices,
-  uint32_t vertexCount,
-  uint32_t indexCount) :
-    pool_(pool),
-    yaga::Mesh(object, asset),
-    vertexBuffer_(vertices),
-    indexBuffer_(indices),
-    vertexCount_(vertexCount),
-    indexCount_(indexCount)
+  Buffer* indices
+) :
+  yaga::Mesh(asset),
+  vertexDirty_(true),
+  indexDirty_(true),
+  pool_(pool),
+  vertexBuffer_(vertices),
+  indexBuffer_(indices)
 {
+  connections_.push_back(asset->properties(assets::Mesh::PropertyIndex::vertices)->onUpdate([this](void*) {
+    vertexDirty_ = true;
+  }));
+  connections_.push_back(asset->properties(assets::Mesh::PropertyIndex::indices )->onUpdate([this](void*) {
+    indexDirty_ = true;
+  }));
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
 Mesh::~Mesh()
 {
-  pool_->onRemove(this);
+  pool_->remove(this);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+void Mesh::update() {
+  if (!vertexDirty_ && !indexDirty_) return;
+  pool_->update(this);
+  vertexDirty_ = false;
+  indexDirty_  = false;
 }
 
 } // !namespace vk

@@ -8,7 +8,7 @@ using namespace yaga;
 BOOST_AUTO_TEST_SUITE(AutoDestructorTest)
 
 // -----------------------------------------------------------------------------------------------------------------------------
-BOOST_AUTO_TEST_CASE(AutoDestructorEmpty)
+BOOST_AUTO_TEST_CASE(Empty)
 {
   {
     AutoDestructor<int> testObject;
@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(AutoDestructorEmpty)
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-BOOST_AUTO_TEST_CASE(AutoDestructorCtor)
+BOOST_AUTO_TEST_CASE(Ctor)
 {
   int counter = 0;
   auto DestroyInt = [&counter](int) { ++counter; };
@@ -29,7 +29,7 @@ BOOST_AUTO_TEST_CASE(AutoDestructorCtor)
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-BOOST_AUTO_TEST_CASE(AutoDestructorAssign)
+BOOST_AUTO_TEST_CASE(Assign)
 {
   int counter = 0;
   auto DestroyInt = [&counter](int) { ++counter; };
@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(AutoDestructorAssign)
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-BOOST_AUTO_TEST_CASE(AutoDestructorReset)
+BOOST_AUTO_TEST_CASE(Reset)
 {
   int counter = 0;
   auto DestroyInt = [&counter](int) { ++counter; };
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(AutoDestructorReset)
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-BOOST_AUTO_TEST_CASE(AutoDestructorDoubleAssign)
+BOOST_AUTO_TEST_CASE(DoubleAssign)
 {
   int counter = 0;
   int counter2 = 0;
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(AutoDestructorDoubleAssign)
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-BOOST_AUTO_TEST_CASE(AutoDestructorAssignCtor)
+BOOST_AUTO_TEST_CASE(AssignCtor)
 {
   int counter = 0;
   auto DestroyInt = [&counter](int) { ++counter; };
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(AutoDestructorAssignCtor)
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-BOOST_AUTO_TEST_CASE(AutoDestructorCopyCtor)
+BOOST_AUTO_TEST_CASE(CopyCtor)
 {
   int counter = 0;
   int counter2 = 0;
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(AutoDestructorCopyCtor)
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-BOOST_AUTO_TEST_CASE(AutoDestructorGetValue)
+BOOST_AUTO_TEST_CASE(GetValue)
 {
   int counter = 0;
   auto DestroyInt = [&counter](int) { ++counter; };
@@ -121,7 +121,7 @@ BOOST_AUTO_TEST_CASE(AutoDestructorGetValue)
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-BOOST_AUTO_TEST_CASE(AutoDestructorEmptyValue)
+BOOST_AUTO_TEST_CASE(EmptyValue)
 {
   AutoDestructor<int> testObject;
   try {
@@ -133,7 +133,7 @@ BOOST_AUTO_TEST_CASE(AutoDestructorEmptyValue)
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-BOOST_AUTO_TEST_CASE(AutoDestructorResetEmptyValue)
+BOOST_AUTO_TEST_CASE(ResetEmptyValue)
 {
   int counter = 0;
   auto DestroyInt = [&counter](int) { ++counter; };

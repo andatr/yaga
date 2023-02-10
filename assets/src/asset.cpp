@@ -5,7 +5,8 @@ namespace yaga {
 namespace assets {
 
 // -----------------------------------------------------------------------------------------------------------------------------
-Asset::Asset(const std::string& name) : name_(name)
+Asset::Asset(const std::string& name) :
+  name_(name)
 {
 }
 

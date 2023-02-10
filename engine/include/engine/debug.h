@@ -3,25 +3,25 @@
 
 #include <ostream>
 
-#include "glm.h"
+#include "utility/glm.h"
 
 namespace yaga {
 
 // thanks ADL
-template< typename T >
+template <typename T >
 struct Printable
 {
   T const& value;
 };
 
 // -----------------------------------------------------------------------------------------------------------------------------
-template<typename T>
+template <typename T>
 Printable<T> toStream(T const& value) {
   return { value };
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-template<typename CharT, typename TraitsT>
+template <typename CharT, typename TraitsT>
 std::basic_ostream<CharT, TraitsT>& operator<<(std::basic_ostream<CharT, TraitsT>& stream, const Printable<glm::vec2>& v)
 {
   stream << "(" << v.value.x << ", " << v.value.y << ")";
@@ -29,7 +29,7 @@ std::basic_ostream<CharT, TraitsT>& operator<<(std::basic_ostream<CharT, TraitsT
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-template<typename CharT, typename TraitsT>
+template <typename CharT, typename TraitsT>
 std::basic_ostream<CharT, TraitsT>& operator<<(std::basic_ostream<CharT, TraitsT>& stream, const Printable<glm::vec3>& v)
 {
   stream << "(" << v.value.x << ", " << v.value.y << ", " << v.value.z << ")";
@@ -37,7 +37,7 @@ std::basic_ostream<CharT, TraitsT>& operator<<(std::basic_ostream<CharT, TraitsT
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-template<typename CharT, typename TraitsT>
+template <typename CharT, typename TraitsT>
 std::basic_ostream<CharT, TraitsT>& operator<<(std::basic_ostream<CharT, TraitsT>& stream, const Printable<glm::vec4>& v)
 {
   stream << "(" << v.value.x << ", " << v.value.y << ", " << v.value.z << ", " << v.value.w << ")";
@@ -45,7 +45,7 @@ std::basic_ostream<CharT, TraitsT>& operator<<(std::basic_ostream<CharT, TraitsT
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-template<typename CharT, typename TraitsT>
+template <typename CharT, typename TraitsT>
 std::basic_ostream<CharT, TraitsT>& operator<<(std::basic_ostream<CharT, TraitsT>& stream, const Printable<glm::mat2>& m)
 {
   stream << "(" << m.value[0].x << ", " << m.value[0].y << ")\n";
@@ -54,7 +54,7 @@ std::basic_ostream<CharT, TraitsT>& operator<<(std::basic_ostream<CharT, TraitsT
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-template<typename CharT, typename TraitsT>
+template <typename CharT, typename TraitsT>
 std::basic_ostream<CharT, TraitsT>& operator<<(std::basic_ostream<CharT, TraitsT>& stream, const Printable<glm::mat3>& m)
 {
   stream << "(" << m.value[0].x << ", " << m.value[0].y << ", " << m.value[0].z << ")\n";
@@ -64,7 +64,7 @@ std::basic_ostream<CharT, TraitsT>& operator<<(std::basic_ostream<CharT, TraitsT
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-template<typename CharT, typename TraitsT>
+template <typename CharT, typename TraitsT>
 std::basic_ostream<CharT, TraitsT>& operator<<(std::basic_ostream<CharT, TraitsT>& stream, const Printable<glm::mat4>& m)
 {
   stream << "(" << m.value[0].x << ", " << m.value[0].y << ", " << m.value[0].z << ", " << m.value[0].w << ")\n";

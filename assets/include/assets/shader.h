@@ -12,23 +12,27 @@ namespace yaga {
 namespace assets {
 
 class Shader;
-typedef std::unique_ptr<Shader> ShaderPtr;
+typedef std::shared_ptr<Shader> ShaderPtr;
 
 class Shader : public Asset
 {
 public:
   explicit Shader(const std::string& name);
   virtual ~Shader();
-  const ByteArray& code() const { return code_; }
-  void code(const ByteArray& code) { code_ = code; }
+  const ByteArray& bytes() const { return bytes_; }
+  void bytes(const ByteArray& value) { bytes_ = value; }
+  AssetType type() const override { return typeId; }
 
 public:
-  static const SerializationInfo serializationInfo;
-  static ShaderPtr deserializeBinary(const std::string& name, std::istream& stream, size_t size, RefResolver& resolver);
-  static ShaderPtr deserializeFriendly(const std::string& name, const std::string& path, RefResolver& resolver);
+  static const AssetType typeId = (uint32_t)StandardAssetType::shader;
+  static ShaderPtr deserializeBinary  (std::istream& stream);
+  static ShaderPtr deserializeFriendly(std::istream& stream);
+  static void serializeBinary  (Asset* asset, std::ostream& stream);
+  static void serializeFriendly(Asset* asset, std::ostream& stream);
+  static void resolveRefs(Asset* asset, Storage* storage);
 
 private:
-  ByteArray code_;
+  ByteArray bytes_;
 };
 
 } // !namespace assets

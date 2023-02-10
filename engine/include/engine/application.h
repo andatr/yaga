@@ -3,6 +3,7 @@
 
 #include <memory>
 
+#include "engine/config.h"
 #include "engine/input.h"
 #include "engine/context.h"
 
@@ -13,14 +14,15 @@ class Application
 public:
   virtual ~Application() {}
   virtual void init(Context* context, Input* input) = 0;
-  virtual void resize()   = 0;
-  virtual bool loop()     = 0;
-  virtual void stop()     = 0;
-  virtual void shutdown() = 0;
-  virtual void gui()      = 0;
+  virtual void resize()      = 0;
+  virtual bool loop()        = 0;
+  virtual void stop()        = 0;
+  virtual void shutdown()    = 0;
+  virtual void gui()         = 0;
+  virtual ConfigPtr config() = 0;
 };
 
-typedef std::unique_ptr< Application> ApplicationPtr;
+typedef std::shared_ptr<Application> ApplicationPtr;
 
 } // !namespace yaga
 

@@ -1,15 +1,14 @@
 #include "precompiled.h"
 #include "assets/shader.h"
+#include "assets/storage.h"
+#include "binary_serializer_helper.h"
+#include "binary_serializer_registry.h"
+#include "friendly_serializer_helper.h"
 
 namespace yaga {
 namespace assets {
 
-const SerializationInfo Shader::serializationInfo = {
-  (uint32_t)StandardAssetId::shader,
-  { "spv" },
-  &Shader::deserializeBinary,
-  &Shader::deserializeFriendly
-};
+BINARY_SERIALIZER_REG(Shader)
 
 // -----------------------------------------------------------------------------------------------------------------------------
 Shader::Shader(const std::string& name) : Asset(name) 
@@ -22,21 +21,42 @@ Shader::~Shader()
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-ShaderPtr Shader::deserializeBinary(const std::string& name, std::istream& stream, size_t size, RefResolver&)
+ShaderPtr Shader::deserializeBinary(std::istream& stream)
 {
+  std::string name;
+  binser::read(stream, name);
   auto shader = std::make_unique<Shader>(name);
-  ByteArray code(size);
-  stream.read(code.data(), code.size());
-  shader->code(code);
+  uint64_t size = 0;
+  binser::read(stream, size);
+  shader->bytes_.resize(size);
+  stream.read(shader->bytes_.data(), size);
   return shader;
 }
 
 // -----------------------------------------------------------------------------------------------------------------------------
-ShaderPtr Shader::deserializeFriendly(const std::string& name, const std::string& path, RefResolver& resolver)
+void Shader::serializeBinary(Asset* asset, std::ostream& stream)
 {
-  auto size = boost::filesystem::file_size(path);
-  std::ifstream stream(path, std::ios::in | std::ios::binary);
-  return deserializeBinary(name, stream, size, resolver);
+  auto shader = assetCast<Shader>(asset);
+  uint64_t size = shader->bytes_.size();
+  binser::write(stream, size);
+  stream.write(shader->bytes_.data(), size);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+ShaderPtr Shader::deserializeFriendly(std::istream& stream)
+{
+  return deserializeBinary(stream);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+void Shader::serializeFriendly(Asset* asset, std::ostream& stream)
+{
+  serializeBinary(asset, stream);
+}
+
+// -----------------------------------------------------------------------------------------------------------------------------
+void Shader::resolveRefs(Asset*, Storage*)
+{
 }
 
 } // !namespace assets
